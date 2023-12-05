@@ -1,0 +1,5 @@
+[dependencies]
+base = "0.9.8"
+motoko-sha = "https://github.com/enzoh/motoko-sha#master"
+ics2 = "https://github.com/sergeybykov85/ic-storage-service#master"
+serde = "2.0.4"

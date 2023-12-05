@@ -1,0 +1,15 @@
+{
+  "canisters": {
+    "bundle_package": {
+      "main": "src/content-bundle/BundlePackage.mo",
+      "type": "motoko",
+      "dependencies": []
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "mops sources"
+    }
+  },  
+  "version": 1
+}
