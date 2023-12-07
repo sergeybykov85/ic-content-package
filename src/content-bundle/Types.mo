@@ -27,13 +27,15 @@ module {
 		identity_id : Text;
 	};
 
+	public type IdentityAccess = {
+		identity : Identity;
+	};
+
 
 	public type NameValue = {
 		name : Text;
 		value : Text;
 	};
-
-		
 
 	public type RequestedObject = {
 		id : Text;
@@ -75,16 +77,6 @@ module {
         #Local: Text; // host details like localhost:4943
     };
 
-	public type ResourcePathType = {
-		#InHouse : ResourcePath;
-		#External : Text;
-	};
-
-	public type ResourcePresentation = {
-		locale : Text;
-		value : ResourcePathType;
-	};
-
 	// mode governs the behavior who can create new bundle
 	public type SubmissionMode = {
 		#Installer; 
@@ -114,9 +106,15 @@ module {
 		deletion = #Deletable;
 	};
 
+	public type DataPackageAction = {
+		#Upload;
+		#UploadChunk;
+		#Package;
+	};
+
 	public type ItemCategory = {
 		#POI;
-		#Data;
+		#About;
 		#AudioGuide;
 		#Music;
 		#Video;
@@ -127,35 +125,63 @@ module {
 		#Sundry;
 	};
 
-	/*public type TextData = {
-		name : Text;
-		description : Text;
-	};*/
-	
+	public type DataPayload = {
+		value : Blob;
+		content_type : ?Text;
+	};
+
+	public type PayloadFormat = {
+		#Json;
+		#Binary;
+	};
+
+	public type UploadOptions = {
+		replace_path : ?ResourcePath;
+		keys : ?[Text];
+		format : PayloadFormat;
+	};
+
+	public type ChunkUploadAttempt = {
+		// needed to complete batch upload
+		binding_key : Text;
+		locale : ?Text;
+		created : Time.Time;
+	};
+
+	public type DataSection = {
+		category : ItemCategory;
+		var data: List.List<ResourcePath>;
+		var active_upload : ?ChunkUploadAttempt;
+	};
+
+	public type DataSectionView = {
+		category : ItemCategory;
+		data: [ResourcePath];
+	};	
 
 	// represents a single resource (POI or an Addition object)
 	public type DataItem = {
 		// name for internal management.
 		var name : Text;
-		category : ItemCategory;
-		location: ?Location;
+		var location: ?Location;
 		// various sections. They might be filled depending on the category
-
-		data : ?[ResourcePath];
-
-		// text representation of the object
-		about_data: ?[ResourcePath];
-		// images
-		image_data: ?[ResourcePath];
-		// audio files
-		audio_data: ?[ResourcePath];
-		// video files
-		video_data: ?[ResourcePath];		
-		// who submitted the data
+		var data : ResourcePath;
+		var sections: List.List<DataSection>;
 		owner : Identity;
 		created : Time.Time;
 
 	};
+
+	public type DataItemView = {
+		// name for internal management.
+		name : Text;
+		location: ?Location;
+		data : ResourcePath;
+		sections: [DataSectionView];
+		owner : Identity;
+		created : Time.Time;
+
+	};	
 
 	public type BundlePayload = {
 		// single poi
@@ -163,11 +189,6 @@ module {
 		// any extra information around the main object
 		var additions : List.List<DataItem>;
 		created : Time.Time;
-	};
-
-	public type BundleLogo = {
-		payload : Blob;
-		content_type : ?Text;
 	};
 
 	public type Bundle = {
@@ -188,14 +209,21 @@ module {
 	public type BundleArgs = {
 		name : Text;
 		description : Text;
-		logo : ?BundleLogo;
+		logo : ?DataPayload;
 		tags : [Text];
 	};
+
+	public type DataPackageArgs = {
+		category : ItemCategory;
+		locale :? Text;
+		payload : DataPayload;
+		action : DataPackageAction;
+	};	
 
 	public type BundleUpdateArgs = {
 		name : ?Text;
 		description : ?Text;
-		logo : ?BundleLogo;
+		logo : ?DataPayload;
 		tags : ?[Text];
 	};		
 
@@ -238,7 +266,9 @@ module {
         // exceeded allowed items
         #ExceededAllowedLimit;	
 		// not authorized to manage certain object
-		#AccessDenied;	
+		#AccessDenied;
+		// no resource or no chunk
+		#ActionFailed;	
     };
 
 	/**
@@ -294,6 +324,7 @@ module {
 			apply_html_resource_template : shared (template : ?Text) -> async Result.Result<(), Errors>;
 			apply_cleanup_period : shared (seconds : Nat) -> async Result.Result<(), Errors>;
 			store_resource : shared (content : Blob, resource_args : ResourceArgs ) -> async Result.Result<IdUrl, Errors>;
+			replace_resource : shared (id:Text, content : Blob) -> async Result.Result<IdUrl, Errors>;
 			execute_action_on_resource : shared (args : ActionResourceArgs) -> async Result.Result<IdUrl, Errors>;
 		};
 
@@ -317,14 +348,24 @@ module {
 	Module to represents json objects
 	*/
 	public module Serialization {
-		public type ItemStructureJson = {
+		public let POI_GENERAL_FIELDS = ["name", "value", "category", "location", "latitude", "longitude", "attributes", "owner", "country_code2", "region", "city", "coordinates"];
+		public let POI_ABOUT_FIELDS = ["name", "value", "attributes", "locale", "short_description", "description"];
+		public type POIArgs = {
+			general : POIDataJson;
+			about : ?[ItemAboutDataJson];
+		};
+		public type POIUpdateArgs = {
+			general : ?POIDataJson;
+			about : ?[ItemAboutDataJson];
+		};		
+		public type POIDataJson = {
 			name : Text;
 			category : Text;
 			location: Location;
 			attributes : [NameValue];
-		};	
+		};
 
-		public type AboutDataJson = {
+		public type ItemAboutDataJson = {
 			name : Text;
 			short_description : ?Text;
 			description : Text;
