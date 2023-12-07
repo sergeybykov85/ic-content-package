@@ -220,6 +220,21 @@ module {
     	Buffer.toArray(res);
     };
 
+    public func resolve_resource_metadata (category: Types.ItemCategory, locale: ?Text) : (Text, ?[Text], Types.PayloadFormat) {
+        let prefix = switch (locale) {
+            case (?l) {l#"_"};
+            case (null) {""};
+        };       
+        switch (category) {
+            case (#POI) { (prefix#"poi.json", ?Types.Serialization.POI_GENERAL_FIELDS, #Json);};
+            case (#About) { (prefix#"about.json", ?Types.Serialization.POI_ABOUT_FIELDS, #Json);};
+            case (#AudioGuide) { (prefix#"audio_guide", null, #Binary);};
+            case (#Video) { (prefix#"video", null, #Binary);};
+            case (_) { (prefix#"other", null, #Binary);};
+        };
+
+    };
+
     public func datastore_view (info: Types.DataStore) : Types.DataStoreView {
         return {
             buckets = List.toArray(info.buckets);
@@ -227,5 +242,22 @@ module {
 			last_update = Option.get(info.last_update,0);
         };
     };
+
+    public func dataitem_view (info: Types.DataItem) : Types.DataItemView {
+ 
+        return {
+            name = info.name;
+            location = info.location;
+            data = info.data;
+            sections = List.toArray(List.map(info.sections, func (s : Types.DataSection):Types.DataSectionView {
+		    {
+				category = s.category;
+				data = List.toArray(s.data);
+		    };
+		    }));
+            owner = info.owner;
+			created = info.created;
+        };
+    };    
 
 };
