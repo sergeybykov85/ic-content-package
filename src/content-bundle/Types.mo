@@ -324,7 +324,10 @@ module {
 			apply_html_resource_template : shared (template : ?Text) -> async Result.Result<(), Errors>;
 			apply_cleanup_period : shared (seconds : Nat) -> async Result.Result<(), Errors>;
 			store_resource : shared (content : Blob, resource_args : ResourceArgs ) -> async Result.Result<IdUrl, Errors>;
-			replace_resource : shared (id:Text, content : Blob) -> async Result.Result<IdUrl, Errors>;
+			replace_resource : shared (id :Text, content : Blob) -> async Result.Result<IdUrl, Errors>;
+			delete_resource : shared (id : Text) -> async Result.Result<IdUrl, Errors>;
+			store_chunk : shared (content : Blob, binding_key : ?Text) -> async Result.Result<Text, Errors>;
+			commit_batch_by_key : shared (binding_key : Text, resource_args : ResourceArgs) -> async Result.Result<IdUrl, Errors>;		
 			execute_action_on_resource : shared (args : ActionResourceArgs) -> async Result.Result<IdUrl, Errors>;
 		};
 
@@ -360,7 +363,6 @@ module {
 		};		
 		public type POIDataJson = {
 			name : Text;
-			category : Text;
 			location: Location;
 			attributes : [NameValue];
 		};

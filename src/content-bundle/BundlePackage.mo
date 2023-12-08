@@ -156,6 +156,59 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		
 	};
 
+	/**
+	* Apply logo for the bundle item. If not specified, then the existing logo is removed
+	* Allowed only to the owner of the bundle.
+	*/
+	public shared ({ caller }) func apply_bundle_logo (id: Text, logo : ?Types.DataPayload) : async Result.Result<Text, Types.Errors> {
+		switch (bundle_get(id)) {
+			case (?bundle) {
+            	// account should be controlled by owner,                 
+              	//  if (not (caller == bundle.owner)) return #err(#AccessDenied);		
+				let bucket_actor : Types.Actor.DataBucketActor = actor (bundle.data_path.bucket_id);				
+				// replace logo
+				switch(logo) {
+					case (?logo_val){
+						// replace or save
+						switch (bundle.logo) {
+							case (?logo_path) { ignore await bucket_actor.replace_resource(logo_path.resource_id, logo_val.value);};
+							case (null) {
+								let logo_result = await bucket_actor.store_resource(logo_val.value, {
+									content_type = logo_val.content_type;
+									name = "logo";
+									parent_id = null; parent_path = null; ttl = null; read_only = null;}
+								);
+								switch (logo_result) {
+									case (#ok(l_path)) {	
+										bundle.logo := ?{
+											locale=null; 
+											url=l_path.url; 
+											bucket_id=l_path.partition; 
+											resource_id=l_path.id;
+										}
+									};
+									case (#err(_)) {return #err(#ActionFailed);};
+								};
+							};
+						};
+					};
+					case (null) {
+						// delete
+						switch (bundle.logo) {
+							case (?logo_path) { ignore await bucket_actor.delete_resource(logo_path.resource_id);};
+							// no errors, silently ignore if no logo uploaded
+							case (null) { }
+						}
+					};
+				}; 				
+				return #ok(id);
+			};
+			case (null) { return #err(#NotFound); };
+		};
+		
+	};
+
+
 	public shared ({ caller }) func register_poi (bundle_id: Text, args : Types.Serialization.POIDataJson) : async Result.Result<Text, Types.Errors> {
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
@@ -210,54 +263,101 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				// update section references inside the payload
 				let bundle_payload = Utils.unwrap(bundle.payload);
 
-				// identify section
+				// identify section by category (it could be exteneded to identify the section by internal ID)
 				let target_section = List.find(bundle_payload.poi.sections , func (k:Types.DataSection):Bool { k.category == args.category});
+				// take into account the number of such files (counters)
+				let res_meta = Utils.resolve_resource_metadata(args.category, args.locale);
+
+				var replace_path:?Types.ResourcePath = null;
+				var active_upload :?Types.ChunkUploadAttempt = null;
+				if (Option.isSome(target_section)){
+					let sec = Utils.unwrap(target_section);
+					replace_path := List.find(sec.data , func (k:Types.ResourcePath):Bool { Option.get(k.locale, "") == Option.get(args.locale, "")});
+					active_upload := sec.active_upload;
+				};
 				switch (args.action) {
 					// upload binary data till 2mb
 					case (#Upload) {
-						// take into account the number of such files (counters)
-						let res_meta = Utils.resolve_resource_metadata(args.category, args.locale);
+						// active chunk upload has not completed yet
+						if (Option.isSome(active_upload)) return #err(#OperationNotAllowed);
 
-						var replace_path:?Types.ResourcePath = null;
-						if (Option.isSome(target_section)){
-							replace_path := List.find(Utils.unwrap(target_section).data , func (k:Types.ResourcePath):Bool { Option.get(k.locale, "") == Option.get(args.locale, "")});
-						};
-
-						let section_ref = await _submit_data(bundle.data_path, res_meta.0, args.locale, args.payload, {
-							replace_path=replace_path;
-							keys = res_meta.1;
-							format = res_meta.2});
 						// resource_path
-						let section_path:Types.ResourcePath = switch (section_ref) {
+						let section_path:Types.ResourcePath = switch (await _submit_data(bundle.data_path, res_meta.0, args.locale, args.payload, 
+																	{replace_path=replace_path; keys = res_meta.1; format = res_meta.2})) {
 							case (#ok(data)){ data; };
 							case (#err(_)) { return #err(#ActionFailed); };
 						};
-						// new or existing section
+						// register a new section or update the existing section
 						switch (target_section) {
 							case (?section) {
-								// register resource_path in the existing section
 								section.data:= List.push(section_path, section.data);
 							};
-							/**
-								public type DataSection = {
-		category : ItemCategory;
-		var data: List.List<ResourcePath>;
-		var active_upload : ?ChunkUploadAttempt;
-	};
-							*/
 							case (null) {
-								// register new section and 1 resource_path within
-								let s : Types.DataSection = {
+								bundle_payload.poi.sections:= List.push ({
 									category = args.category;
 									var data =  List.push(section_path, null);
 									var active_upload = null;
-								};
-								bundle_payload.poi.sections:= List.push (s, null);
+								}:Types.DataSection, null);
 							};
 						};
 					};
-					case (#UploadChunk) {};
-					case (#Package) {};
+					case (#UploadChunk) {
+						let bucket_actor : Types.Actor.DataBucketActor = actor (bundle.data_path.bucket_id);
+						switch (active_upload) {
+							case (?attempt) {ignore await bucket_actor.store_chunk(args.payload.value, ?attempt.binding_key);};
+							case (null) {
+								let binding_key = Utils.hash_time_based(bundle_id#"poi", Int.abs(Time.now()));
+								active_upload:= ?{
+									binding_key=binding_key;
+									locale  = null;
+									created = Time.now();
+								};
+								ignore await bucket_actor.store_chunk(args.payload.value, ?binding_key);
+								switch (target_section) {
+									case (?section) {section.active_upload:= active_upload;	};
+									case (null) {
+										bundle_payload.poi.sections:= List.push ({
+											category = args.category;
+											var data =  List.nil();
+											var active_upload = active_upload;
+										}:Types.DataSection, null);
+									};
+								};								
+							};
+						}
+					};
+					case (#Package) {
+						let bucket_actor : Types.Actor.DataBucketActor = actor (bundle.data_path.bucket_id);
+						switch (active_upload) {
+							case (?attempt) {
+								let res = await bucket_actor.commit_batch_by_key(attempt.binding_key, {
+									content_type = args.payload.content_type;
+									name = res_meta.0;
+									parent_id = ?bundle.data_path.resource_id;
+									parent_path = null; ttl = null; read_only = null;
+								});
+								let section_path:Types.ResourcePath = switch (res) {
+									case (#ok(r)) {{locale=args.locale; url = r.url; bucket_id = r.partition; resource_id = r.id};};
+									case (#err (e)) { return #err(#ActionFailed)};
+								};
+
+								switch (target_section) {
+									case (?section) {
+										section.data:= List.push(section_path, section.data);
+										section.active_upload:= null;
+									};
+									case (null) {
+										bundle_payload.poi.sections:= List.push ({
+											category = args.category;
+											var data =  List.push(section_path, null);
+											var active_upload = null;
+										}:Types.DataSection, null);
+									};
+								};																
+							};
+							case (null) { return #err(#OperationNotAllowed); };
+						}						
+					};
 
 				};
 
@@ -309,10 +409,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (#Binary) {payload.value;};
 
 		};
-		let file_name = switch (locale) {
-			case (?l) {l#"_"#name;};
-			case (null) {name;};
-		};
 		let res = switch (options.replace_path) {
 			case (?replace) {
 				await bucket_actor.replace_resource(replace.resource_id, blob_to_save);						
@@ -320,7 +416,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (null) {
 				await bucket_actor.store_resource(blob_to_save, {
 					content_type = payload.content_type;
-					name = file_name;
+					name = name;
 					parent_id = ?root_path.resource_id;
 					parent_path = null; ttl = null; read_only = null;
 				});

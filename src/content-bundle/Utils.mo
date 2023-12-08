@@ -23,7 +23,7 @@ import SHA256 "mo:motoko-sha/SHA256";
 module {
     public let VERSION = "0.1";
     public let FORMAT_DATES_SCRIPT = "<script>let dates = document.getElementsByClassName(\"js_date\"); for (let i=0; i<dates.length; i++) { dates[i].innerHTML = (new Date(dates[i].textContent/1000000).toLocaleString()); } </script>";    
-    public let DEF_BUCKET_CYCLES:Nat = 5_000_000_000;
+    public let DEF_BUCKET_CYCLES:Nat = 9_000_000_000;
 
     public let ROOT = "/";
 
