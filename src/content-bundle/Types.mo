@@ -112,6 +112,11 @@ module {
 		#Package;
 	};
 
+	public type DataGroupId = {
+		#POI;
+		#Additions;
+	};
+
 	public type ItemCategory = {
 		#POI;
 		#About;
@@ -180,15 +185,25 @@ module {
 		sections: [DataSectionView];
 		owner : Identity;
 		created : Time.Time;
+	};
 
-	};	
+	// represents a space for logically grouped sections
+	public type DataGroup = {
+		// name for internal management.
+		data_path : ResourcePath;
+		var sections: List.List<DataSection>;
+		created : Time.Time;
+	};
+
+	public type DataGroupView = {
+		// name for internal management.
+		data_path : ResourcePath;
+		sections: [DataSectionView];
+	};		
 
 	public type BundlePayload = {
-		// single poi
-		poi : DataItem;
-		// any extra information around the main object
-		var additions : List.List<DataItem>;
-		created : Time.Time;
+		var poi_group : ?DataGroup;
+		var additions_group : ?DataGroup;
 	};
 
 	public type Bundle = {
@@ -200,7 +215,7 @@ module {
 		var logo : ?ResourcePath;
 		var tags : List.List<Text>;
 		// payload
-		var payload : ?BundlePayload;
+		var payload : BundlePayload;
 		owner : Identity;
 		
 		created : Time.Time;
@@ -304,17 +319,6 @@ module {
 			read_only : ?Nat;
 		};
 
-		public type ActionResourceArgs = {
-			id : Text;
-			action : ResourceAction;
-			payload : ?Blob;
-			name : ?Text;
-			parent_path : ?Text;
-			ttl : ?Nat;
-			read_only : ?Nat;
-			http_headers: ?[NameValue];
-		};
-
     	public type ICSettingsArgs = {
         	controllers : ?[Principal];
    	 	};
@@ -328,7 +332,6 @@ module {
 			delete_resource : shared (id : Text) -> async Result.Result<IdUrl, Errors>;
 			store_chunk : shared (content : Blob, binding_key : ?Text) -> async Result.Result<Text, Errors>;
 			commit_batch_by_key : shared (binding_key : Text, resource_args : ResourceArgs) -> async Result.Result<IdUrl, Errors>;		
-			execute_action_on_resource : shared (args : ActionResourceArgs) -> async Result.Result<IdUrl, Errors>;
 		};
 
     	public type ICManagementActor = actor {

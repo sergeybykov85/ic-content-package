@@ -232,8 +232,14 @@ module {
             case (#Video) { (prefix#"video", null, #Binary);};
             case (_) { (prefix#"other", null, #Binary);};
         };
-
     };
+
+    public func resolve_group_name (group_id: Types.DataGroupId) : (Text) {
+        switch (group_id) {
+            case (#POI) { "poi"};
+            case (#Additions) {"additions"};
+        };
+    };    
 
     public func datastore_view (info: Types.DataStore) : Types.DataStoreView {
         return {
@@ -258,6 +264,18 @@ module {
             owner = info.owner;
 			created = info.created;
         };
-    };    
+    }; 
+
+    public func datagroup_view (info: Types.DataGroup) : Types.DataGroupView {
+        return {
+            data_path = info.data_path;
+            sections = List.toArray(List.map(info.sections, func (s : Types.DataSection):Types.DataSectionView {
+		    {
+				category = s.category;
+				data = List.toArray(s.data);
+		    };
+		    }));
+        };
+    };       
 
 };
