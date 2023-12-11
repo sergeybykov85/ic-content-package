@@ -220,17 +220,17 @@ module {
     	Buffer.toArray(res);
     };
 
-    public func resolve_resource_metadata (category: Types.ItemCategory, locale: ?Text) : (Text, ?[Text], Types.PayloadFormat) {
+    public func resolve_resource_metadata (category: Types.ItemCategory, locale: ?Text) : (Text, ?[Text], Types.TransformType) {
         let prefix = switch (locale) {
             case (?l) {l#"_"};
             case (null) {""};
         };       
         switch (category) {
-            case (#POI) { (prefix#"poi.json", ?Types.Serialization.POI_GENERAL_FIELDS, #Json);};
+            case (#General) { (prefix#"general.json", ?Types.Serialization.POI_GENERAL_FIELDS, #Json);};
             case (#About) { (prefix#"about.json", ?Types.Serialization.POI_ABOUT_FIELDS, #Json);};
-            case (#AudioGuide) { (prefix#"audio_guide", null, #Binary);};
-            case (#Video) { (prefix#"video", null, #Binary);};
-            case (_) { (prefix#"other", null, #Binary);};
+            case (#AudioGuide) { (prefix#"audio_guide", null, #None);};
+            case (#Video) { (prefix#"video", null, #None);};
+            case (_) { (prefix#"other", null, #None);};
         };
     };
 

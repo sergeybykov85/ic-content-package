@@ -118,7 +118,7 @@ module {
 	};
 
 	public type ItemCategory = {
-		#POI;
+		#General;
 		#About;
 		#AudioGuide;
 		#Music;
@@ -133,17 +133,6 @@ module {
 	public type DataPayload = {
 		value : Blob;
 		content_type : ?Text;
-	};
-
-	public type PayloadFormat = {
-		#Json;
-		#Binary;
-	};
-
-	public type UploadOptions = {
-		replace_path : ?ResourcePath;
-		keys : ?[Text];
-		format : PayloadFormat;
 	};
 
 	public type ChunkUploadAttempt = {
@@ -228,9 +217,21 @@ module {
 		tags : [Text];
 	};
 
+	public type TransformType = {
+		#Json;
+		// not needed
+		#None;
+	};
+
+	public type TransformOptions = {
+		keys : ?[Text];
+		transform : TransformType;
+	};	
+
 	public type DataPackageArgs = {
+		group: DataGroupId;
 		category : ItemCategory;
-		locale :? Text;
+		locale : ?Text;
 		payload : DataPayload;
 		action : DataPackageAction;
 	};	
@@ -241,7 +242,6 @@ module {
 		logo : ?DataPayload;
 		tags : ?[Text];
 	};		
-
 
 	// input arguments to install a new BundlePackage actor
 	public type BundlePackageArgs = {
@@ -357,14 +357,10 @@ module {
 		public let POI_GENERAL_FIELDS = ["name", "value", "category", "location", "latitude", "longitude", "attributes", "owner", "country_code2", "region", "city", "coordinates"];
 		public let POI_ABOUT_FIELDS = ["name", "value", "attributes", "locale", "short_description", "description"];
 		public type POIArgs = {
-			general : POIDataJson;
+			general : POIGeneralJson;
 			about : ?[ItemAboutDataJson];
-		};
-		public type POIUpdateArgs = {
-			general : ?POIDataJson;
-			about : ?[ItemAboutDataJson];
-		};		
-		public type POIDataJson = {
+		};	
+		public type POIGeneralJson = {
 			name : Text;
 			location: Location;
 			attributes : [NameValue];
