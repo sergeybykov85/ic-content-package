@@ -19,6 +19,8 @@ import { JSON; Candid } "mo:serde";
 import Json "mo:json/JSON";
 
 import Http "./Http";
+import CommonTypes "./CommonTypes";
+import Conversion "./Conversion";
 import Types "./Types";
 import Utils "./Utils";
 
@@ -34,6 +36,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	".tag { color:#0969DA; margin: 0 4px; border: 1px solid #0969DA; border-radius: 8px; padding: 4px 10px; background-color:#B6E3FF;} "#
 	".access_tag { color:white; font-size:large; border: 1px solid gray; border-radius: 8px; padding: 8px 16px; position: absolute; right: 20px; top: 1px; background-color:#636466;} </style>";
 
+    // 30 days
+    let DEF_READONLY_SEC:Nat = 30 * 24 * 60 * 60;
+	let NANOSEC:Nat = 1_000_000_000;
 
     let OWNER = installation.caller;
 	stable let NETWORK = initArgs.network;
@@ -73,7 +78,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Register a new bunle
 	* Allowed only to the owner or operator of the bucket.
 	*/
-	public shared ({ caller }) func register_bundle (args : Types.BundleArgs) : async Result.Result<Text, Types.Errors> {
+	public shared ({ caller }) func register_bundle (args : Types.BundleArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		// different restrictions based on the mode
         switch (MODES.submission) {
             case (#Installer) {
@@ -94,7 +99,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Updates an existing bundle, just override  description, tags, logo and if they specified
 	* Allowed only to the owner of the bundle.
 	*/
-	public shared ({ caller }) func update_bundle (id: Text, args : Types.BundleUpdateArgs) : async Result.Result<Text, Types.Errors> {
+	public shared ({ caller }) func update_bundle (id: Text, args : Types.BundleUpdateArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
 			case (?bundle) {
             	// account should be controlled by owner,                 
@@ -138,7 +143,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Apply logo for the bundle item. If not specified, then the existing logo is removed
 	* Allowed only to the owner of the bundle.
 	*/
-	public shared ({ caller }) func apply_bundle_logo (id: Text, logo : ?Types.DataPayload) : async Result.Result<Text, Types.Errors> {
+	public shared ({ caller }) func apply_bundle_logo (id: Text, logo : ?Types.DataPayload) : async Result.Result<Text, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
 			case (?bundle) {
 				ignore await _apply_bundle_logo(bundle, logo);
@@ -148,12 +153,81 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
-	public shared ({ caller }) func apply_bundle_section (bundle_id: Text, args : Types.DataPackageArgs) : async Result.Result<Text, Types.Errors> {
+	public shared ({ caller }) func freeze_bundle (id: Text, args: Types.DataFreezeArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		Debug.print("freeze_bundle "#debug_show(id)#" readonly "#debug_show(args.period_sec) # " for groups "#debug_show(args.groups));
+		switch (bundle_get(id)) {
+			case (?bundle) {
+				for (group in args.groups.vals()) {
+					// if group is not initialized --> no errors
+					let data_group_opt = switch (group) {
+						case (#POI) {bundle.payload.poi_group;};
+						case (#Additions) {bundle.payload.additions_group;};
+					};
+					switch (data_group_opt) {
+						case (?data_group) {
+							let bucket_actor : Types.Actor.DataBucketActor = actor (data_group.data_path.bucket_id);
+							// readoly paramter is nanosec
+							let readonly : Nat = Int.abs(Time.now ()) + Option.get(args.period_sec, DEF_READONLY_SEC) * NANOSEC;
+							switch (await bucket_actor.readonly_resource(data_group.data_path.resource_id, ?readonly)) {
+								case (#ok(_)) {
+									// update model
+									data_group.readonly := ?readonly;
+									Debug.print("Apply readonly "#debug_show(readonly)#" group"#debug_show(data_group)); 
+								};
+								case (#err(e)){
+									Debug.print("FAILED to Apply readonly "#debug_show(readonly)); 
+								}
+							};
+						};
+						case (null) {
+							Debug.print("DataGroup "#debug_show(group)#" not found . Impossible to Apply readonly "); 
+						};
+					}
+				};
+				return #ok(id);
+			};
+			case (null) { 
+				Debug.print("Budnle not found. "#debug_show(id)#". FAILED to Apply readonly"); 
+				return #err(#NotFound); };
+		};
+	};	
+
+	public shared ({ caller }) func apply_bundle_section_raw (bundle_id: Text, args : Types.DataPackageRawArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
-				ignore await _apply_bundle_section(bundle, args, {keys = null; transform = #None});
-				return #ok(bundle_id);
+				// transformation is not needed
+				switch (await _apply_bundle_section(bundle, args)) {
+					// any post processing could be added here
+					case (#ok()) { return #ok(bundle_id); };
+					case (#err(e)) {return #err(e);};
+				};
+			};
+			case (null) { return #err(#NotFound); };
+		};
+	};
+
+	public shared ({ caller }) func apply_bundle_section (bundle_id: Text, args : Types.DataPackageArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
+		switch (bundle_get(bundle_id)) {
+			case (?bundle) {
+				// transform into raw format
+				let blob_to_save = switch (Conversion.convert_to_blob(args.category, args.payload)) {
+					case (#ok(b)) {b;};
+					case (#err(e)) {return #err(e);};
+				};
+				// save into databucket
+				switch (await _apply_bundle_section(bundle, {
+					group = args.group;
+					category = args.category;
+					locale = args.locale;
+					payload = { value = blob_to_save; content_type = ?"application/json"; };
+					action = args.action;
+				})) {
+					// any post processing could be added here
+					case (#ok()) { return #ok(bundle_id); };
+					case (#err(e)) {return #err(e);};
+				};
 			};
 			case (null) { return #err(#NotFound); };
 		};
@@ -163,7 +237,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Init a store, creating a 1st data bucket
 	* Allowed only to the owner 
 	*/
-	public shared ({ caller }) func init_data_store (cycles : ?Nat) : async Result.Result<Text, Types.Errors> {
+	public shared ({ caller }) func init_data_store (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
 		if (not (caller == OWNER)) return #err(#AccessDenied);
         // reeturn active bucket in case data store already initialized
         if (Option.isSome(data_store.active_bucket)) return #ok(Utils.unwrap(data_store.active_bucket));
@@ -204,7 +278,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Init a store, creating a 1st data bucket
 	* Allowed only to the owner 
 	*/
-	public shared ({ caller }) func new_data_bucket (cycles : ?Nat) : async Result.Result<Text, Types.Errors> {
+	public shared ({ caller }) func new_data_bucket (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
 		if (not (caller == OWNER)) return #err(#AccessDenied);
         if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 
@@ -256,24 +330,14 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
-	private func _submit_data (root_path:Types.ResourcePath, replace_path:?Types.ResourcePath, name:Text, locale:?Text, payload : Types.DataPayload, 
-			options : Types.TransformOptions) : async Result.Result<Types.ResourcePath, Types.Errors> {
+	private func _submit_data (root_path:CommonTypes.ResourcePath, replace_path:?CommonTypes.ResourcePath, name:Text, locale:?Text, payload : Types.DataPayload) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
 		let bucket_actor : Types.Actor.DataBucketActor = actor (root_path.bucket_id);
-		// transform if needed
-		let blob_to_save = switch (options.transform) {
-			case (#Json) {
-				switch (JSON.toText(payload.value, Option.get(options.keys, []), null)){
-				case (#ok(j)) {Text.encodeUtf8(j); };
-				case (#err (e)) { return #err(#ActionFailed)};}				
-			};
-			case (#None) {payload.value;};
-		};
 		let res = switch (replace_path) {
 			case (?replace) {
-				await bucket_actor.replace_resource(replace.resource_id, blob_to_save);						
+				await bucket_actor.replace_resource(replace.resource_id, payload.value);						
 			};
 			case (null) {
-				await bucket_actor.store_resource(blob_to_save, {
+				await bucket_actor.store_resource(payload.value, {
 					content_type = payload.content_type;
 					name = name;
 					parent_id = ?root_path.resource_id;
@@ -281,7 +345,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				});
 			};
 		};
-				
 		switch (res) {
 			case (#ok(r)) {	#ok({locale=locale; url = r.url; bucket_id = r.partition; resource_id = r.id});	};
 			case (#err (e)) { return #err(#ActionFailed)};
@@ -302,12 +365,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				var out_html = "<html><head>"#DEF_CSS#"</head><body>" # "<h2>&#128464; Overview &#9757; </h2><hr/>";
 				switch (tag) {
 					case (?t) {
-						Debug.print("Searching Bundles for tag "#t); 
 						out_html:=out_html # "<h3>Bundles <span class=\"tag\">" # t # "</span></h3><div class=\"grid\">";
 						let n_tag = Utils.normalize_tag(t);
 						switch (tags2bundle_get(n_tag)) {
 							case (?bundle_ids) {
-								Debug.print("Bundles for tag. Bundles "#debug_show(bundle_ids)); 
 								for (id in List.toIter(bundle_ids)) {
 									switch (bundle_get(id)) {
             						case (null) { };
@@ -348,11 +409,11 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     	ignore Cycles.accept(amount);
   	};
 
-	public query func get_data_store() : async Types.DataStoreView {
-		return Utils.datastore_view(data_store);
+	public query func get_data_store() : async Conversion.DataStoreView {
+		return Conversion.convert_datastore_view(data_store);
 	};
 
-	public query func get_data_group (bundle_id: Text, group_id:Types.DataGroupId) : async Result.Result<Types.DataGroupView, Types.Errors> {
+	public query func get_data_group (bundle_id: Text, group_id:CommonTypes.DataGroupId) : async Result.Result<Conversion.DataGroupView, CommonTypes.Errors> {
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
 				let group_opt = switch (group_id) {
@@ -360,7 +421,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (#Additions) {bundle.payload.additions_group};
 				};
 				switch (group_opt) {
-					case (?g) { return #ok(Utils.datagroup_view(g));};
+					case (?g) { return #ok(Conversion.convert_datagroup_view(g));};
 					case (null) {return #err(#NotRegistered);};
 				};
 			};
@@ -391,7 +452,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     	Option.isSome(Array.find(operators, func (x: Principal) : Bool { x == id }))
     };
 
-	private func _apply_bundle_logo (bundle: Types.Bundle, logo : ?Types.DataPayload) : async Result.Result<(), Types.Errors> {
+	private func _apply_bundle_logo (bundle: Types.Bundle, logo : ?Types.DataPayload) : async Result.Result<(), CommonTypes.Errors> {
       	// account should be controlled by owner,                 
        	//  if (not (caller == bundle.owner)) return #err(#AccessDenied);		
 		let bucket_actor : Types.Actor.DataBucketActor = actor (bundle.data_path.bucket_id);				
@@ -405,7 +466,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						let logo_result = await bucket_actor.store_resource(logo_val.value, {
 							content_type = logo_val.content_type;
 							name = "logo";
-							parent_id = null; parent_path = null; ttl = null; read_only = null;}
+							parent_id = ?bundle.data_path.resource_id; parent_path = null; ttl = null; read_only = null;}
 						);
 						switch (logo_result) {
 							case (#ok(l_path)) {	
@@ -423,18 +484,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			};
 			case (null) {
 					// delete
-			switch (bundle.logo) {
-				case (?logo_path) { ignore await bucket_actor.delete_resource(logo_path.resource_id);};
-				// no errors, silently ignore if no logo uploaded
-				case (null) { }
-			}
+				switch (bundle.logo) {
+					case (?logo_path) { ignore await bucket_actor.delete_resource(logo_path.resource_id);};
+					// no errors, silently ignore if no logo uploaded
+					case (null) { }
+				}
 		};
 	}; 				
 	return #ok();
 
 	};
 
-    private func _register_bundle(args : Types.BundleArgs, owner : Types.Identity) : async Result.Result<Text, Types.Errors> {
+    private func _register_bundle(args : Types.BundleArgs, owner : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
         // validate tags
 		if (Array.size(args.tags) > MAX_TAGS) return #err(#InvalidRequest);
 		for (tag in args.tags.vals()) {
@@ -491,7 +552,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				// logo
 				switch (args.logo) {
 					case (?logo) {
-						let logo_result = await bucket_actor.store_resource(logo.value, {
+
+						ignore await _apply_bundle_logo(bundle, ?{value=logo.value; content_type=logo.content_type});
+						/*let logo_result = await bucket_actor.store_resource(logo.value, {
 							content_type = logo.content_type;
 							name = "logo";
 							parent_id = ?idUrl.id; parent_path = null; ttl = null; read_only = null;}
@@ -506,7 +569,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 								}
 							};
 							case (#err(_)) {};
-						};
+						};*/
 					};
 					case (null) { };
 				};				
@@ -613,12 +676,19 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		if (Option.isSome(r.logo)) {
 			resource_html := resource_html # "<img  src=\"" # (Utils.unwrap(r.logo)).url # "\" class=\"logo_details\">";
 		};
+		resource_html := resource_html # "<p><b>ID</b> : "# debug_show(id) # "</p>";
+		resource_html := resource_html # "<p><b>Root data path</b> : <a  href=\"" # r.data_path.url #"\" target = \"_blank\">"#r.data_path.url#"</a></p>";
+		resource_html := resource_html # "<p><b>Created</b> : <span class=\"js_date\">"# Int.toText(r.created) # "</span></p>";
+		resource_html := resource_html # "<p><b>Owner</b> : "# debug_show(r.owner) # "</p>";		
 		
 		switch (r.payload.poi_group) {
 			case (?poi) {
 				resource_html := resource_html # "<p><b>'POI' data group</b></p>";
-				resource_html := resource_html # "<div style=\"padding: 0 10px;\">created : <span class=\"js_date\">"# Int.toText(poi.created) # "</span></div>";
-				resource_html := resource_html # "<div style=\"padding: 0 10px;\">path : <a  href=\"" # poi.data_path.url #"\" target = \"_blank\">"#poi.data_path.url#"</a></div>";
+				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">created : <span class=\"js_date\">"# Int.toText(poi.created) # "</span></div>";
+				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">path : <a  href=\"" # poi.data_path.url #"\" target = \"_blank\">"#poi.data_path.url#"</a></div>";
+				if (Option.isSome(poi.readonly)) {
+					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(poi.readonly)) # "</span></div>";
+				}			
 			};
 			case (null) {resource_html := resource_html # "<p><b>'POI' data group</b> : --- / --- </p>";}
 		};
@@ -626,25 +696,24 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		switch (r.payload.additions_group) {
 			case (?add) {
 				resource_html := resource_html # "<p><b>'Additions' data group</b></p>";
-				resource_html := resource_html # "<div style=\"padding: 0 10px;\">created : <span class=\"js_date\">"# Int.toText(add.created) # "</span></div>";
-				resource_html := resource_html # "<div style=\"padding: 0 10px;\">path : <a  href=\"" # add.data_path.url #"\" target = \"_blank\">"#add.data_path.url#"</a></div>";
+				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">created : <span class=\"js_date\">"# Int.toText(add.created) # "</span></div>";
+				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">path : <a  href=\"" # add.data_path.url #"\" target = \"_blank\">"#add.data_path.url#"</a></div>";
+				if (Option.isSome(add.readonly)) {
+					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(add.readonly)) # "</span></div>";
+				}
 			};
 			case (null) {resource_html := resource_html # "<p><b>'Additions' data group</b> : --- / --- </p>";}
 		};
 
-
-		resource_html := resource_html # "<p><u>Created</u> : <span class=\"js_date\">"# Int.toText(r.created) # "</span></p>";
-		resource_html := resource_html # "<p><u>Owner</u> : "# debug_show(r.owner) # "</p>";
-
 		if (List.size(r.tags) > 0) {
 			let tags_fmt = Text.join("", List.toIter(List.map(r.tags, func (t : Text):Text {"<span class=\"tag\">"#t#"</span>";})));
-			resource_html := resource_html # "<p>"# tags_fmt # "</p>";
+			resource_html := resource_html # "<br/><p>"# tags_fmt # "</p>";
 		};		
 		
 		return  resource_html # "</div>";	
 	};
 
-	private func _apply_bundle_section (bundle: Types.Bundle, args : Types.DataPackageArgs, options : Types.TransformOptions) : async Result.Result<(), Types.Errors> {
+	private func _apply_bundle_section (bundle: Types.Bundle, args : Types.DataPackageRawArgs) : async Result.Result<(), CommonTypes.Errors> {
 		// assert the group is initialized
 		let data_group:Types.DataGroup = switch (await _assert_data_group(bundle, args.group)) {
 			case (#ok(g)){
@@ -656,92 +725,73 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (#err(_)) { return #err(#ActionFailed); };
 		};
 			// identify the section by category (it could be exteneded to identify the section by internal ID)
-		let target_section = List.find(data_group.sections , func (k:Types.DataSection):Bool { k.category == args.category});
-			// take into account the number of such files (counters)
-		let res_meta = Utils.resolve_resource_metadata(args.category, args.locale);
-
-		var replace_path:?Types.ResourcePath = null;
-		var active_upload :?Types.ChunkUploadAttempt = null;
-		if (Option.isSome(target_section)){
-			let sec = Utils.unwrap(target_section);
-			replace_path := List.find(sec.data , func (k:Types.ResourcePath):Bool { Option.get(k.locale, "") == Option.get(args.locale, "")});
-			active_upload := sec.active_upload;
+		// take into account the number of such files (counters)
+		let target_section =  switch (List.find(data_group.sections , func (k:Types.DataSection):Bool { k.category == args.category})) {
+			case (?sec){sec};
+			case (null) {
+				switch (await _init_data_section (data_group.data_path, args.category)) {
+					case (#ok(r_path)) {
+						let s : Types.DataSection = {
+							data_path = r_path;
+							category = args.category;
+							var data =  List.nil();
+							var active_upload = null;
+						};
+						data_group.sections:= List.push(s, data_group.sections)	;
+						s;				
+					};
+					case (#err(_)) { return #err(#ActionFailed); };
+				};
+			}
 		};
+
+		let replace_path:?CommonTypes.ResourcePath = List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool { Option.get(k.locale, "") == Option.get(args.locale, "")});
 		switch (args.action) {
 			// upload binary data till 2mb
 			case (#Upload) {
 				// active chunk upload has not completed yet
-				if (Option.isSome(active_upload)) return #err(#OperationNotAllowed);
+				if (Option.isSome(target_section.active_upload)) return #err(#OperationNotAllowed);
 				// resource_path
-				let section_path:Types.ResourcePath = switch (await _submit_data(data_group.data_path,replace_path,
-															 res_meta.0, args.locale, args.payload, options)) {
+				let section_path:CommonTypes.ResourcePath = switch (await _submit_data(target_section.data_path,
+						replace_path, Utils.resolve_resource_name(args.category, args.locale), args.locale, args.payload)) {
 					case (#ok(data)){ data; };
 					case (#err(_)) { return #err(#ActionFailed); };
 				};
-					// register a new section or update the existing section
-				switch (target_section) {
-					case (?section) { section.data:= List.push(section_path, section.data); };
-					case (null) {
-						data_group.sections:= List.push ({
-							category = args.category;
-							var data =  List.push(section_path, null);
-							var active_upload = null;
-						}:Types.DataSection, null);
-					};
-				};
+				//  update the existing section
+				target_section.data:= List.push(section_path, target_section.data);
 			};
 			case (#UploadChunk) {
-				let bucket_actor : Types.Actor.DataBucketActor = actor (data_group.data_path.bucket_id);
-				switch (active_upload) {
+				let bucket_actor : Types.Actor.DataBucketActor = actor (target_section.data_path.bucket_id);
+				switch (target_section.active_upload) {
 					case (?attempt) {ignore await bucket_actor.store_chunk(args.payload.value, ?attempt.binding_key);};
 					case (null) {
 						let binding_key = Utils.hash_time_based(bundle.data_path.resource_id, Int.abs(Time.now()));
-						active_upload:= ?{
+						target_section.active_upload:= ?{
 							binding_key=binding_key;
 							locale  = null;
 							created = Time.now();
 						};
 						ignore await bucket_actor.store_chunk(args.payload.value, ?binding_key);
-						switch (target_section) {
-							case (?section) {section.active_upload:= active_upload;	};
-							case (null) {
-								data_group.sections:= List.push ({
-									category = args.category;
-									var data =  List.nil();
-									var active_upload = active_upload;
-								}:Types.DataSection, null);
-							};
-						};								
 					};
 				}
 			};
 			case (#Package) {
-				let bucket_actor : Types.Actor.DataBucketActor = actor (data_group.data_path.bucket_id);
-				switch (active_upload) {
+				let bucket_actor : Types.Actor.DataBucketActor = actor (target_section.data_path.bucket_id);
+
+				switch (target_section.active_upload) {
 					case (?attempt) {
 						let res = await bucket_actor.commit_batch_by_key(attempt.binding_key, {
 							content_type = args.payload.content_type;
-							name = res_meta.0;
-							parent_id = ?bundle.data_path.resource_id;
+							name = Utils.resolve_resource_name(args.category, args.locale);
+							parent_id = ?target_section.data_path.resource_id;
 							parent_path = null; ttl = null; read_only = null;
 						});
-						let section_path:Types.ResourcePath = switch (res) {
+						let section_path:CommonTypes.ResourcePath = switch (res) {
 							case (#ok(r)) {{locale=args.locale; url = r.url; bucket_id = r.partition; resource_id = r.id};};
 							case (#err (e)) { return #err(#ActionFailed)};
 						};
-						switch (target_section) {
-							case (?section) {
-								section.data:= List.push(section_path, section.data);
-								section.active_upload:= null;
-							};
-							case (null) {
-								data_group.sections:= List.push ({
-									category = args.category;
-									var data =  List.push(section_path, null);
-									var active_upload = null;
-								}:Types.DataSection, null);
-							};
-						};																
+						target_section.data:= List.push(section_path, target_section.data);
+						target_section.active_upload:= null;						
 					};
 					case (null) { return #err(#OperationNotAllowed); };
 				}						
@@ -750,9 +800,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		return #ok();
 	};
 
-
-
-	private func _assert_data_group (bundle: Types.Bundle, group_id:Types.DataGroupId) : async Result.Result<Types.DataGroupId, Types.Errors> {
+	private func _assert_data_group (bundle: Types.Bundle, group_id:CommonTypes.DataGroupId) : async Result.Result<CommonTypes.DataGroupId, CommonTypes.Errors> {
 		// init group if needed
 		let data_group:Types.DataGroup = switch (group_id) {
 			case (#POI) {
@@ -761,7 +809,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) {
 						let poi_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #POI)) {
 							case (#ok(r_path)) {
-								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now()};
+								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null;};
 								bundle.payload.poi_group := ?g;
 								g;
 							};
@@ -776,7 +824,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) {
 						let additions_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #Additions)) {
 							case (#ok(r_path)) {
-								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now()};
+								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null;};
 								bundle.payload.additions_group := ?g;
 								g;
 							};
@@ -789,7 +837,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		#ok(group_id);
 	};
 
-	private func _init_data_group (root_path : Types.ResourcePath, group_id : Types.DataGroupId) : async Result.Result<Types.ResourcePath, Types.Errors> {
+	private func _init_data_group (root_path : CommonTypes.ResourcePath, group_id : CommonTypes.DataGroupId) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
 		let bucket_actor : Types.Actor.DataBucketActor = actor (root_path.bucket_id);
 		let res = await bucket_actor.new_directory(false, {
 			content_type = null;
@@ -799,7 +847,22 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			ttl = null;
 			read_only = null;
 		});
+		switch (res) {
+			case (#ok(r)) {	#ok({locale=null; url = r.url; bucket_id = r.partition; resource_id = r.id});	};
+			case (#err (e)) { return #err(#ActionFailed)};
+		};
+	};
 
+	private func _init_data_section (root_path : CommonTypes.ResourcePath, category : CommonTypes.ItemCategory) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
+		let bucket_actor : Types.Actor.DataBucketActor = actor (root_path.bucket_id);
+		let res = await bucket_actor.new_directory(false, {
+			content_type = null;
+			name =  Utils.resolve_category_name(category);
+			parent_path = null;
+			parent_id = ?root_path.resource_id;
+			ttl = null;
+			read_only = null;
+		});
 		switch (res) {
 			case (#ok(r)) {	#ok({locale=null; url = r.url; bucket_id = r.partition; resource_id = r.id});	};
 			case (#err (e)) { return #err(#ActionFailed)};

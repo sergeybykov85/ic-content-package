@@ -6,36 +6,9 @@ import Time "mo:base/Time";
 import List "mo:base/List";
 import Blob "mo:base/Blob";
 
+import CommonTypes "./CommonTypes";
+
 module {
-
-	public type AccessList = {owner : Principal; operators : [Principal]};
-
-	public type Location = {country_code2:Text; region:?Text; city:?Text; coordinates:?Coordinates};
-
-	public type Coordinates = {latitude : Float; longitude : Float};
-	//public type LocationText = {latitude : Text; longitude : Text};
-	public type Attribute = {trait_type:Text; value:Text;};
-	public type ResourcePath = {locale:?Text; url : Text; bucket_id:Text; resource_id: Text;};
-
-	public type IdentityType = {
-		#ICP;
-		#EvmChain; 
-	};
-
-	public type Identity = {
-		identity_type : IdentityType;
-		identity_id : Text;
-	};
-
-	public type IdentityAccess = {
-		identity : Identity;
-	};
-
-
-	public type NameValue = {
-		name : Text;
-		value : Text;
-	};
 
 	public type RequestedObject = {
 		id : Text;
@@ -43,7 +16,6 @@ module {
 		route : Route;
 		tag : ?Text;
 	};	
-
 
 	public type Route = {
 		#Bundle;
@@ -55,7 +27,6 @@ module {
 		#Index;     // index, names could be used as a part of browser url
 		#Open;      // references to the resource by its hash
 	};
-		
 
 	public type DataStore = {
 		var buckets : List.List<Text>;
@@ -112,24 +83,6 @@ module {
 		#Package;
 	};
 
-	public type DataGroupId = {
-		#POI;
-		#Additions;
-	};
-
-	public type ItemCategory = {
-		#General;
-		#About;
-		#AudioGuide;
-		#Music;
-		#Video;
-		#Image;
-		#Article;
-		#Document;
-		#AR;
-		#Sundry;
-	};
-
 	public type DataPayload = {
 		value : Blob;
 		content_type : ?Text;
@@ -143,52 +96,20 @@ module {
 	};
 
 	public type DataSection = {
-		category : ItemCategory;
-		var data: List.List<ResourcePath>;
+		data_path : CommonTypes.ResourcePath;
+		category : CommonTypes.ItemCategory;
+		var data: List.List<CommonTypes.ResourcePath>;
 		var active_upload : ?ChunkUploadAttempt;
-	};
-
-	public type DataSectionView = {
-		category : ItemCategory;
-		data: [ResourcePath];
-	};	
-
-	// represents a single resource (POI or an Addition object)
-	public type DataItem = {
-		// name for internal management.
-		var name : Text;
-		var location: ?Location;
-		// various sections. They might be filled depending on the category
-		var data : ResourcePath;
-		var sections: List.List<DataSection>;
-		owner : Identity;
-		created : Time.Time;
-
-	};
-
-	public type DataItemView = {
-		// name for internal management.
-		name : Text;
-		location: ?Location;
-		data : ResourcePath;
-		sections: [DataSectionView];
-		owner : Identity;
-		created : Time.Time;
 	};
 
 	// represents a space for logically grouped sections
 	public type DataGroup = {
 		// name for internal management.
-		data_path : ResourcePath;
+		data_path : CommonTypes.ResourcePath;
 		var sections: List.List<DataSection>;
+		var readonly : ?Nat;
 		created : Time.Time;
 	};
-
-	public type DataGroupView = {
-		// name for internal management.
-		data_path : ResourcePath;
-		sections: [DataSectionView];
-	};		
 
 	public type BundlePayload = {
 		var poi_group : ?DataGroup;
@@ -197,16 +118,15 @@ module {
 
 	public type Bundle = {
 		// path to the root data partition
-		data_path : ResourcePath;
+		data_path : CommonTypes.ResourcePath;
 		var name : Text;
 		var description : Text;
 		// simple light weigh logo
-		var logo : ?ResourcePath;
+		var logo : ?CommonTypes.ResourcePath;
 		var tags : List.List<Text>;
 		// payload
 		var payload : BundlePayload;
-		owner : Identity;
-		
+		owner : CommonTypes.Identity;
 		created : Time.Time;
 	};
 
@@ -217,22 +137,24 @@ module {
 		tags : [Text];
 	};
 
-	public type TransformType = {
-		#Json;
-		// not needed
-		#None;
+	public type DataFreezeArgs = {
+		groups : [CommonTypes.DataGroupId];
+		period_sec : ?Nat
 	};
 
-	public type TransformOptions = {
-		keys : ?[Text];
-		transform : TransformType;
+	public type DataPackageRawArgs = {
+		group: CommonTypes.DataGroupId;
+		category : CommonTypes.ItemCategory;
+		locale : ?Text;
+		payload : DataPayload;
+		action : DataPackageAction;
 	};	
 
 	public type DataPackageArgs = {
-		group: DataGroupId;
-		category : ItemCategory;
+		group: CommonTypes.DataGroupId;
+		category : CommonTypes.ItemCategory;
 		locale : ?Text;
-		payload : DataPayload;
+		payload : CommonTypes.Serialization.StructureArgs;
 		action : DataPackageAction;
 	};	
 
@@ -253,7 +175,6 @@ module {
 		bucket_cycles : ?Nat;
 	};
 
-
 	// BundlePackage metadata
 	public type BundlePackageMetadata = {
 		id : Principal;
@@ -263,28 +184,6 @@ module {
 		owner : Principal;
 		created : Time.Time;
 	};
-
-	
-	public type Errors = {
-		// data store is not initialized
-		#DataStoreNotInitialized;
-		// no resource or no chunk
-		#NotFound;
-		// record already registered
-		#DuplicateRecord;
-		// action not allowed by the logic or constraints
-        #OperationNotAllowed;
-        // not registered
-        #NotRegistered;
-		// when input argument contains wrong value
-		#InvalidRequest;
-        // exceeded allowed items
-        #ExceededAllowedLimit;	
-		// not authorized to manage certain object
-		#AccessDenied;
-		// no resource or no chunk
-		#ActionFailed;	
-    };
 
 	/**
 	Module to inter-canister calls
@@ -324,14 +223,15 @@ module {
    	 	};
 
 		public type DataBucketActor = actor {
-			new_directory : shared (break_on_duplicate:Bool, args : ResourceArgs) -> async Result.Result<IdUrl, Errors>;
-			apply_html_resource_template : shared (template : ?Text) -> async Result.Result<(), Errors>;
-			apply_cleanup_period : shared (seconds : Nat) -> async Result.Result<(), Errors>;
-			store_resource : shared (content : Blob, resource_args : ResourceArgs ) -> async Result.Result<IdUrl, Errors>;
-			replace_resource : shared (id :Text, content : Blob) -> async Result.Result<IdUrl, Errors>;
-			delete_resource : shared (id : Text) -> async Result.Result<IdUrl, Errors>;
-			store_chunk : shared (content : Blob, binding_key : ?Text) -> async Result.Result<Text, Errors>;
-			commit_batch_by_key : shared (binding_key : Text, resource_args : ResourceArgs) -> async Result.Result<IdUrl, Errors>;		
+			new_directory : shared (break_on_duplicate:Bool, args : ResourceArgs) -> async Result.Result<IdUrl, CommonTypes.Errors>;
+			apply_html_resource_template : shared (template : ?Text) -> async Result.Result<(), CommonTypes.Errors>;
+			apply_cleanup_period : shared (seconds : Nat) -> async Result.Result<(), CommonTypes.Errors>;
+			store_resource : shared (content : Blob, resource_args : ResourceArgs ) -> async Result.Result<IdUrl, CommonTypes.Errors>;
+			replace_resource : shared (id :Text, content : Blob) -> async Result.Result<IdUrl, CommonTypes.Errors>;
+			delete_resource : shared (id : Text) -> async Result.Result<IdUrl, CommonTypes.Errors>;
+			readonly_resource : shared (id : Text, read_only : ?Nat) -> async Result.Result<IdUrl, CommonTypes.Errors>;
+			store_chunk : shared (content : Blob, binding_key : ?Text) -> async Result.Result<Text, CommonTypes.Errors>;
+			commit_batch_by_key : shared (binding_key : Text, resource_args : ResourceArgs) -> async Result.Result<IdUrl, CommonTypes.Errors>;		
 		};
 
     	public type ICManagementActor = actor {
@@ -349,32 +249,5 @@ module {
     	};		
 	};
 	///
-
-	/**
-	Module to represents json objects
-	*/
-	public module Serialization {
-		public let POI_GENERAL_FIELDS = ["name", "value", "category", "location", "latitude", "longitude", "attributes", "owner", "country_code2", "region", "city", "coordinates"];
-		public let POI_ABOUT_FIELDS = ["name", "value", "attributes", "locale", "short_description", "description"];
-		public type POIArgs = {
-			general : POIGeneralJson;
-			about : ?[ItemAboutDataJson];
-		};	
-		public type POIGeneralJson = {
-			name : Text;
-			location: Location;
-			attributes : [NameValue];
-		};
-
-		public type ItemAboutDataJson = {
-			name : Text;
-			short_description : ?Text;
-			description : Text;
-			locale : Text;
-			attributes : [NameValue];
-		};	
-	};
-	///	
-
 
 };

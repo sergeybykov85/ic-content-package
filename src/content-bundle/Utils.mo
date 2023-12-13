@@ -18,12 +18,14 @@ import List "mo:base/List";
 import Option "mo:base/Option";
 
 import Types "./Types";
+import CommonTypes "./CommonTypes";
 import SHA256 "mo:motoko-sha/SHA256";
 
 module {
     public let VERSION = "0.1";
     public let FORMAT_DATES_SCRIPT = "<script>let dates = document.getElementsByClassName(\"js_date\"); for (let i=0; i<dates.length; i++) { dates[i].innerHTML = (new Date(dates[i].textContent/1000000).toLocaleString()); } </script>";    
     public let DEF_BUCKET_CYCLES:Nat = 9_000_000_000;
+
 
     public let ROOT = "/";
 
@@ -220,62 +222,41 @@ module {
     	Buffer.toArray(res);
     };
 
-    public func resolve_resource_metadata (category: Types.ItemCategory, locale: ?Text) : (Text, ?[Text], Types.TransformType) {
+    public func resolve_resource_name (category: CommonTypes.ItemCategory, locale: ?Text) : Text {
         let prefix = switch (locale) {
             case (?l) {l#"_"};
             case (null) {""};
         };       
         switch (category) {
-            case (#General) { (prefix#"general.json", ?Types.Serialization.POI_GENERAL_FIELDS, #Json);};
-            case (#About) { (prefix#"about.json", ?Types.Serialization.POI_ABOUT_FIELDS, #Json);};
-            case (#AudioGuide) { (prefix#"audio_guide", null, #None);};
-            case (#Video) { (prefix#"video", null, #None);};
-            case (_) { (prefix#"other", null, #None);};
+            case (#General) { prefix#"general.json";};
+            case (#About) { prefix#"about.json";};
+            case (#AudioGuide) { prefix#"audio_guide";};
+            case (#Music) { prefix#"music";};
+            case (#Video) { prefix#"video";};
+            case (_) { prefix#"other";};
         };
     };
 
-    public func resolve_group_name (group_id: Types.DataGroupId) : (Text) {
-        switch (group_id) {
+    public func resolve_group_name (group: CommonTypes.DataGroupId) : (Text) {
+        switch (group) {
             case (#POI) { "poi"};
             case (#Additions) {"additions"};
         };
-    };    
-
-    public func datastore_view (info: Types.DataStore) : Types.DataStoreView {
-        return {
-            buckets = List.toArray(info.buckets);
-            active_bucket = Option.get(info.active_bucket,"");
-			last_update = Option.get(info.last_update,0);
-        };
-    };
-
-    public func dataitem_view (info: Types.DataItem) : Types.DataItemView {
- 
-        return {
-            name = info.name;
-            location = info.location;
-            data = info.data;
-            sections = List.toArray(List.map(info.sections, func (s : Types.DataSection):Types.DataSectionView {
-		    {
-				category = s.category;
-				data = List.toArray(s.data);
-		    };
-		    }));
-            owner = info.owner;
-			created = info.created;
-        };
     }; 
 
-    public func datagroup_view (info: Types.DataGroup) : Types.DataGroupView {
-        return {
-            data_path = info.data_path;
-            sections = List.toArray(List.map(info.sections, func (s : Types.DataSection):Types.DataSectionView {
-		    {
-				category = s.category;
-				data = List.toArray(s.data);
-		    };
-		    }));
+    public func resolve_category_name (category: CommonTypes.ItemCategory) : (Text) {
+        switch (category) {
+            case (#General) { "general"};
+            case (#About) {"about"};
+            case (#AudioGuide) {"audio_guide"};
+            case (#Music) {"music"};
+            case (#Video) {"video"};
+            case (#Image) {"gallery"};
+            case (#Article) {"article"};
+            case (#Document) {"doc"};
+            case (#AR) {"ar"};
+            case (#Sundry) {"sundry"};
         };
-    };       
+    };      
 
 };
