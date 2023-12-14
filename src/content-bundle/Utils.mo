@@ -17,9 +17,10 @@ import Buffer "mo:base/Buffer";
 import List "mo:base/List";
 import Option "mo:base/Option";
 
-import Types "./Types";
-import CommonTypes "./CommonTypes";
 import SHA256 "mo:motoko-sha/SHA256";
+
+import CommonTypes "../shared/CommonTypes";
+import Types "./Types";
 
 module {
     public let VERSION = "0.1";
@@ -222,18 +223,33 @@ module {
     	Buffer.toArray(res);
     };
 
-    public func resolve_resource_name (category: CommonTypes.ItemCategory, locale: ?Text) : Text {
-        let prefix = switch (locale) {
-            case (?l) {l#"_"};
+	public func identity_equals (identity1: CommonTypes.Identity, identity2: CommonTypes.Identity) : Bool {
+		return (identity1.identity_type == identity2.identity_type
+		and identity1.identity_id == identity2.identity_id);
+	};    
+
+    public func resolve_resource_name (category: CommonTypes.ItemCategory, locale: ?Text, salt:?Text) : Text {
+        var suffix = switch (locale) {
+            case (?loc) {"_"#loc};
             case (null) {""};
-        };       
+        };
+        suffix:= switch (salt) {
+            case (?s) { 
+                if (suffix == "") {"_"#s;}
+                else {suffix#"_"#s;} };
+            case (null) {suffix;}
+        };
+
         switch (category) {
-            case (#General) { prefix#"general.json";};
-            case (#About) { prefix#"about.json";};
-            case (#AudioGuide) { prefix#"audio_guide";};
-            case (#Music) { prefix#"music";};
-            case (#Video) { prefix#"video";};
-            case (_) { prefix#"other";};
+            case (#General) { "general"#suffix#".json";};
+            case (#About) { "about"#suffix#".json";};
+            case (#AudioGuide) { "audio_guide"#suffix;};
+            case (#Music) { "track"#suffix;};
+            case (#Video) { "video"#suffix;};
+            case (#Image) { "img"#suffix;};
+            case (#Article) { "index"#suffix#".html";};     
+            case (#Document) { "file"#suffix;};
+            case (_) { "res"#suffix;};
         };
     };
 

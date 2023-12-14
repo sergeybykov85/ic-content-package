@@ -6,7 +6,7 @@ import Time "mo:base/Time";
 import List "mo:base/List";
 import Blob "mo:base/Blob";
 
-import CommonTypes "./CommonTypes";
+import CommonTypes "../shared/CommonTypes";
 
 module {
 
@@ -100,6 +100,7 @@ module {
 		category : CommonTypes.ItemCategory;
 		var data: List.List<CommonTypes.ResourcePath>;
 		var active_upload : ?ChunkUploadAttempt;
+		var counter: Nat;
 	};
 
 	// represents a space for logically grouped sections
@@ -142,21 +143,18 @@ module {
 		period_sec : ?Nat
 	};
 
-	public type DataPackageRawArgs = {
+	public type DataRequest<T> = {
 		group: CommonTypes.DataGroupId;
 		category : CommonTypes.ItemCategory;
+		name : ?Text;
 		locale : ?Text;
-		payload : DataPayload;
+		payload : T;
 		action : DataPackageAction;
-	};	
+	};
 
-	public type DataPackageArgs = {
-		group: CommonTypes.DataGroupId;
-		category : CommonTypes.ItemCategory;
-		locale : ?Text;
-		payload : CommonTypes.Serialization.StructureArgs;
-		action : DataPackageAction;
-	};	
+	public type DataPackageRawArgs = DataRequest<DataPayload>;
+
+	public type DataPackageArgs = DataRequest<CommonTypes.Serialization.StructureArgs>;
 
 	public type BundleUpdateArgs = {
 		name : ?Text;

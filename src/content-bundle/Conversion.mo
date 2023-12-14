@@ -8,7 +8,7 @@ import { JSON; Candid } "mo:serde";
 import Result "mo:base/Result";
 
 import Types "./Types";
-import CommonTypes "./CommonTypes";
+import CommonTypes "../shared/CommonTypes";
 
 
 module {
@@ -31,7 +31,6 @@ module {
 		sections: [DataSectionView];
 		readonly : ?Nat;
 	};	
-
 
     public func convert_datagroup_view (info: Types.DataGroup) : DataGroupView {
         return {
