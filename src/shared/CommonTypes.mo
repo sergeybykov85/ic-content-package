@@ -36,11 +36,11 @@ module {
 		#Additions;
 	};	
 
-	public type ItemCategory = {
+	public type CategoryId = {
 		#General;
 		#About;
 		#AudioGuide;
-		#Music;
+		#Audio;
 		#Video;
 		#Image;
 		#Article;

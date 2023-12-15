@@ -97,7 +97,7 @@ module {
 
 	public type DataSection = {
 		data_path : CommonTypes.ResourcePath;
-		category : CommonTypes.ItemCategory;
+		category : CommonTypes.CategoryId;
 		var data: List.List<CommonTypes.ResourcePath>;
 		var active_upload : ?ChunkUploadAttempt;
 		var counter: Nat;
@@ -109,6 +109,7 @@ module {
 		data_path : CommonTypes.ResourcePath;
 		var sections: List.List<DataSection>;
 		var readonly : ?Nat;
+		var access_list : List.List<CommonTypes.Identity>;
 		created : Time.Time;
 	};
 
@@ -128,6 +129,8 @@ module {
 		// payload
 		var payload : BundlePayload;
 		owner : CommonTypes.Identity;
+		// modifications! query is available for all, forever
+		var access_list : List.List<CommonTypes.Identity>;
 		created : Time.Time;
 	};
 
@@ -143,9 +146,16 @@ module {
 		period_sec : ?Nat
 	};
 
+	public type DataAccessListArgs = {
+		// if not specified, then apply on the bucket
+		group : ?CommonTypes.DataGroupId;
+		// list to apply
+		access_list : [CommonTypes.Identity];
+	};
+
 	public type DataRequest<T> = {
 		group: CommonTypes.DataGroupId;
-		category : CommonTypes.ItemCategory;
+		category : CommonTypes.CategoryId;
 		name : ?Text;
 		locale : ?Text;
 		payload : T;

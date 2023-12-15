@@ -21,7 +21,7 @@ module {
 
 	public type DataSectionView = {
 		data_path : CommonTypes.ResourcePath;
-		category : CommonTypes.ItemCategory;
+		category : CommonTypes.CategoryId;
 		data: [CommonTypes.ResourcePath];
 	};
 
@@ -54,7 +54,7 @@ module {
         };
     };		
 
-	public func convert_to_blob (category: CommonTypes.ItemCategory, args : CommonTypes.Serialization.StructureArgs) : Result.Result<Blob, CommonTypes.Errors> {
+	public func convert_to_blob (category: CommonTypes.CategoryId, args : CommonTypes.Serialization.StructureArgs) : Result.Result<Blob, CommonTypes.Errors> {
 		let blob_to_save = switch (category) {
 			case (#General) {
 				switch (args.general) {

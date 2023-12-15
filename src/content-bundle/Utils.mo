@@ -228,7 +228,7 @@ module {
 		and identity1.identity_id == identity2.identity_id);
 	};    
 
-    public func resolve_resource_name (category: CommonTypes.ItemCategory, locale: ?Text, salt:?Text) : Text {
+    public func resolve_resource_name (category: CommonTypes.CategoryId, locale: ?Text, salt:?Text) : Text {
         var suffix = switch (locale) {
             case (?loc) {"_"#loc};
             case (null) {""};
@@ -244,7 +244,7 @@ module {
             case (#General) { "general"#suffix#".json";};
             case (#About) { "about"#suffix#".json";};
             case (#AudioGuide) { "audio_guide"#suffix;};
-            case (#Music) { "track"#suffix;};
+            case (#Audio) { "track"#suffix;};
             case (#Video) { "video"#suffix;};
             case (#Image) { "img"#suffix;};
             case (#Article) { "index"#suffix#".html";};     
@@ -260,12 +260,12 @@ module {
         };
     }; 
 
-    public func resolve_category_name (category: CommonTypes.ItemCategory) : (Text) {
+    public func resolve_category_name (category: CommonTypes.CategoryId) : (Text) {
         switch (category) {
             case (#General) { "general"};
             case (#About) {"about"};
             case (#AudioGuide) {"audio_guide"};
-            case (#Music) {"music"};
+            case (#Audio) {"audio"};
             case (#Video) {"video"};
             case (#Image) {"gallery"};
             case (#Article) {"article"};

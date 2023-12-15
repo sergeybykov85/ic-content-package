@@ -29,6 +29,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 	let MAX_TAGS = 5;
 	let DEF_CSS =  "<style>" # Utils.DEF_BODY_STYLE #
+	".grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } "#
 	".grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; } "#
 	".grid_details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } "#
 	".logo { max-height:200px; margin: 1em auto; display:block; } .logo_details { max-height:300px; margin: 1em auto; display:block; } "#
@@ -105,7 +106,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (?bundle) {
             	// account should be controlled by owner,
 				let identity = _build_identity(caller); 
-				if (not Utils.identity_equals(identity, bundle.owner)) return #err(#AccessDenied);         
+				if (not _access_allowed (bundle, identity, null)) return #err(#AccessDenied);
 				if (Option.isSome(args.name)) {
 					bundle.name:= Utils.unwrap(args.name);
 				};                
@@ -148,12 +149,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	public shared ({ caller }) func apply_bundle_logo (id: Text, logo : ?Types.DataPayload) : async Result.Result<Text, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
 			case (?bundle) {
-				Debug.print("apply_bundle_logo "#debug_show(id));
-
-				if (not Utils.identity_equals(_build_identity(caller), bundle.owner)) { 
-					Debug.print("apply_bundle_logo returns ACCESS denied "#debug_show(id)# "; owner "#debug_show(bundle.owner)#"\n caller "#debug_show(_build_identity(caller)));
-					return #err(#AccessDenied); 	
-				};		
+				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
 				ignore await _apply_bundle_logo(bundle, logo);
 				return #ok(id);
 			};
@@ -161,11 +157,45 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
+	/**
+	* Apply logo for the bundle item. If not specified, then the existing logo is removed
+	* Allowed only to the owner of the bundle.
+	*/
+	public shared ({ caller }) func apply_access_list (id: Text, args : Types.DataAccessListArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		switch (bundle_get(id)) {
+			case (?bundle) {
+				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
+
+				switch (args.group) {
+					// apply on the group level
+					case (?group_val) {
+					// init group if not initialized yet
+						let data_group:Types.DataGroup = switch (await _assert_data_group(bundle, group_val)) {
+						case (#ok(g)){
+							switch (g) {
+								case (#POI) {Utils.unwrap(bundle.payload.poi_group)};
+								case (#Additions) {Utils.unwrap(bundle.payload.additions_group)};
+							}
+						};
+						case (#err(_)) { return #err(#ActionFailed); };
+						};
+						data_group.access_list:= List.fromArray(args.access_list);	
+					};
+					// apply on the bundle level
+					case (null) { bundle.access_list:= List.fromArray(args.access_list) };
+				};
+				return #ok(id);
+			};
+			case (null) { return #err(#NotFound); };
+		};
+	};	
+
 	public shared ({ caller }) func freeze_bundle (id: Text, args: Types.DataFreezeArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		Debug.print("freeze_bundle "#debug_show(id)#" readonly "#debug_show(args.period_sec) # " for groups "#debug_show(args.groups));
 		switch (bundle_get(id)) {
 			case (?bundle) {
-				//if (not Utils.identity_equals(_build_identity(caller), bundle.owner)) return #err(#AccessDenied); 				
+				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
+
 				for (group in args.groups.vals()) {
 					// if group is not initialized --> no errors
 					let data_group_opt = switch (group) {
@@ -202,7 +232,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
-				if (not Utils.identity_equals(_build_identity(caller), bundle.owner)) return #err(#AccessDenied); 				
+				Debug.print("apply_bundle_section_raw "#debug_show(bundle_id)#debug_show(args.group)#"; category "#debug_show(args.category)#"; name "#debug_show(args.name));		
+						
+				if (not _access_allowed (bundle, _build_identity(caller), ?args.group)) return #err(#AccessDenied);				
 
 				// transformation is not needed
 				switch (await _apply_bundle_section(bundle, args)) {
@@ -219,7 +251,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
-				if (not Utils.identity_equals(_build_identity(caller), bundle.owner)) return #err(#AccessDenied); 				
+				if (not _access_allowed (bundle, _build_identity(caller), ?args.group)) return #err(#AccessDenied); 				
 
 				// transform into raw format
 				let blob_to_save = switch (Conversion.convert_to_blob(args.category, args.payload)) {
@@ -556,6 +588,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					};
             		owner = owner;
             		created = Time.now();
+					var access_list = List.nil();
         		};
         		// put into store memory
         		bundles := Trie.put(bundles, Utils.text_key(bundle_id), Text.equal, bundle).0;
@@ -684,7 +717,15 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">path : <a  href=\"" # poi.data_path.url #"\" target = \"_blank\">"#poi.data_path.url#"</a></div>";
 				if (Option.isSome(poi.readonly)) {
 					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(poi.readonly)) # "</span></div>";
-				}			
+				};
+				// render sections
+				if (not List.isNil(poi.sections)){
+					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">sections :";
+					for (section in List.toIter(poi.sections)) {
+						resource_html := resource_html # "<span style=\"padding: 0 10px;\"><i>" # debug_show(section.category) #"</i></span>";
+					};
+					resource_html := resource_html # "</div>";	
+				};					
 			};
 			case (null) {resource_html := resource_html # "<p><b>'POI' data group</b> : --- / --- </p>";}
 		};
@@ -696,7 +737,15 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">path : <a  href=\"" # add.data_path.url #"\" target = \"_blank\">"#add.data_path.url#"</a></div>";
 				if (Option.isSome(add.readonly)) {
 					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(add.readonly)) # "</span></div>";
-				}
+				};
+				// render sections
+				if (not List.isNil(add.sections)){
+					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">sections :";
+					for (section in List.toIter(add.sections)) {
+						resource_html := resource_html # "<span style=\"padding: 0 10px;\"><i>" # debug_show(section.category) #"</i></span>";
+					};
+					resource_html := resource_html # "</div>";	
+				};			
 			};
 			case (null) {resource_html := resource_html # "<p><b>'Additions' data group</b> : --- / --- </p>";}
 		};
@@ -720,6 +769,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			};
 			case (#err(_)) { return #err(#ActionFailed); };
 		};
+		Debug.print("_apply_bundle_section : group "#debug_show(args.group)#"; category "#debug_show(args.category)#"; name "#debug_show(args.name));
 
 		// identify the section by category (it could be exteneded to identify the section by internal ID)
 		// take into account the number of such files (counters)
@@ -821,7 +871,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) {
 						let poi_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #POI)) {
 							case (#ok(r_path)) {
-								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null;};
+								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil();};
 								bundle.payload.poi_group := ?g;
 								g;
 							};
@@ -836,7 +886,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) {
 						let additions_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #Additions)) {
 							case (#ok(r_path)) {
-								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null;};
+								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil();};
 								bundle.payload.additions_group := ?g;
 								g;
 							};
@@ -865,7 +915,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
-	private func _init_data_section (root_path : CommonTypes.ResourcePath, category : CommonTypes.ItemCategory) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
+	private func _init_data_section (root_path : CommonTypes.ResourcePath, category : CommonTypes.CategoryId) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
 		let bucket_actor : Types.Actor.DataBucketActor = actor (root_path.bucket_id);
 		let res = await bucket_actor.new_directory(false, {
 			content_type = null;
@@ -889,6 +939,32 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			identity_type = #ICP;
 			identity_id = Principal.toText(caller);
 		};
+	};
+
+	private func _access_allowed (bundle:Types.Bundle, identity: CommonTypes.Identity, group: ?CommonTypes.DataGroupId): Bool {
+			switch (group) {
+				// check based on the specified group
+				case (?g) {
+					let group_opt = switch (g) {
+						case (#POI) {bundle.payload.poi_group;};
+						case (#Additions) {bundle.payload.additions_group;}
+					};
+					// if group present --> check access_list, else compare with owner
+					switch (group_opt) {
+						// check on group
+						case (?group_obj) {
+							Option.isSome(List.find(group_obj.access_list , func (k:CommonTypes.Identity):Bool { Utils.identity_equals(identity, k)}))
+						};
+						// // check on bundle
+						case (null) { Utils.identity_equals(identity, bundle.owner) };
+					};
+				};
+				// check based on bundle level only
+				case (null) { 
+					if (not List.isNil(bundle.access_list)) {
+						Option.isSome(List.find(bundle.access_list , func (k:CommonTypes.Identity):Bool { Utils.identity_equals(identity, k)}))
+					} else Utils.identity_equals(identity, bundle.owner); }
+			};
 	};
 
 	private func _register_bucket(name:Text, operators : [Principal], cycles : Nat): async Text {
