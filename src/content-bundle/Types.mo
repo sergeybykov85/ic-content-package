@@ -128,7 +128,8 @@ module {
 		var tags : List.List<Text>;
 		// payload
 		var payload : BundlePayload;
-		owner : CommonTypes.Identity;
+		creator : CommonTypes.Identity;
+		var owner : CommonTypes.Identity;
 		// modifications! query is available for all, forever
 		var access_list : List.List<CommonTypes.Identity>;
 		created : Time.Time;
@@ -145,6 +146,11 @@ module {
 		groups : [CommonTypes.DataGroupId];
 		period_sec : ?Nat
 	};
+
+	public type DataPathArgs = {
+		group : CommonTypes.DataGroupId;
+		category : ?CommonTypes.CategoryId;
+	};	
 
 	public type DataAccessListArgs = {
 		// if not specified, then apply on the bucket

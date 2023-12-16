@@ -42,7 +42,7 @@ module {
 		#AudioGuide;
 		#Audio;
 		#Video;
-		#Image;
+		#Gallery;
 		#Article;
 		#Document;
 		#AR;

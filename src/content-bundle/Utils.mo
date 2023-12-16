@@ -246,7 +246,7 @@ module {
             case (#AudioGuide) { "audio_guide"#suffix;};
             case (#Audio) { "track"#suffix;};
             case (#Video) { "video"#suffix;};
-            case (#Image) { "img"#suffix;};
+            case (#Gallery) { "img"#suffix;};
             case (#Article) { "index"#suffix#".html";};     
             case (#Document) { "file"#suffix;};
             case (_) { "res"#suffix;};
@@ -267,7 +267,7 @@ module {
             case (#AudioGuide) {"audio_guide"};
             case (#Audio) {"audio"};
             case (#Video) {"video"};
-            case (#Image) {"gallery"};
+            case (#Gallery) {"gallery"};
             case (#Article) {"article"};
             case (#Document) {"doc"};
             case (#AR) {"ar"};
