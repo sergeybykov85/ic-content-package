@@ -24,13 +24,13 @@ import Types "./Types";
 
 module {
     public let VERSION = "0.1";
-    public let FORMAT_DATES_SCRIPT = "<script>let dates = document.getElementsByClassName(\"js_date\"); for (let i=0; i<dates.length; i++) { dates[i].innerHTML = (new Date(dates[i].textContent/1000000).toLocaleString()); } </script>";    
+   // public let FORMAT_DATES_SCRIPT = "<script>let dates = document.getElementsByClassName(\"js_date\"); for (let i=0; i<dates.length; i++) { dates[i].innerHTML = (new Date(dates[i].textContent/1000000).toLocaleString()); } </script>";    
     public let DEF_BUCKET_CYCLES:Nat = 9_000_000_000;
 
 
     public let ROOT = "/";
 
-    public let DEF_BODY_STYLE = " a { text-decoration: underscore; color:#090909; } body { background-color: #FFFDE7; color:#090909; font-family: helvetica; }";
+  //  public let DEF_BODY_STYLE = " a { text-decoration: underscore; color:#090909; } body { background-color: #FFFDE7; color:#090909; font-family: helvetica; }";
 
     let HEX_SYMBOLS =  [
     '0', '1', '2', '3', '4', '5', '6', '7',
@@ -97,10 +97,18 @@ module {
 
     public func normalize_tag (token : Text) : Text {
         let x = Text.map(token , Prim.charToLower);
+    };
+
+    public func get_identity_key (identity: CommonTypes.Identity) : Text {
+        Text.map(resolve_identity_type(identity.identity_type)#identity.identity_id , Prim.charToLower);
     };     
 
     public func text_key(id: Text) : Trie.Key<Text> = { key = id; hash = Text.hash id };
     public func tag_key(id: Text) : Trie.Key<Text> = { key = normalize_tag(id); hash = Text.hash (normalize_tag(id)) };
+    public func identity_key(identity: CommonTypes.Identity) : Trie.Key<Text>  { 
+        let _k = get_identity_key(identity);
+        {key = _k; hash = Text.hash (_k) }
+    };
 
     public func unwrap<T>(x: ?T) : T {
         switch x {
@@ -116,6 +124,13 @@ module {
     public func un_escape_browser_token (token : Text) : Text {
         Text.replace(Text.replace(token, #text "%20", " "), #text "%2B", "+")
     };
+
+    public func is_readonly (r: Types.DataGroup) : Bool {
+		if (Option.isSome(r.readonly)) { 
+			return (Time.now() < unwrap(r.readonly));
+		};
+		return false;	
+	};	
 
     /**
     * Builds resource url based on specified params (id, network, view mode)
@@ -258,7 +273,14 @@ module {
             case (#POI) { "poi"};
             case (#Additions) {"additions"};
         };
-    }; 
+    };
+
+    public func resolve_identity_type (identity_type: CommonTypes.IdentityType) : (Text) {
+        switch (identity_type) {
+            case (#ICP) { "ICP"};
+            case (#EvmChain) {"EvmChain"};
+        };
+    };     
 
     public func resolve_category_name (category: CommonTypes.CategoryId) : (Text) {
         switch (category) {

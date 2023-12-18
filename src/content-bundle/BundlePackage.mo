@@ -16,6 +16,7 @@ import Nat64 "mo:base/Nat64";
 import DataBucket "mo:ics2/DataBucket";
 import Debug "mo:base/Debug";
 import { JSON; Candid } "mo:serde";
+import Common "mo:serde/Candid/Text/Parser/Common";
 import Json "mo:json/JSON";
 
 import Http "../shared/Http";
@@ -24,19 +25,11 @@ import CommonTypes "../shared/CommonTypes";
 import Conversion "./Conversion";
 import Types "./Types";
 import Utils "./Utils";
+import EmbededUI "./EmbededUI";
 
 shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageArgs) = this {
 
 	let MAX_TAGS = 5;
-	let DEF_CSS =  "<style>" # Utils.DEF_BODY_STYLE #
-	".grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } "#
-	".grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; } "#
-	".grid_details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } "#
-	".logo { max-height:200px; margin: 1em auto; display:block; } .logo_details { max-height:300px; margin: 1em auto; display:block; } "#
-	".cell { min-height: 100px; border: 1px solid gray; border-radius: 8px; padding: 8px 16px; position: relative; } "#
-	".cell_details { min-height: 250px; border: 1px solid gray; border-radius: 8px; padding: 8px 16px; position: relative; } "#
-	".tag { color:#0969DA; margin: 0 4px; border: 1px solid #0969DA; border-radius: 8px; padding: 4px 10px; background-color:#B6E3FF;} "#
-	".access_tag { color:white; font-size:large; border: 1px solid gray; border-radius: 8px; padding: 8px 16px; position: absolute; right: 20px; top: 1px; background-color:#636466;} </style>";
 
     // 30 days
     let DEF_READONLY_SEC:Nat = 30 * 24 * 60 * 60;
@@ -61,12 +54,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	// tag to bundle
     stable var tags2bundle : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
+	// creator to bundle
+    stable var creator2bundle : Trie.Trie<Text, List.List<Text>> = Trie.empty();
+
     // all bunles inside this package
     stable var bundles : Trie.Trie<Text, Types.Bundle> = Trie.empty();
 
     private func tags2bundle_get(id : Text) : ?List.List<Text> = Trie.get(tags2bundle, Utils.tag_key(id), Text.equal);
 
+    private func creator2bundle_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(creator2bundle, Utils.identity_key(identity), Text.equal);
+
     private func bundle_get(id : Text) : ?Types.Bundle = Trie.get(bundles, {key = id; hash = Text.hash id }, Text.equal);
+
 
 	/**
 	* Applies list of operators for the bundle package
@@ -88,10 +87,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
                 await _register_bundle(args, _build_identity(caller));
             };
             case (#Public) {
-                await _register_bundle(args, _build_identity(caller));
-            };
-            case (#ACL) {
-                if (not (caller == OWNER or _is_operator(caller))) return #err(#AccessDenied);
                 await _register_bundle(args, _build_identity(caller));
             };
         };
@@ -165,7 +160,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		switch (bundle_get(id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
-
 				switch (args.group) {
 					// apply on the group level
 					case (?group_val) {
@@ -190,6 +184,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
+	/**
+	* Transfers ownership from current owner to the new one
+	*/
 	public shared ({ caller }) func transfer_ownership (id: Text, to : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
 			case (?bundle) {
@@ -203,39 +200,35 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 
 	public shared ({ caller }) func freeze_bundle (id: Text, args: Types.DataFreezeArgs) : async Result.Result<Text, CommonTypes.Errors> {
-		Debug.print("freeze_bundle "#debug_show(id)#" readonly "#debug_show(args.period_sec) # " for groups "#debug_show(args.groups));
 		switch (bundle_get(id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
 
-				for (group in args.groups.vals()) {
-					// if group is not initialized --> no errors
-					let data_group_opt = switch (group) {
-						case (#POI) {bundle.payload.poi_group;};
-						case (#Additions) {bundle.payload.additions_group;};
-					};
-					switch (data_group_opt) {
-						case (?data_group) {
-							let bucket_actor : Types.Actor.DataBucketActor = actor (data_group.data_path.bucket_id);
-							// readoly paramter is nanosec
-							let readonly : Nat = Int.abs(Time.now ()) + Option.get(args.period_sec, DEF_READONLY_SEC) * NANOSEC;
-							switch (await bucket_actor.readonly_resource(data_group.data_path.resource_id, ?readonly)) {
-								case (#ok(_)) {
-									// update model
-									data_group.readonly := ?readonly;
-								};
-								case (#err(e)){
-								}
+				// if group is not initialized --> no errors
+				let data_group_opt = switch (args.group) {
+					case (#POI) {bundle.payload.poi_group;};
+					case (#Additions) {bundle.payload.additions_group;};
+				};
+				switch (data_group_opt) {
+					case (?data_group) {
+						let bucket_actor : Types.Actor.DataBucketActor = actor (data_group.data_path.bucket_id);
+						// readoly paramter is nanosec
+						let readonly : Nat = Int.abs(Time.now ()) + Option.get(args.period_sec, DEF_READONLY_SEC) * NANOSEC;
+						switch (await bucket_actor.readonly_resource(data_group.data_path.resource_id, ?readonly)) {
+							case (#ok(_)) {
+								// update model
+								data_group.readonly := ?readonly;
 							};
+							case (#err(e)){
+							}
 						};
-						case (null) {
-						};
-					}
+					};
+					case (null) {
+					};
 				};
 				return #ok(id);
 			};
 			case (null) { 
-				Debug.print("Budnle not found. "#debug_show(id)#". FAILED to Apply readonly"); 
 				return #err(#NotFound); };
 		};
 	};
@@ -262,7 +255,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 											case (#ok(_)) {	_exclude_section(group, category);};
 											case (#err(e)) {return #err(e)};
 										};
-
 									};
 									case (null)  {return #err(#NotRegistered)};
 								}
@@ -324,6 +316,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				switch (await _apply_bundle_section(bundle, {
 					name = args.name;
 					group = args.group;
+					nested_path = args.nested_path;
 					category = args.category;
 					locale = args.locale;
 					payload = { value = blob_to_save; content_type = ?"application/json"; };
@@ -423,12 +416,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		switch (Utils.get_resource_id(request.url)) {
 			case (?r) {
 				switch (r.view_mode) {
-					case (#Index) {
-						return bundle_http_handler(r.id, r.view_mode, r.tag);
-					};
-					case (#Open) {
-						return bundle_data_handler(r.id, r.route);
-					};
+					case (#Index) { return bundle_http_response( r.id, r.tag);};
+					// not supported for now
+					case (#Open) {return Http.not_found();};
 				};
 			};
 			case null { return Http.not_found();};
@@ -451,64 +441,11 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			};
 		};
 		switch (res) {
-			case (#ok(r)) {	#ok({locale=locale; url = r.url; bucket_id = r.partition; resource_id = r.id});	};
+			case (#ok(r)) {	#ok({locale=locale; name = ?name; url = r.url; bucket_id = r.partition; resource_id = r.id});	};
 			case (#err (e)) { return #err(e)};
 		};
 	};	
 
-    private func bundle_data_handler(key : Text, route : Types.Route) : Http.Response {
-		// TODO : not implemented yet
-		switch (bundle_get(key)) {
-            case (null) { Http.not_found() };
-            case (? v)  {Http.not_found();}
-        };
-    };	
-
-    private func bundle_http_handler(key : Text, view_mode : Types.ViewMode, tag: ?Text) : Http.Response {
-		if (key == Utils.ROOT) {
-				let canister_id = Principal.toText(Principal.fromActor(this));
-				var out_html = "<html><head>"#DEF_CSS#"</head><body>" # "<h2>&#128464; Overview &#9757; </h2><hr/>";
-				switch (tag) {
-					case (?t) {
-						out_html:=out_html # "<h3>Bundles <span class=\"tag\">" # t # "</span></h3><div class=\"grid\">";
-						let n_tag = Utils.normalize_tag(t);
-						switch (tags2bundle_get(n_tag)) {
-							case (?bundle_ids) {
-								for (id in List.toIter(bundle_ids)) {
-									switch (bundle_get(id)) {
-            						case (null) { };
-            						case (? r)  { out_html:=out_html # render_bundle_overview(canister_id, id, r);};
-									};
-								};
-							};
-							case (null) {};
-						};
-					};						
-					case (null) {
-						out_html := out_html # "<h3>Bundles</h3><div class=\"grid\">";
-						for ((id, r) in Trie.iter(bundles)) {
-							out_html:=out_html # render_bundle_overview(canister_id, id, r);
-						};						
-					};
-				};
-				return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html # "</div>"#Utils.FORMAT_DATES_SCRIPT#"</body></html>"));
-		};
-
-		switch (bundle_get(key)) {
-            case (null) { Http.not_found() };
-            case (? v)  {
-				///
-				let canister_id = Principal.toText(Principal.fromActor(this));
-				let root_url = Utils.build_resource_url({resource_id = ""; canister_id = canister_id; network = initArgs.network; view_mode = #Index; route = null;});
-				var directory_html = "<html><head>"#DEF_CSS#"</head><body>" # "<h2><span><a style=\"margin: 0 5px;\" href=\"" # root_url # "\" >"#Utils.ROOT#"</a></span>  &#128464; "#v.name#" </h2><hr/><h3>Bundle</h3><div class=\"grid_details\">";
-				
-				directory_html:=directory_html # render_bundle_details(canister_id, key, v);
-				// extra details possible here
-				return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(directory_html # "</div>"#Utils.FORMAT_DATES_SCRIPT#"</body></html>"));
-			};
-        };
-    };		   
-    
   	public shared func wallet_receive() {
     	let amount = Cycles.available();
     	ignore Cycles.accept(amount);
@@ -542,19 +479,78 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		return Utils.VERSION;
 	};
 
-    public query func get_bundles_for_tag(tag:Text) : async List.List<Text> {
-		switch (tags2bundle_get(tag)) {
-			case (?bundle_ids) {
-				bundle_ids;   
-			};
-			case (null) {
-				List.nil();       
-			};
+	public query func total_supply() : async Nat {
+		return Trie.size(bundles);
+	};	
+
+	public query func total_supply_by_creator(identity:CommonTypes.Identity) : async Nat {
+		switch (creator2bundle_get(identity)) {
+			case (?ids) {List.size(ids)};
+			case (null) {0};
 		};
-    };	      
+	};
+
+    public query func get_bundle(id:Text) : async Result.Result<Conversion.BundleView, CommonTypes.Errors> {
+		switch (bundle_get(id)) {
+			case (?bundle) { #ok(Conversion.convert_bundle_view(bundle)); };
+			case (null) { return #err(#NotFound); };
+		};
+    };	
+
+    public query func get_bundle_ids_for_creator(identity:CommonTypes.Identity) : async [Text] {
+		switch (creator2bundle_get(identity)) {
+			case (?bundle_ids) { List.toArray(bundle_ids) };
+			case (null) { [] };
+		};
+    };	
+
+    public query func get_bundle_ids_for_tag(tag:Text) : async [Text] {
+		switch (tags2bundle_get(tag)) {
+			case (?bundle_ids) {List.toArray(bundle_ids)};
+			case (null) {[]};
+		};
+    };     
 
 	private func _is_operator(id: Principal) : Bool {
     	Option.isSome(Array.find(operators, func (x: Principal) : Bool { x == id }))
+    };
+
+    private func bundle_data_handler(key : Text, route : Types.Route) : Http.Response {
+		// TODO : not implemented yet
+		switch (bundle_get(key)) {
+            case (null) { Http.not_found() };
+            case (? v)  {Http.not_found();}
+        };
+    };	
+
+   	private func bundle_http_response(key : Text, tag: ?Text) : Http.Response {
+		if (key == Utils.ROOT) {
+				let canister_id = Principal.toText(Principal.fromActor(this));
+				var out_html = EmbededUI.render_root_header(tag);
+				switch (tag) {
+					case (?t) {
+						let n_tag = Utils.normalize_tag(t);
+						switch (tags2bundle_get(n_tag)) {
+							case (?bundle_ids) {
+								for (id in List.toIter(bundle_ids)) {
+									switch (bundle_get(id)) {
+            							case (null) { };
+            							case (? r)  { out_html:=out_html # EmbededUI.render_bundle_overview(canister_id,initArgs.network, id, r);};
+									};
+								};
+							};
+							case (null) {};
+						};
+					};						
+					case (null) {
+						for ((id, r) in Trie.iter(bundles)) {
+							out_html:=out_html # EmbededUI.render_bundle_overview(canister_id, initArgs.network, id, r);
+						};						
+					};
+				};
+				return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
+		};
+		EmbededUI.bundle_page_response( Principal.toText(Principal.fromActor(this)), initArgs.network, key, bundle_get(key));
     };
 
 	private func _apply_bundle_logo (bundle: Types.Bundle, logo : ?Types.DataPayload) : async Result.Result<(), CommonTypes.Errors> {
@@ -578,6 +574,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 							case (#ok(l_path)) {	
 								bundle.logo := ?{
 									locale=null; 
+									name = ?"logo";
 									url=l_path.url; 
 									bucket_id=l_path.partition; 
 									resource_id=l_path.id;
@@ -608,7 +605,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		for (tag in args.tags.vals()) {
   			if (Utils.invalid_tag_name(tag)) return #err(#InvalidRequest);
 		};
-
 		// increment counter
 		_bundle_counter  := _bundle_counter + 1;
         let canister_id = Principal.toText(Principal.fromActor(this));
@@ -616,7 +612,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
             case (#Ordinal) {Nat.toText(_bundle_counter)};
             case (#Hash) { Utils.hash_time_based(canister_id, _bundle_counter)};
         };
-
 		// init directory
 		let bucket_id:Text = Utils.unwrap(data_store.active_bucket);
 		let bucket_actor : Types.Actor.DataBucketActor = actor (bucket_id);
@@ -628,14 +623,12 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			ttl = null;
 			read_only = null;
 		});		
-
 		switch (bundle_data) {
 			case (#ok(idUrl)) {
-
        			let tags_list = List.fromArray(Array.map<Text, Text>(args.tags, func t = Utils.normalize_tag(t)));
 				let bundle:Types.Bundle = {
 					data_path = {
-						locale = null; 
+						locale = null; name = null;
 						url = idUrl.url; 
 						bucket_id = idUrl.partition; 
 						resource_id = idUrl.id
@@ -664,7 +657,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						ignore await _apply_bundle_logo(bundle, ?{value=logo.value; content_type=logo.content_type});
 					};
 					case (null) { };
-				};				
+				};	
+				_track_creator(owner, bundle_id);
 
         		return #ok(bundle_id);				
 
@@ -705,6 +699,22 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
     };
 
+    private func _track_creator(identity:CommonTypes.Identity, bundle_id:Text) : () {
+		switch (creator2bundle_get(identity)) {
+			case (?bundle_ids) {
+				if (not List.isNil(bundle_ids)) {
+					for (leaf in List.toIter(bundle_ids)){
+						if (leaf == bundle_id) return;
+					};
+				};
+				creator2bundle := Trie.put(creator2bundle, Utils.identity_key(identity), Text.equal, List.push(bundle_id, bundle_ids)).0;       
+			};
+			case (null) {
+				creator2bundle := Trie.put(creator2bundle, Utils.identity_key(identity), Text.equal, List.push(bundle_id, List.nil())).0;       
+			};
+		};
+    };	
+
     private func _exclude_tag(bundle_id:Text, tag:Text) : () {
 		switch (tags2bundle_get(tag)) {
 			case (?bundle_ids) {
@@ -740,89 +750,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
     };	
 
-	private func render_bundle_overview (canister_id: Text, id:Text, r:Types.Bundle) : Text {
-		let url = Utils.build_resource_url({resource_id = id; canister_id = canister_id; network = initArgs.network; view_mode = #Index; route = null});
-		var resource_html = "<div class=\"cell\">";
-		resource_html :=resource_html # "<div>&#128464; <a style=\"font-weight:bold; color:#0969DA;\" href=\"" # url # "\" target = \"_self\">"# r.name # "</a></div>";
-		if (Option.isSome(r.logo)) {
-			resource_html := resource_html # "<img  src=\"" # (Utils.unwrap(r.logo)).url # "\" class=\"logo\">";
-		};
-
-		resource_html := resource_html # "<p><u>Created</u> : <span class=\"js_date\">"# Int.toText(r.created) # "</span></p>";
-		resource_html := resource_html # "<p><b>Creaator</b> : "# debug_show(r.creator) # "</p>";
-		resource_html := resource_html # "<p><u>Owner</u> : "# debug_show(r.owner) # "</p>";
-
-		if (List.size(r.tags) > 0) {
-			let tags_fmt = Text.join("", List.toIter(List.map(r.tags, func (t : Text):Text {"<span class=\"tag\">"#t#"</span>";})));
-			resource_html := resource_html # "<p>"# tags_fmt # "</p>";
-		};		
-		
-		return  resource_html # "</div>";	
-	};
-
-
-	private func render_bundle_details (canister_id: Text, id:Text, r:Types.Bundle) : Text {
-		let url = Utils.build_resource_url({resource_id = id; canister_id = canister_id; network = initArgs.network; view_mode = #Index; route = null});
-		var resource_html = "<div class=\"cell_details\">";
-		resource_html :=resource_html # "<div>&#128464; <a style=\"font-weight:bold; color:#0969DA;\" href=\"" # url # "\" target = \"_self\">"# r.name # "</a></div>";
-		resource_html := resource_html # "<p><i>"# r.description # "</i></p>";
-		if (Option.isSome(r.logo)) {
-			resource_html := resource_html # "<img  src=\"" # (Utils.unwrap(r.logo)).url # "\" class=\"logo_details\">";
-		};
-		resource_html := resource_html # "<p><b>ID</b> : "# debug_show(id) # "</p>";
-		resource_html := resource_html # "<p><b>Root data path</b> : <a  href=\"" # r.data_path.url #"\" target = \"_blank\">"#r.data_path.url#"</a></p>";
-		resource_html := resource_html # "<p><b>Created</b> : <span class=\"js_date\">"# Int.toText(r.created) # "</span></p>";
-		resource_html := resource_html # "<p><b>Creaator</b> : "# debug_show(r.creator) # "</p>";
-		resource_html := resource_html # "<p><b>Owner</b> : "# debug_show(r.owner) # "</p>";		
-		
-		switch (r.payload.poi_group) {
-			case (?poi) {
-				resource_html := resource_html # "<hr><p><b>'POI' data group</b></p>";
-				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">created : <span class=\"js_date\">"# Int.toText(poi.created) # "</span></div>";
-				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">path : <a  href=\"" # poi.data_path.url #"\" target = \"_blank\">"#poi.data_path.url#"</a></div>";
-				if (Option.isSome(poi.readonly)) {
-					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(poi.readonly)) # "</span></div>";
-				};
-				// render sections
-				if (not List.isNil(poi.sections)){
-					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">sections :";
-					for (section in List.toIter(poi.sections)) {
-						resource_html := resource_html # "<span style=\"padding: 0 10px;\"><i>" # debug_show(section.category) #"</i></span>";
-					};
-					resource_html := resource_html # "</div>";	
-				};					
-			};
-			case (null) {resource_html := resource_html # "<p><b>'POI' data group</b> : --- / --- </p>";}
-		};
-
-		switch (r.payload.additions_group) {
-			case (?add) {
-				resource_html := resource_html # "<hr><p><b>'Additions' data group</b></p>";
-				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">created : <span class=\"js_date\">"# Int.toText(add.created) # "</span></div>";
-				resource_html := resource_html # "<div style=\"padding: 5px 10px;\">path : <a  href=\"" # add.data_path.url #"\" target = \"_blank\">"#add.data_path.url#"</a></div>";
-				if (Option.isSome(add.readonly)) {
-					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(add.readonly)) # "</span></div>";
-				};
-				// render sections
-				if (not List.isNil(add.sections)){
-					resource_html := resource_html # "<div style=\"padding: 5px 10px;\">sections :";
-					for (section in List.toIter(add.sections)) {
-						resource_html := resource_html # "<span style=\"padding: 0 10px;\"><i>" # debug_show(section.category) #"</i></span>";
-					};
-					resource_html := resource_html # "</div>";	
-				};			
-			};
-			case (null) {resource_html := resource_html # "<p><b>'Additions' data group</b> : --- / --- </p>";}
-		};
-
-		if (List.size(r.tags) > 0) {
-			let tags_fmt = Text.join("", List.toIter(List.map(r.tags, func (t : Text):Text {"<span class=\"tag\">"#t#"</span>";})));
-			resource_html := resource_html # "<hr><p>"# tags_fmt # "</p>";
-		};		
-		
-		return  resource_html # "</div>";	
-	};
-
 	private func _apply_bundle_section (bundle: Types.Bundle, args : Types.DataPackageRawArgs) : async Result.Result<(), CommonTypes.Errors> {
 		// assert the group is initialized
 		let data_group:Types.DataGroup = switch (await _assert_data_group(bundle, args.group)) {
@@ -839,12 +766,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		// identify the section by category (it could be exteneded to identify the section by internal ID)
 		// take into account the number of such files (counters)
 		let target_section =  switch (_find_section(data_group,  args.category)) {
-			case (?sec){
-				Debug.print("     take existing section "#debug_show(sec.category) #" under "#debug_show(sec.data_path.resource_id));
-
-				sec};
+			case (?sec){sec};
 			case (null) {
-				switch (await _init_data_section (data_group.data_path, args.category)) {
+				switch (await _init_data_section (data_group.data_path, Utils.resolve_category_name(args.category))) {
 					case (#ok(r_path)) {
 						let s : Types.DataSection = {
 							data_path = r_path;
@@ -862,6 +786,15 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 		
 		let replace_path:?CommonTypes.ResourcePath = null;
+		let active_path:CommonTypes.ResourcePath = switch (args.nested_path) {
+			case (null) {target_section.data_path};
+			case (?nested_path) {
+				switch (await _init_data_section (target_section.data_path, nested_path)) {
+					case (#ok(r_path)) { r_path;};
+					case (#err(_)) { return #err(#ActionFailed); };
+				}
+			};
+		};
 		//List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool { Option.get(k.locale, "") == Option.get(args.locale, "")});
 		switch (args.action) {
 			// upload binary data till 2mb
@@ -872,10 +805,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				// resolve final name
 				let resource_name = switch (args.name) {
 					case (?name) {name;};
-					case (null) {Utils.resolve_resource_name(args.category, args.locale, ?Nat.toText(target_section.counter))};
+					case (null) {Utils.resolve_resource_name(args.category, args.locale, null)};
 				};
 				// resource_path
-				let section_path:CommonTypes.ResourcePath = switch (await _submit_data(target_section.data_path,
+				let section_path:CommonTypes.ResourcePath = switch (await _submit_data(active_path,
 						replace_path, resource_name, args.locale, args.payload)) {
 					case (#ok(data)){ data; };
 					case (#err(e)) { return #err(e); };
@@ -884,7 +817,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				target_section.data:= List.push(section_path, target_section.data);
 			};
 			case (#UploadChunk) {
-				let bucket_actor : Types.Actor.DataBucketActor = actor (target_section.data_path.bucket_id);
+				let bucket_actor : Types.Actor.DataBucketActor = actor (active_path.bucket_id);
 				switch (target_section.active_upload) {
 					case (?attempt) {ignore await bucket_actor.store_chunk(args.payload.value, ?attempt.binding_key);};
 					case (null) {
@@ -899,7 +832,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				}
 			};
 			case (#Package) {
-				let bucket_actor : Types.Actor.DataBucketActor = actor (target_section.data_path.bucket_id);
+				let bucket_actor : Types.Actor.DataBucketActor = actor (active_path.bucket_id);
 
 				switch (target_section.active_upload) {
 					case (?attempt) {
@@ -907,17 +840,17 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						// resolve final name
 						let resource_name = switch (args.name) {
 							case (?name) {name;};
-							case (null) {Utils.resolve_resource_name(args.category, args.locale, ?Nat.toText(target_section.counter))};
+							case (null) {Utils.resolve_resource_name(args.category, args.locale, null)};
 						};
 
 						let res = await bucket_actor.commit_batch_by_key(attempt.binding_key, {
 							content_type = args.payload.content_type;
 							name = resource_name;
-							parent_id = ?target_section.data_path.resource_id;
+							parent_id = ?active_path.resource_id;
 							parent_path = null; ttl = null; read_only = null;
 						});
 						let section_path:CommonTypes.ResourcePath = switch (res) {
-							case (#ok(r)) {{locale=args.locale; url = r.url; bucket_id = r.partition; resource_id = r.id};};
+							case (#ok(r)) {{locale=args.locale; name =?resource_name; url = r.url; bucket_id = r.partition; resource_id = r.id};};
 							case (#err (e)) { return #err(e)};
 						};
 						target_section.data:= List.push(section_path, target_section.data);
@@ -978,25 +911,24 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			read_only = null;
 		});
 		switch (res) {
-			case (#ok(r)) {	#ok({locale=null; url = r.url; bucket_id = r.partition; resource_id = r.id});	};
+			case (#ok(r)) {	#ok({locale=null; name = null; url = r.url; bucket_id = r.partition; resource_id = r.id});	};
 			case (#err (e)) { return #err(#ActionFailed)};
 		};
 	};
 
-	private func _init_data_section (root_path : CommonTypes.ResourcePath, category : CommonTypes.CategoryId) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
+	private func _init_data_section (root_path : CommonTypes.ResourcePath, path : Text) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
 		let bucket_actor : Types.Actor.DataBucketActor = actor (root_path.bucket_id);
-		Debug.print("     init new section "#debug_show(category) #" under "#debug_show(root_path.resource_id));
 
 		let res = await bucket_actor.new_directory(false, {
 			content_type = null;
-			name =  Utils.resolve_category_name(category);
+			name =  path;
 			parent_path = null;
 			parent_id = ?root_path.resource_id;
 			ttl = null;
 			read_only = null;
 		});
 		switch (res) {
-			case (#ok(r)) {	#ok({locale=null; url = r.url; bucket_id = r.partition; resource_id = r.id});	};
+			case (#ok(r)) {	#ok({locale=null; name = null; url = r.url; bucket_id = r.partition; resource_id = r.id});	};
 			case (#err (e)) { return #err(#ActionFailed)};
 		};
 	};
@@ -1045,7 +977,14 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 	private func _exclude_section (data_group: Types.DataGroup, category: CommonTypes.CategoryId) : () {
 		data_group.sections := List.mapFilter<Types.DataSection, Types.DataSection>(data_group.sections,  func (k:Types.DataSection) = if (k.category == category) { null } else { ?k });	
-	};	
+	};
+
+	private func _is_readonly (r: Types.DataGroup) : Bool {
+		if (Option.isSome(r.readonly)) { 
+			return (Time.now() < Utils.unwrap(r.readonly));
+		};
+		return false;	
+	};		
 
 	private func _register_bucket(name:Text, operators : [Principal], cycles : Nat): async Text {
 		Cycles.add(cycles);

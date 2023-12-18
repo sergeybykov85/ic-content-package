@@ -30,7 +30,32 @@ module {
 		data_path : CommonTypes.ResourcePath;
 		sections: [DataSectionView];
 		readonly : ?Nat;
-	};	
+	};
+
+	public type BundleView = {
+		data_path : CommonTypes.ResourcePath;
+		name : Text;
+		description : Text;
+		// simple light weigh logo
+		logo : ?CommonTypes.ResourcePath;
+		tags : [Text];
+		creator : CommonTypes.Identity;
+		owner : CommonTypes.Identity;
+		created : Time.Time;
+	};
+
+    public func convert_bundle_view (info: Types.Bundle) : BundleView {
+        return {
+			data_path = info.data_path;
+			name = info.name;
+			description = info.description;
+			logo = info.logo;
+			tags = List.toArray (info.tags);
+			creator = info.creator;
+			owner = info.owner;
+			created = info.created;
+        };
+    };	
 
     public func convert_datagroup_view (info: Types.DataGroup) : DataGroupView {
         return {

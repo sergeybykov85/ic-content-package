@@ -10,7 +10,7 @@ module {
 
 	public type AccessList = {owner : Principal; operators : [Principal]};
 
-	public type ResourcePath = {locale:?Text; url : Text; bucket_id:Text; resource_id: Text;};
+	public type ResourcePath = {url : Text; bucket_id:Text; resource_id: Text; locale:?Text;  name:?Text};
 
 	public type IdentityType = {
 		#ICP;

@@ -52,7 +52,6 @@ module {
 	public type SubmissionMode = {
 		#Installer; 
 		#Public;
-		#ACL;
 	};
 	// mode governs the identifier style for new bundle
 	public type IdentifierMode = {
@@ -74,7 +73,7 @@ module {
 	public let DEFAULT_MODE : Modes = {
 		submission = #Public;
 		identifier = #Hash;
-		deletion = #Deletable;
+		deletion = #NonDeletable;
 	};
 
 	public type DataPackageAction = {
@@ -143,7 +142,7 @@ module {
 	};
 
 	public type DataFreezeArgs = {
-		groups : [CommonTypes.DataGroupId];
+		group : CommonTypes.DataGroupId;
 		period_sec : ?Nat
 	};
 
@@ -162,6 +161,7 @@ module {
 	public type DataRequest<T> = {
 		group: CommonTypes.DataGroupId;
 		category : CommonTypes.CategoryId;
+		nested_path : ?Text;
 		name : ?Text;
 		locale : ?Text;
 		payload : T;
