@@ -64,13 +64,13 @@ module {
 		#NonDeletable;
 	};
 
-	public type Modes = {
+	public type Mode = {
 		submission : SubmissionMode;
 		identifier : IdentifierMode;
 		deletion :  DeleteMode;
 	};
 
-	public let DEFAULT_MODE : Modes = {
+	public let DEFAULT_MODE : Mode = {
 		submission = #Public;
 		identifier = #Hash;
 		deletion = #NonDeletable;
@@ -82,10 +82,15 @@ module {
 		#Package;
 	};
 
-	public type DataPayload = {
+	public type DataRawPayload = {
 		value : Blob;
 		content_type : ?Text;
 	};
+
+	public type DataDomainPayload = {
+		location : ?CommonTypes.Location;
+		about : ?CommonTypes.AboutData;
+	};	
 
 	public type ChunkUploadAttempt = {
 		// needed to complete batch upload
@@ -102,6 +107,10 @@ module {
 		var counter: Nat;
 	};
 
+	public type DataIndex = {
+		var location : ?CommonTypes.Location;
+	};
+
 	// represents a space for logically grouped sections
 	public type DataGroup = {
 		// name for internal management.
@@ -109,6 +118,7 @@ module {
 		var sections: List.List<DataSection>;
 		var readonly : ?Nat;
 		var access_list : List.List<CommonTypes.Identity>;
+		var index : ?DataIndex;
 		created : Time.Time;
 	};
 
@@ -137,7 +147,7 @@ module {
 	public type BundleArgs = {
 		name : Text;
 		description : Text;
-		logo : ?DataPayload;
+		logo : ?DataRawPayload;
 		tags : [Text];
 	};
 
@@ -168,35 +178,23 @@ module {
 		action : DataPackageAction;
 	};
 
-	public type DataPackageRawArgs = DataRequest<DataPayload>;
+	public type DataPackageRawArgs = DataRequest<DataRawPayload>;
 
-	public type DataPackageArgs = DataRequest<CommonTypes.Serialization.StructureArgs>;
+	public type DataPackageArgs = DataRequest<DataDomainPayload>;
 
 	public type BundleUpdateArgs = {
 		name : ?Text;
 		description : ?Text;
-		logo : ?DataPayload;
+		logo : ?DataRawPayload;
 		tags : ?[Text];
 	};		
 
 	// input arguments to install a new BundlePackage actor
 	public type BundlePackageArgs = {
 		network : Network;
-		// operators to work with a bundle application
-		operators : [Principal];
-		// modes
-		modes : ?Modes;
+		// mode
+		mode : ?Mode;
 		bucket_cycles : ?Nat;
-	};
-
-	// BundlePackage metadata
-	public type BundlePackageMetadata = {
-		id : Principal;
-		name : Text;
-		description: Text;
-		image : Text;
-		owner : Principal;
-		created : Time.Time;
 	};
 
 	/**

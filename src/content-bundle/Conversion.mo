@@ -13,6 +13,9 @@ import CommonTypes "../shared/CommonTypes";
 
 module {
 
+	let LOCATION_FIELDS = ["latitude", "longitude", "country_code2", "region", "city", "coordinates"];
+	let ABOUT_FIELDS = ["name", "value", "attributes", "locale", "description"];
+
 	public type DataStoreView = {
 		buckets : [Text];
 		active_bucket : Text;
@@ -25,10 +28,16 @@ module {
 		data: [CommonTypes.ResourcePath];
 	};
 
+	
+	public type DataIndexView = {
+		location : ?CommonTypes.Location;
+	};
+
 	public type DataGroupView = {
 		// name for internal management.
 		data_path : CommonTypes.ResourcePath;
 		sections: [DataSectionView];
+		index : ?DataIndexView;
 		readonly : ?Nat;
 	};
 
@@ -58,6 +67,13 @@ module {
     };	
 
     public func convert_datagroup_view (info: Types.DataGroup) : DataGroupView {
+
+		let index:?DataIndexView = switch (info.index) {
+			case (?index) {
+				?{location = index.location};
+			};
+			case (null) {null};
+		};
         return {
             data_path = info.data_path;
             sections = List.toArray(List.map(info.sections, func (s : Types.DataSection) : DataSectionView {
@@ -68,6 +84,7 @@ module {
 		    };
 		    }));
 			readonly = info.readonly;
+			index = index;
         };
     };
 
@@ -79,25 +96,23 @@ module {
         };
     };		
 
-	public func convert_to_blob (category: CommonTypes.CategoryId, args : CommonTypes.Serialization.StructureArgs) : Result.Result<Blob, CommonTypes.Errors> {
+	public func convert_to_blob (category: CommonTypes.CategoryId, args : Types.DataDomainPayload) : Result.Result<Blob, CommonTypes.Errors> {
 		let blob_to_save = switch (category) {
-			case (#General) {
-				switch (args.general) {
-					case (?general) {
-						switch (JSON.toText(to_candid(general), CommonTypes.Serialization.POI_GENERAL_FIELDS, null)) {
+			case (#Location) {
+				switch (args.location) {
+					case (?location) {
+						switch (JSON.toText(to_candid(location), LOCATION_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
 							case (#err (e)) { return #err(#ActionFailed)};
 						};
 					};
-					// save general data for POI
-					// no data given
 					case (null)  { return #err(#ActionFailed)};
 				};
 			};
 			case (#About) {
 				switch (args.about) {
 					case (?about) {
-						switch (JSON.toText(to_candid(about), CommonTypes.Serialization.POI_ABOUT_FIELDS, null)) {
+						switch (JSON.toText(to_candid(about), ABOUT_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
 							case (#err (e)) { return #err(#ActionFailed)};
 						};

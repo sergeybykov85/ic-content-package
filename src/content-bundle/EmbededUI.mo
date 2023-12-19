@@ -1,5 +1,6 @@
 
 import Int "mo:base/Int";
+import Float "mo:base/Float";
 import Iter "mo:base/Iter";
 import Text "mo:base/Text";
 import List "mo:base/List";
@@ -72,56 +73,72 @@ module {
 		if (Option.isSome(r.logo)) {
 			resource_html := resource_html # "<img  src=\"" # (Utils.unwrap(r.logo)).url # "\" class=\"logo_details\">";
 		};
-		resource_html := resource_html # "<p><b>ID</b> : "# debug_show(id) # "</p>";
-		resource_html := resource_html # "<p><b>Root data path</b> : <a  href=\"" # r.data_path.url #"\" target = \"_blank\">"#r.data_path.url#"</a></p>";
-		resource_html := resource_html # "<p><b>Created</b> : <span class=\"js_date\">"# Int.toText(r.created) # "</span></p>";
-		resource_html := resource_html # "<p><b>Creaator</b> : "# debug_show(r.creator) # "</p>";
-		resource_html := resource_html # "<p><b>Owner</b> : "# debug_show(r.owner) # "</p>";		
+		if (List.size(r.tags) > 0) {
+			let tags_fmt = Text.join("", List.toIter(List.map(r.tags, func (t : Text):Text {"<span class=\"tag\">"#t#"</span>";})));
+			resource_html := resource_html # "<p>"# tags_fmt # "</p>";
+		};	
+		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>ID</b> : "# debug_show(id) # "</div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>Root data path</b> : <a  href=\"" # r.data_path.url #"\" target = \"_blank\">"#r.data_path.url#"</a></div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>Created</b> : <span class=\"js_date\">"# Int.toText(r.created) # "</span></div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>Creaator</b> : "# debug_show(r.creator) # "</div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>Owner</b> : "# debug_show(r.owner) # "</div>";		
 		
 		switch (r.payload.poi_group) {
 			case (?poi) {
 				resource_html := resource_html # "<hr><p><b>'POI' data group</b></p>";
-				resource_html := resource_html # "<div style=\"padding: 4px 12px;\">created : <span class=\"js_date\">"# Int.toText(poi.created) # "</span></div>";
-				resource_html := resource_html # "<div style=\"padding: 4px 12px;\">path : <a  href=\"" # poi.data_path.url #"\" target = \"_blank\">"#poi.data_path.url#"</a></div>";
+				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">created : <span class=\"js_date\">"# Int.toText(poi.created) # "</span></div>";
+				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">path : <a  href=\"" # poi.data_path.url #"\" target = \"_blank\">"#poi.data_path.url#"</a></div>";
 				if (Utils.is_readonly(poi)) {
-					resource_html := resource_html # "<div style=\"padding: 4px 12px;\">&#128274; read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(poi.readonly)) # "</span></div>";
+					resource_html := resource_html # "<div style=\"padding: 2px 12px;\">&#128274; read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(poi.readonly)) # "</span></div>";
+				};
+				// render index
+				switch (poi.index) {
+					case (?index) {
+						switch (index.location) {
+							case (?location) {
+								resource_html := resource_html # "<div style=\"padding: 2px 12px;\">country | region | city | (latitude, longitude) : <span>"# location.country_code2 # " | "# (Option.get(location.region, "--/--")) # " | " #  (Option.get(location.city, "--/--")) # " ("# Float.toText(location.coordinates.latitude) # ", "# Float.toText(location.coordinates.longitude) #")</span></div>";
+							};
+							case (null) {};
+						};
+					};
+					case (null) {};
 				};
 				// render sections
 				if (not List.isNil(poi.sections)){
-					resource_html := resource_html # "<div style=\"padding: 4px 12px;\">sections :";
+					resource_html := resource_html # "<div style=\"padding: 2px 12px;\">sections :";
 					for (section in List.toIter(poi.sections)) {
 						resource_html := resource_html # "<span style=\"padding: 0 12px;\"><i><a  href=\"" # section.data_path.url #"\" target = \"_blank\">"#debug_show(section.category)#"</a></i></span>";
 					};
 					resource_html := resource_html # "</div>";	
 				};					
 			};
-			case (null) {resource_html := resource_html # "<p><b>'POI' data group</b> : --- / --- </p>";}
+			case (null) {resource_html := resource_html # "<hr><p><b>'POI' data group</b> : --- / --- </p>";}
 		};
 
 		switch (r.payload.additions_group) {
 			case (?add) {
 				resource_html := resource_html # "<hr><p><b>'Additions' data group</b></p>";
-				resource_html := resource_html # "<div style=\"padding: 4px 12px;\">created : <span class=\"js_date\">"# Int.toText(add.created) # "</span></div>";
-				resource_html := resource_html # "<div style=\"padding: 4px 12px;\">path : <a  href=\"" # add.data_path.url #"\" target = \"_blank\">"#add.data_path.url#"</a></div>";
+				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">created : <span class=\"js_date\">"# Int.toText(add.created) # "</span></div>";
+				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">path : <a  href=\"" # add.data_path.url #"\" target = \"_blank\">"#add.data_path.url#"</a></div>";
 				if (Utils.is_readonly(add)) {
-					resource_html := resource_html # "<div style=\"padding: 4px 12px;\">read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(add.readonly)) # "</span></div>";
+					resource_html := resource_html # "<div style=\"padding: 2px 12px;\">read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(add.readonly)) # "</span></div>";
 				};
 				// render sections
 				if (not List.isNil(add.sections)){
-					resource_html := resource_html # "<div style=\"padding: 4px 12px;\">sections :";
+					resource_html := resource_html # "<div style=\"padding: 2px 12px;\">sections :";
 					for (section in List.toIter(add.sections)) {
 						resource_html := resource_html # "<span style=\"padding: 0 12px;\"><i><a  href=\"" # section.data_path.url #"\" target = \"_blank\">"#debug_show(section.category)#"</a></i></span>";
 					};
 					resource_html := resource_html # "</div>";	
 				};			
 			};
-			case (null) {resource_html := resource_html # "<p><b>'Additions' data group</b> : --- / --- </p>";}
+			case (null) {resource_html := resource_html # "<hr><p><b>'Additions' data group</b> : --- / --- </p>";}
 		};
 
-		if (List.size(r.tags) > 0) {
+	/*	if (List.size(r.tags) > 0) {
 			let tags_fmt = Text.join("", List.toIter(List.map(r.tags, func (t : Text):Text {"<span class=\"tag\">"#t#"</span>";})));
 			resource_html := resource_html # "<hr><p>"# tags_fmt # "</p>";
-		};		
+		};		*/
 		
 		return  resource_html # "</div>";	
 	};

@@ -243,20 +243,14 @@ module {
 		and identity1.identity_id == identity2.identity_id);
 	};    
 
-    public func resolve_resource_name (category: CommonTypes.CategoryId, locale: ?Text, salt:?Text) : Text {
+    public func resolve_resource_name (category: CommonTypes.CategoryId, locale: ?Text) : Text {
         var suffix = switch (locale) {
             case (?loc) {"_"#loc};
             case (null) {""};
         };
-        suffix:= switch (salt) {
-            case (?s) { 
-                if (suffix == "") {"_"#s;}
-                else {suffix#"_"#s;} };
-            case (null) {suffix;}
-        };
 
         switch (category) {
-            case (#General) { "general"#suffix#".json";};
+            case (#Location) { "location"#suffix#".json";};
             case (#About) { "about"#suffix#".json";};
             case (#AudioGuide) { "audio_guide"#suffix;};
             case (#Audio) { "track"#suffix;};
@@ -284,7 +278,7 @@ module {
 
     public func resolve_category_name (category: CommonTypes.CategoryId) : (Text) {
         switch (category) {
-            case (#General) { "general"};
+            case (#Location) { "location"};
             case (#About) {"about"};
             case (#AudioGuide) {"audio_guide"};
             case (#Audio) {"audio"};

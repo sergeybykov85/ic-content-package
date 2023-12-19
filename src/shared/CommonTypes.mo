@@ -4,7 +4,12 @@ import List "mo:base/List";
 import Blob "mo:base/Blob";
 
 module {
-	public type Location = {country_code2:Text; region:?Text; city:?Text; coordinates:?Coordinates};
+
+	public type NameValue = {name : Text; value : Text; };
+
+	public type Location = {country_code2:Text; region:?Text; city:?Text; coordinates:Coordinates};
+
+	public type AboutData = { name : Text; description : Text; locale : Text; attributes : [NameValue];};
 
 	public type Coordinates = {latitude : Float; longitude : Float};
 
@@ -26,18 +31,13 @@ module {
 		identity : Identity;
 	};
 
-	public type NameValue = {
-		name : Text;
-		value : Text;
-	};
-
 	public type DataGroupId = {
 		#POI;
 		#Additions;
 	};	
 
 	public type CategoryId = {
-		#General;
+		#Location;
 		#About;
 		#AudioGuide;
 		#Audio;
@@ -64,8 +64,6 @@ module {
         #NotRegistered;
 		// when input argument contains wrong value
 		#InvalidRequest;
-        // exceeded allowed items
-        #ExceededAllowedLimit;	
 		// not authorized to manage certain object
 		#AccessDenied;
 		// no resource or no chunk
@@ -73,22 +71,16 @@ module {
     };
 
 	public module Serialization {
-		public let POI_GENERAL_FIELDS = ["name", "value", "category", "location", "latitude", "longitude", "attributes", "owner", "country_code2", "region", "city", "coordinates"];
-		public let POI_ABOUT_FIELDS = ["name", "value", "attributes", "locale", "short_description", "description"];
+		public let LOCATION_FIELDS = ["latitude", "longitude", "country_code2", "region", "city", "coordinates"];
+		public let ABOUT_FIELDS = ["name", "value", "attributes", "locale", "description"];
 		
 		public type StructureArgs = {
-			general : ?GeneralJson;
+			location : ?Location;
 			about : ?AboutDataJson;
 		};	
-		public type GeneralJson = {
-			name : Text;
-			location: Location;
-			attributes : [NameValue];
-		};
 
 		public type AboutDataJson = {
 			name : Text;
-			short_description : ?Text;
 			description : Text;
 			locale : Text;
 			attributes : [NameValue];

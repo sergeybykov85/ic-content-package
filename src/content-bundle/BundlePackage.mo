@@ -17,7 +17,6 @@ import DataBucket "mo:ics2/DataBucket";
 import Debug "mo:base/Debug";
 import { JSON; Candid } "mo:serde";
 import Common "mo:serde/Candid/Text/Parser/Common";
-import Json "mo:json/JSON";
 
 import Http "../shared/Http";
 import CommonTypes "../shared/CommonTypes";
@@ -35,10 +34,16 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     let DEF_READONLY_SEC:Nat = 30 * 24 * 60 * 60;
 	let NANOSEC:Nat = 1_000_000_000;
 
-    let OWNER = installation.caller;
+	let CREATOR:CommonTypes.Identity = {
+		identity_type = #ICP;
+		identity_id = Principal.toText(installation.caller);
+	};
+    stable var owner:CommonTypes.Identity = {
+		identity_type = #ICP;
+		identity_id = Principal.toText(installation.caller);
+	};
 	stable let NETWORK = initArgs.network;
-	stable var operators = initArgs.operators;
-    stable let MODES = Option.get(initArgs.modes, Types.DEFAULT_MODE);
+    stable let MODE = Option.get(initArgs.mode, Types.DEFAULT_MODE);
 
     // data store  model. More attributes could be placed here
     stable var data_store : Types.DataStore = {
@@ -66,24 +71,24 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
     private func bundle_get(id : Text) : ?Types.Bundle = Trie.get(bundles, {key = id; hash = Text.hash id }, Text.equal);
 
-
 	/**
-	* Applies list of operators for the bundle package
+	* Transfers ownership from current owner to the new one
 	*/
-    public shared ({ caller }) func apply_operators(ids: [Principal]) {
-    	assert(caller == OWNER);
-    	operators := ids;
-    }; 
-     
+	public shared ({ caller }) func transfer_ownership (to : CommonTypes.Identity) : async Result.Result<(), CommonTypes.Errors> {
+		if (not Utils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
+		owner :=to;
+		#ok();
+	};
+    
 	/**
 	* Register a new bunle
 	* Allowed only to the owner or operator of the bucket.
 	*/
 	public shared ({ caller }) func register_bundle (args : Types.BundleArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		// different restrictions based on the mode
-        switch (MODES.submission) {
+        switch (MODE.submission) {
             case (#Installer) {
-                if (not (caller == OWNER or _is_operator(caller))) return #err(#AccessDenied);
+				if (not Utils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
                 await _register_bundle(args, _build_identity(caller));
             };
             case (#Public) {
@@ -141,7 +146,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Apply logo for the bundle item. If not specified, then the existing logo is removed
 	* Allowed only to the owner of the bundle.
 	*/
-	public shared ({ caller }) func apply_bundle_logo (id: Text, logo : ?Types.DataPayload) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func apply_bundle_logo (id: Text, logo : ?Types.DataRawPayload) : async Result.Result<Text, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
@@ -185,9 +190,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	};
 
 	/**
-	* Transfers ownership from current owner to the new one
+	* Transfers ownership for the specified bundle from current owner to the new one
 	*/
-	public shared ({ caller }) func transfer_ownership (id: Text, to : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func transfer_bundle_ownership (id: Text, to : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
@@ -196,8 +201,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			};
 			case (null) { return #err(#NotFound); };
 		};
-	};	
-
+	};
 
 	public shared ({ caller }) func freeze_bundle (id: Text, args: Types.DataFreezeArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
@@ -211,6 +215,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				};
 				switch (data_group_opt) {
 					case (?data_group) {
+						// check if already applied
+						if (Utils.is_readonly(data_group)) return #err(#OperationNotAllowed);
+
 						let bucket_actor : Types.Actor.DataBucketActor = actor (data_group.data_path.bucket_id);
 						// readoly paramter is nanosec
 						let readonly : Nat = Int.abs(Time.now ()) + Option.get(args.period_sec, DEF_READONLY_SEC) * NANOSEC;
@@ -232,18 +239,21 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				return #err(#NotFound); };
 		};
 	};
-
+	/**
+	* Removes bundle data if it is allowed
+	*/
 	public shared ({ caller }) func remove_bundle_data (bundle_id: Text, args : Types.DataPathArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
-				//if (not _access_allowed (bundle, _build_identity(caller), ?args.group)) return #err(#AccessDenied);				
+				if (not _access_allowed (bundle, _build_identity(caller), ?args.group)) return #err(#AccessDenied);				
 				let group_opt = switch (args.group) {
 					case (#POI) {bundle.payload.poi_group};
 					case (#Additions) {bundle.payload.additions_group}
 				};
 				switch (group_opt) {
 					case (?group) {
+						if (Utils.is_readonly(group)) return #err(#OperationNotAllowed);
 						switch (args.category) {
 							case (?category) {
 								switch (_find_section(group,  category)) {
@@ -283,7 +293,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (null) { return #err(#NotFound); };
 		};
 	};		
-
+	/**
+	* Applies data section based on the given binary data. No transformation performed.
+	*/
 	public shared ({ caller }) func apply_bundle_section_raw (bundle_id: Text, args : Types.DataPackageRawArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
@@ -300,7 +312,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (null) { return #err(#NotFound); };
 		};
 	};
-
+	/**
+	* Applies data section based on the given domain object. Passed domains objects are getting transformed into blob object before saving.
+	* Only reserved fields could be submitted.
+	*/
 	public shared ({ caller }) func apply_bundle_section (bundle_id: Text, args : Types.DataPackageArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
@@ -323,7 +338,23 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					action = args.action;
 				})) {
 					// any post processing could be added here
-					case (#ok()) { return #ok(bundle_id); };
+					case (#ok()) { 
+						// apply an index
+						if (args.category == #Location) {
+							switch (args.group) {
+								case (#POI) {
+									let poi = Utils.unwrap(bundle.payload.poi_group);
+									switch (poi.index) {
+										case (?index) {index.location:=args.payload.location};
+										case (null)   { poi.index := ?{var location = args.payload.location}; };
+									};
+								};
+								case (#Additions) {};
+							};
+						};
+
+						return #ok(bundle_id); 
+					};
 					case (#err(e)) {return #err(e);};
 				};
 			};
@@ -336,7 +367,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner 
 	*/
 	public shared ({ caller }) func init_data_store (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
-		if (not (caller == OWNER)) return #err(#AccessDenied);
+		if (not Utils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
         // reeturn active bucket in case data store already initialized
         if (Option.isSome(data_store.active_bucket)) return #ok(Utils.unwrap(data_store.active_bucket));
 
@@ -358,17 +389,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         data_store.bucket_counter := bucket_counter;
         data_store.last_update := ?Time.now();
 
-		// create root dir
-		/*let bucket_actor : Types.Actor.DataBucketActor = actor (bucket);
-		ignore await bucket_actor.new_directory(false, {
-			content_type = null;
-			name =  Principal.toText(Principal.fromActor(this));
-			parent_path = null;
-			parent_id = null;
-			ttl = null;
-			read_only = null;
-		});*/
-	
 		return #ok(bucket);
 	};
 
@@ -377,7 +397,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner 
 	*/
 	public shared ({ caller }) func new_data_bucket (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
-		if (not (caller == OWNER)) return #err(#AccessDenied);
+		if (not Utils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
         if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 
 		let canister_id = Principal.toText(Principal.fromActor(this));	
@@ -398,17 +418,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         data_store.bucket_counter := bucket_counter;
         data_store.last_update := ?Time.now();
 
-		// create root dir
-		/*let bucket_actor : Types.Actor.DataBucketActor = actor (bucket);
-		ignore await bucket_actor.new_directory(false, {
-			content_type = null;
-			name =  Principal.toText(Principal.fromActor(this));
-			parent_path = null;
-			parent_id = null;
-			ttl = null;
-			read_only = null;
-		});*/
-	
 		return #ok(bucket);
 	}; 	
 
@@ -425,7 +434,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
-	private func _submit_data (root_path:CommonTypes.ResourcePath, replace_path:?CommonTypes.ResourcePath, name:Text, locale:?Text, payload : Types.DataPayload) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
+	private func _submit_data (root_path:CommonTypes.ResourcePath, replace_path:?CommonTypes.ResourcePath, name:Text, locale:?Text, payload : Types.DataRawPayload) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
 		let bucket_actor : Types.Actor.DataBucketActor = actor (root_path.bucket_id);
 		let res = switch (replace_path) {
 			case (?replace) {
@@ -481,7 +490,19 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 	public query func total_supply() : async Nat {
 		return Trie.size(bundles);
-	};	
+	};
+
+	public query func get_mode() : async Types.Mode {
+		MODE;
+	};
+
+	public query func get_creator() : async CommonTypes.Identity {
+		CREATOR;
+	};
+
+	public query func get_owner() : async CommonTypes.Identity {
+		owner;
+	};		
 
 	public query func total_supply_by_creator(identity:CommonTypes.Identity) : async Nat {
 		switch (creator2bundle_get(identity)) {
@@ -510,18 +531,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (null) {[]};
 		};
     };     
-
-	private func _is_operator(id: Principal) : Bool {
-    	Option.isSome(Array.find(operators, func (x: Principal) : Bool { x == id }))
-    };
-
-    private func bundle_data_handler(key : Text, route : Types.Route) : Http.Response {
-		// TODO : not implemented yet
-		switch (bundle_get(key)) {
-            case (null) { Http.not_found() };
-            case (? v)  {Http.not_found();}
-        };
-    };	
 
    	private func bundle_http_response(key : Text, tag: ?Text) : Http.Response {
 		if (key == Utils.ROOT) {
@@ -553,9 +562,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		EmbededUI.bundle_page_response( Principal.toText(Principal.fromActor(this)), initArgs.network, key, bundle_get(key));
     };
 
-	private func _apply_bundle_logo (bundle: Types.Bundle, logo : ?Types.DataPayload) : async Result.Result<(), CommonTypes.Errors> {
+	private func _apply_bundle_logo (bundle: Types.Bundle, logo : ?Types.DataRawPayload) : async Result.Result<(), CommonTypes.Errors> {
       	// account should be controlled by owner,                 
-       	//  if (not (caller == bundle.owner)) return #err(#AccessDenied);		
 		let bucket_actor : Types.Actor.DataBucketActor = actor (bundle.data_path.bucket_id);				
 		// replace logo
 		switch(logo) {
@@ -608,7 +616,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		// increment counter
 		_bundle_counter  := _bundle_counter + 1;
         let canister_id = Principal.toText(Principal.fromActor(this));
-        let bundle_id = switch (MODES.identifier) {
+        let bundle_id = switch (MODE.identifier) {
             case (#Ordinal) {Nat.toText(_bundle_counter)};
             case (#Hash) { Utils.hash_time_based(canister_id, _bundle_counter)};
         };
@@ -653,9 +661,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 				// logo
 				switch (args.logo) {
-					case (?logo) {
-						ignore await _apply_bundle_logo(bundle, ?{value=logo.value; content_type=logo.content_type});
-					};
+					case (?logo) { ignore await _apply_bundle_logo(bundle, ?{value=logo.value; content_type=logo.content_type}); };
 					case (null) { };
 				};	
 				_track_creator(owner, bundle_id);
@@ -667,7 +673,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				// we can throw this kind of error because it belong to the data bucket. Root directory was not created
 				return #err(#DataStoreNotInitialized);
 			};
-
 		};
     };
 
@@ -761,10 +766,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			};
 			case (#err(_)) { return #err(#ActionFailed); };
 		};
-		//Debug.print("_apply_bundle_section : group "#debug_show(args.group)#"; category "#debug_show(args.category)#"; name "#debug_show(args.name));
 
-		// identify the section by category (it could be exteneded to identify the section by internal ID)
-		// take into account the number of such files (counters)
+		if (Utils.is_readonly(data_group)) return #err(#OperationNotAllowed);
 		let target_section =  switch (_find_section(data_group,  args.category)) {
 			case (?sec){sec};
 			case (null) {
@@ -785,7 +788,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			}
 		};
 		
-		let replace_path:?CommonTypes.ResourcePath = null;
 		let active_path:CommonTypes.ResourcePath = switch (args.nested_path) {
 			case (null) {target_section.data_path};
 			case (?nested_path) {
@@ -795,18 +797,19 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				}
 			};
 		};
-		//List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool { Option.get(k.locale, "") == Option.get(args.locale, "")});
 		switch (args.action) {
 			// upload binary data till 2mb
 			case (#Upload) {
 				// active chunk upload has not completed yet
 				if (Option.isSome(target_section.active_upload)) return #err(#OperationNotAllowed);
 				target_section.counter:=target_section.counter + 1;
+
 				// resolve final name
 				let resource_name = switch (args.name) {
 					case (?name) {name;};
-					case (null) {Utils.resolve_resource_name(args.category, args.locale, null)};
+					case (null) {Utils.resolve_resource_name(args.category, args.locale)};
 				};
+				let replace_path:?CommonTypes.ResourcePath = List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool {   Option.get(k.name, "") == resource_name and Option.get(k.locale, "") == Option.get(args.locale, "")});
 				// resource_path
 				let section_path:CommonTypes.ResourcePath = switch (await _submit_data(active_path,
 						replace_path, resource_name, args.locale, args.payload)) {
@@ -840,7 +843,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						// resolve final name
 						let resource_name = switch (args.name) {
 							case (?name) {name;};
-							case (null) {Utils.resolve_resource_name(args.category, args.locale, null)};
+							case (null) {Utils.resolve_resource_name(args.category, args.locale)};
 						};
 
 						let res = await bucket_actor.commit_batch_by_key(attempt.binding_key, {
@@ -872,7 +875,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) {
 						let poi_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #POI)) {
 							case (#ok(r_path)) {
-								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil();};
+								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil(); var index = null;};
 								bundle.payload.poi_group := ?g;
 								g;
 							};
@@ -887,7 +890,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) {
 						let additions_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #Additions)) {
 							case (#ok(r_path)) {
-								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil();};
+								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil(); var index = null;};
 								bundle.payload.additions_group := ?g;
 								g;
 							};
@@ -978,13 +981,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	private func _exclude_section (data_group: Types.DataGroup, category: CommonTypes.CategoryId) : () {
 		data_group.sections := List.mapFilter<Types.DataSection, Types.DataSection>(data_group.sections,  func (k:Types.DataSection) = if (k.category == category) { null } else { ?k });	
 	};
-
-	private func _is_readonly (r: Types.DataGroup) : Bool {
-		if (Option.isSome(r.readonly)) { 
-			return (Time.now() < Utils.unwrap(r.readonly));
-		};
-		return false;	
-	};		
 
 	private func _register_bucket(name:Text, operators : [Principal], cycles : Nat): async Text {
 		Cycles.add(cycles);
