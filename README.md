@@ -26,6 +26,11 @@ _Defined the concept of readonly directories, added the concept of resouce repla
 
 Examples of the build-in html interface (DCB) could be found herehttps://github.com/sergeybykov85/ic-content-package/tree/m1/screens
 
+Project has several directories, but the code available only here right now
+
+https://github.com/sergeybykov85/ic-content-package/tree/m1/src/content-bundle
+https://github.com/sergeybykov85/ic-content-package/tree/m1/src/shared
+
 ***
 
 # TODO:
