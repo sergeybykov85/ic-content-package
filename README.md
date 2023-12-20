@@ -18,11 +18,13 @@ _Only some backend changes were done in the scope of the 1st milestone. But some
 1. [Extend ICS2 service]
 _Defined the concept of readonly directories, added the concept of resouce replacement._
 
-2. [Definition of the basic model of the content bundle (DCB)].
+2. [Definition of the basic model of the content bundle (DCB), its structure and relations to databucket canisters].
 
 3. [Implementation the basic opperations for DCB].
 
 4. [Support of build-in html interface for backend canister DCB].
+
+Examples of the build-in html interface (DCB) could be found herehttps://github.com/sergeybykov85/ic-content-package/tree/m1/screens
 
 ***
 
