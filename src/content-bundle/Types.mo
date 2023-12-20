@@ -58,22 +58,15 @@ module {
 		#Ordinal;
 		#Hash;
 	};
-	// mode governs the behaviour if bundle can be removed or not
-	public type DeleteMode = {
-		#Deletable;
-		#NonDeletable;
-	};
 
 	public type Mode = {
 		submission : SubmissionMode;
 		identifier : IdentifierMode;
-		deletion :  DeleteMode;
 	};
 
 	public let DEFAULT_MODE : Mode = {
 		submission = #Public;
 		identifier = #Hash;
-		deletion = #NonDeletable;
 	};
 
 	public type DataPackageAction = {
@@ -194,7 +187,8 @@ module {
 		network : Network;
 		// mode
 		mode : ?Mode;
-		bucket_cycles : ?Nat;
+		// target owner. If not specified, then onwer = who installs the canister
+		owner : ?CommonTypes.Identity;
 	};
 
 	/**
@@ -227,7 +221,7 @@ module {
 			// direcotry id. It has a precedence over the parent_path, but this field is not supported in all methods
 			parent_id : ?Text;
 			ttl : ?Nat;
-			read_only : ?Nat;
+			readonly : ?Nat;
 		};
 
     	public type ICSettingsArgs = {
@@ -241,7 +235,7 @@ module {
 			store_resource : shared (content : Blob, resource_args : ResourceArgs ) -> async Result.Result<IdUrl, CommonTypes.Errors>;
 			replace_resource : shared (id :Text, content : Blob) -> async Result.Result<IdUrl, CommonTypes.Errors>;
 			delete_resource : shared (id : Text) -> async Result.Result<IdUrl, CommonTypes.Errors>;
-			readonly_resource : shared (id : Text, read_only : ?Nat) -> async Result.Result<IdUrl, CommonTypes.Errors>;
+			readonly_resource : shared (id : Text, readonly : ?Nat) -> async Result.Result<IdUrl, CommonTypes.Errors>;
 			store_chunk : shared (content : Blob, binding_key : ?Text) -> async Result.Result<Text, CommonTypes.Errors>;
 			commit_batch_by_key : shared (binding_key : Text, resource_args : ResourceArgs) -> async Result.Result<IdUrl, CommonTypes.Errors>;		
 		};

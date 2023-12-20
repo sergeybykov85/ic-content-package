@@ -27,10 +27,6 @@ module {
 		identity_id : Text;
 	};
 
-	public type IdentityAccess = {
-		identity : Identity;
-	};
-
 	public type DataGroupId = {
 		#POI;
 		#Additions;
@@ -69,23 +65,5 @@ module {
 		// no resource or no chunk
 		#ActionFailed;	
     };
-
-	public module Serialization {
-		public let LOCATION_FIELDS = ["latitude", "longitude", "country_code2", "region", "city", "coordinates"];
-		public let ABOUT_FIELDS = ["name", "value", "attributes", "locale", "description"];
-		
-		public type StructureArgs = {
-			location : ?Location;
-			about : ?AboutDataJson;
-		};	
-
-		public type AboutDataJson = {
-			name : Text;
-			description : Text;
-			locale : Text;
-			attributes : [NameValue];
-		};	
-	};	
-
 	
 };

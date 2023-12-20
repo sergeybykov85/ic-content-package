@@ -17,7 +17,7 @@ module {
     public let FORMAT_DATES_SCRIPT = "<script>let dates = document.getElementsByClassName(\"js_date\"); for (let i=0; i<dates.length; i++) { dates[i].innerHTML = (new Date(dates[i].textContent/1000000).toLocaleString()); } </script>";    
 
     let GLOBAL_CSS =  "<style type=\"text/css\"> a { text-decoration: underscore; color:#090909; } body { background-color: #FFFDE7; color:#090909; font-family: helvetica; } </style>";
-	let CLASS_CSS =  "<style type=\"text/css\"> .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; } .grid_details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } .logo { max-height:200px; margin: 1em auto; display:block; } .logo_details { max-height:300px; margin: 1em auto; display:block; } .cell { min-height: 100px; border: 1px solid gray; border-radius: 8px; padding: 8px 16px; position: relative; } .cell_details { min-height: 250px; border: 1px solid gray; border-radius: 8px; padding: 8px 16px; position: relative; } .tag { color:#0969DA; margin: 0 4px; border: 1px solid #0969DA; border-radius: 8px; padding: 4px 10px; background-color:#B6E3FF;}</style>";
+	let CLASS_CSS =  "<style type=\"text/css\"> .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; } .grid_details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } .logo { max-height:200px; margin: 1em auto; display:block; } .logo_details { max-height:300px; margin: 1em auto; display:block; } .cell { min-height: 100px; border: 1px solid gray; border-radius: 8px; padding: 8px 16px; position: relative; } .cell_details { min-height: 250px; border: 1px solid gray; border-radius: 8px; padding: 8px 16px; position: relative; } .tag { color:#1414A8; margin: 0 4px; border: 1px solid #0969DA; border-radius: 8px; padding: 4px 10px; background-color:#B6E3FF;} .right {float:right;}</style>";
 
     public func render_root_header (tag:?Text) : Text {
         var out_html = "<html><head>"#GLOBAL_CSS#CLASS_CSS# "</head><body>" # "<h2>&#128464; Overview &#9757; </h2><hr/>";
@@ -42,7 +42,6 @@ module {
 			};
         };
     };
-
 
 	public func render_bundle_overview (canister_id: Text, network:Types.Network, id:Text, r:Types.Bundle) : Text {
 		let url = Utils.build_resource_url({resource_id = id; canister_id = canister_id; network = network; view_mode = #Index; route = null});
@@ -77,26 +76,26 @@ module {
 			let tags_fmt = Text.join("", List.toIter(List.map(r.tags, func (t : Text):Text {"<span class=\"tag\">"#t#"</span>";})));
 			resource_html := resource_html # "<p>"# tags_fmt # "</p>";
 		};	
-		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>ID</b> : "# debug_show(id) # "</div>";
-		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>Root data path</b> : <a  href=\"" # r.data_path.url #"\" target = \"_blank\">"#r.data_path.url#"</a></div>";
-		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>Created</b> : <span class=\"js_date\">"# Int.toText(r.created) # "</span></div>";
-		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>Creaator</b> : "# debug_show(r.creator) # "</div>";
-		resource_html := resource_html # "<div style=\"padding: 4px 2px;\"><b>Owner</b> : "# debug_show(r.owner) # "</div>";		
+		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>ID</b> : "# debug_show(id) # "</div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Root data path</b> : <a  href=\"" # r.data_path.url #"\" target = \"_blank\">"#r.data_path.url#"</a></div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Created</b> : <span class=\"js_date\">"# Int.toText(r.created) # "</span></div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Creaator</b> : "# debug_show(r.creator) # "</div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Owner</b> : "# debug_show(r.owner) # "</div>";		
 		
 		switch (r.payload.poi_group) {
 			case (?poi) {
 				resource_html := resource_html # "<hr><p><b>'POI' data group</b></p>";
-				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">created : <span class=\"js_date\">"# Int.toText(poi.created) # "</span></div>";
-				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">path : <a  href=\"" # poi.data_path.url #"\" target = \"_blank\">"#poi.data_path.url#"</a></div>";
+				resource_html := resource_html # "<div style=\"padding: 3px 12px;\">created : <span class=\"right\"><span class=\"js_date\">"# Int.toText(poi.created) # "</span></span></div>";
+				resource_html := resource_html # "<div style=\"padding: 3px 12px;\">path : <span class=\"right\"><a  href=\"" # poi.data_path.url #"\" target = \"_blank\">"#poi.data_path.url#"</a></span></div>";
 				if (Utils.is_readonly(poi)) {
-					resource_html := resource_html # "<div style=\"padding: 2px 12px;\">&#128274; read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(poi.readonly)) # "</span></div>";
+					resource_html := resource_html # "<div style=\"padding: 3px 12px;\">&#128274; readonly untill : <span class=\"right\"><span class=\"js_date\">"# Int.toText(Utils.unwrap(poi.readonly)) # "</span></span></div>";
 				};
 				// render index
 				switch (poi.index) {
 					case (?index) {
 						switch (index.location) {
 							case (?location) {
-								resource_html := resource_html # "<div style=\"padding: 2px 12px;\">country | region | city | (latitude, longitude) : <span>"# location.country_code2 # " | "# (Option.get(location.region, "--/--")) # " | " #  (Option.get(location.city, "--/--")) # " ("# Float.toText(location.coordinates.latitude) # ", "# Float.toText(location.coordinates.longitude) #")</span></div>";
+								resource_html := resource_html # "<div style=\"padding: 3px 12px;\">country | region | city | (latitude, longitude) : <span class=\"right\">"# location.country_code2 # " | "# (Option.get(location.region, "--/--")) # " | " #  (Option.get(location.city, "--/--")) # " ("# Float.toText(location.coordinates.latitude) # ", "# Float.toText(location.coordinates.longitude) #")</span></div>";
 							};
 							case (null) {};
 						};
@@ -107,7 +106,7 @@ module {
 				if (not List.isNil(poi.sections)){
 					resource_html := resource_html # "<div style=\"padding: 2px 12px;\">sections :";
 					for (section in List.toIter(poi.sections)) {
-						resource_html := resource_html # "<span style=\"padding: 0 12px;\"><i><a  href=\"" # section.data_path.url #"\" target = \"_blank\">"#debug_show(section.category)#"</a></i></span>";
+						resource_html := resource_html # "<span class=\"right\"><span style=\"padding: 0 12px;\"><i><a  href=\"" # section.data_path.url #"\" target = \"_blank\">"#debug_show(section.category)#"</a></i></span></span>";
 					};
 					resource_html := resource_html # "</div>";	
 				};					
@@ -118,16 +117,16 @@ module {
 		switch (r.payload.additions_group) {
 			case (?add) {
 				resource_html := resource_html # "<hr><p><b>'Additions' data group</b></p>";
-				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">created : <span class=\"js_date\">"# Int.toText(add.created) # "</span></div>";
-				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">path : <a  href=\"" # add.data_path.url #"\" target = \"_blank\">"#add.data_path.url#"</a></div>";
+				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">created : <span class=\"right\"><span class=\"js_date\">"# Int.toText(add.created) # "</span></span></div>";
+				resource_html := resource_html # "<div style=\"padding: 2px 12px;\">path : <span class=\"right\"><a  href=\"" # add.data_path.url #"\" target = \"_blank\">"#add.data_path.url#"</a></span></div>";
 				if (Utils.is_readonly(add)) {
-					resource_html := resource_html # "<div style=\"padding: 2px 12px;\">read only untill : <span class=\"js_date\">"# Int.toText(Utils.unwrap(add.readonly)) # "</span></div>";
+					resource_html := resource_html # "<div style=\"padding: 2px 12px;\">readonly untill : <span class=\"right\"><span class=\"js_date\">"# Int.toText(Utils.unwrap(add.readonly)) # "</span></span></div>";
 				};
 				// render sections
 				if (not List.isNil(add.sections)){
 					resource_html := resource_html # "<div style=\"padding: 2px 12px;\">sections :";
 					for (section in List.toIter(add.sections)) {
-						resource_html := resource_html # "<span style=\"padding: 0 12px;\"><i><a  href=\"" # section.data_path.url #"\" target = \"_blank\">"#debug_show(section.category)#"</a></i></span>";
+						resource_html := resource_html # "<span class=\"right\"><span style=\"padding: 0 12px;\"><i><a  href=\"" # section.data_path.url #"\" target = \"_blank\">"#debug_show(section.category)#"</a></i></span></span>";
 					};
 					resource_html := resource_html # "</div>";	
 				};			
@@ -135,10 +134,6 @@ module {
 			case (null) {resource_html := resource_html # "<hr><p><b>'Additions' data group</b> : --- / --- </p>";}
 		};
 
-	/*	if (List.size(r.tags) > 0) {
-			let tags_fmt = Text.join("", List.toIter(List.map(r.tags, func (t : Text):Text {"<span class=\"tag\">"#t#"</span>";})));
-			resource_html := resource_html # "<hr><p>"# tags_fmt # "</p>";
-		};		*/
 		
 		return  resource_html # "</div>";	
 	};
