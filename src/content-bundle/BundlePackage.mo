@@ -1,5 +1,6 @@
 import Blob "mo:base/Blob";
 import Array "mo:base/Array";
+import Buffer "mo:base/Buffer";
 import Cycles "mo:base/ExperimentalCycles";
 import Int "mo:base/Int";
 import Nat "mo:base/Nat";
@@ -16,10 +17,10 @@ import Nat64 "mo:base/Nat64";
 import DataBucket "mo:ics2/DataBucket";
 import Debug "mo:base/Debug";
 import { JSON; Candid } "mo:serde";
-import Common "mo:serde/Candid/Text/Parser/Common";
 
 import Http "../shared/Http";
 import CommonTypes "../shared/CommonTypes";
+import CommonUtils "../shared/CommonUtils";
 
 import Conversion "./Conversion";
 import Types "./Types";
@@ -42,6 +43,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
 	});
+
+	stable var metadata : Types.Metadata = Conversion.to_metadata(initArgs.metadata);
+
 	stable let NETWORK = initArgs.network;
     stable let MODE = Option.get(initArgs.mode, Types.DEFAULT_MODE);
 
@@ -70,17 +74,36 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
     private func tags2bundle_get(id : Text) : ?List.List<Text> = Trie.get(tags2bundle, Utils.tag_key(id), Text.equal);
 
-    private func creator2bundle_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(creator2bundle, Utils.identity_key(identity), Text.equal);
+    private func creator2bundle_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(creator2bundle, CommonUtils.identity_key(identity), Text.equal);
 
-    private func owner2bundle_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(owner2bundle, Utils.identity_key(identity), Text.equal);
+    private func owner2bundle_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(owner2bundle, CommonUtils.identity_key(identity), Text.equal);
 
-    private func bundle_get(id : Text) : ?Types.Bundle = Trie.get(bundles, {key = id; hash = Text.hash id }, Text.equal);
+    private func bundle_get(id : Text) : ?Types.Bundle = Trie.get(bundles, CommonUtils.text_key(id), Text.equal);
+
+	/**
+	* Updates metadata of the package
+	* Allowed only to the owner of the package
+	*/
+	public shared ({ caller }) func update_metadata (args : Types.MetadataUpdateArgs) : async Result.Result<(), CommonTypes.Errors> {
+		if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
+		if (Option.isSome(args.name)) {
+			metadata.name:= CommonUtils.unwrap(args.name);
+		};                
+		if (Option.isSome(args.description)) {
+			metadata.description:= CommonUtils.unwrap(args.description);
+		};
+		if (Option.isSome(args.logo)) {
+			metadata.logo:= args.logo;
+		}; 				
+		return #ok();
+	};
+
 
 	/**
 	* Transfers ownership of the package from current owner to the new one
 	*/
 	public shared ({ caller }) func transfer_ownership (to : CommonTypes.Identity) : async Result.Result<(), CommonTypes.Errors> {
-		if (not Utils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
+		if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
 		owner :=to;
 		#ok();
 	};
@@ -92,7 +115,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		// different restrictions based on the mode
         switch (MODE.submission) {
             case (#Installer) {
-				if (not Utils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
+				if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
                 await _register_bundle(args, _build_identity(caller));
             };
             case (#Public) {
@@ -111,13 +134,13 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
             	// account should be controlled by owner,
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
 				if (Option.isSome(args.name)) {
-					bundle.name:= Utils.unwrap(args.name);
+					bundle.name:= CommonUtils.unwrap(args.name);
 				};                
 				if (Option.isSome(args.description)) {
-					bundle.description:= Utils.unwrap(args.description);
+					bundle.description:= CommonUtils.unwrap(args.description);
 				};
 				if (Option.isSome(args.tags)) {
-					let tags = Utils.unwrap(args.tags);
+					let tags = CommonUtils.unwrap(args.tags);
 					if (Array.size(tags) > MAX_TAGS) return #err(#InvalidRequest);
 					for (tag in tags.vals()) {
   						if (Utils.invalid_tag_name(tag)) return #err(#InvalidRequest);
@@ -175,8 +198,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						let data_group:Types.DataGroup = switch (await _assert_data_group(bundle, group_val)) {
 						case (#ok(g)){
 							switch (g) {
-								case (#POI) {Utils.unwrap(bundle.payload.poi_group)};
-								case (#Additions) {Utils.unwrap(bundle.payload.additions_group)};
+								case (#POI) {CommonUtils.unwrap(bundle.payload.poi_group)};
+								case (#Additions) {CommonUtils.unwrap(bundle.payload.additions_group)};
 							}
 						};
 						case (#err(_)) { return #err(#ActionFailed); };
@@ -348,7 +371,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						if (args.category == #Location) {
 							switch (args.group) {
 								case (#POI) {
-									let poi = Utils.unwrap(bundle.payload.poi_group);
+									let poi = CommonUtils.unwrap(bundle.payload.poi_group);
 									switch (poi.index) {
 										case (?index) {index.location:=args.payload.location};
 										case (null)   { poi.index := ?{var location = args.payload.location}; };
@@ -372,9 +395,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner 
 	*/
 	public shared ({ caller }) func init_data_store (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
-		if (not Utils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
+		if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
         // reeturn active bucket in case data store already initialized
-        if (Option.isSome(data_store.active_bucket)) return #ok(Utils.unwrap(data_store.active_bucket));
+        if (Option.isSome(data_store.active_bucket)) return #ok(CommonUtils.unwrap(data_store.active_bucket));
 
 		let canister_id = Principal.toText(Principal.fromActor(this));	
 
@@ -402,7 +425,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner 
 	*/
 	public shared ({ caller }) func new_data_bucket (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
-		if (not Utils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
+		if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
         if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 
 		let canister_id = Principal.toText(Principal.fromActor(this));	
@@ -439,6 +462,26 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
+    private func bundle_data_handler(key : Text, route : Types.Route) : Http.Response {
+		switch (route) {
+            case (#Asset) {
+				if (key == Utils.LOGO) {
+					return switch (metadata.logo) {
+						case (?logo) {
+							let headers = switch (logo.content_type) {
+								case (?cp) {[("Content-Type", cp)]};
+								case (null) {[("Content-Type", "application/octet-stream")]};
+							};
+							Http.success(headers, logo.value)};
+						case (null) {Http.not_found() };
+					}
+				};
+				return Http.not_found();
+			};
+			case (_) { Http.not_found() };
+        };
+    };		
+
 	private func _submit_data (root_path:CommonTypes.ResourcePath, replace_path:?CommonTypes.ResourcePath, name:Text, locale:?Text, payload : Types.DataRawPayload) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
 		let bucket_actor : Types.Actor.DataBucketActor = actor (root_path.bucket_id);
 		let res = switch (replace_path) {
@@ -464,6 +507,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     	let amount = Cycles.available();
     	ignore Cycles.accept(amount);
   	};
+	
+	public query func available_cycles() : async Nat {
+		return Cycles.balance();
+  	};
 
 	public query func get_data_store() : async Conversion.DataStoreView {
 		return Conversion.convert_datastore_view(data_store);
@@ -485,10 +532,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
-	public query func available_cycles() : async Nat {
-		return Cycles.balance();
-  	};
-
 	public query func get_version() : async Text {
 		return Utils.VERSION;
 	};
@@ -507,7 +550,23 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 	public query func get_owner() : async CommonTypes.Identity {
 		owner;
-	};		
+	};
+
+	public query func get_details () : async Types.PackageDetails {
+		let logo_url = switch (metadata.logo) {
+			case (?logo) {
+				?Utils.build_resource_url({resource_id = Utils.LOGO; canister_id = Principal.toText(Principal.fromActor(this)); network = NETWORK; view_mode = #Open; route = ?#Asset;});
+			};
+			case (null) {null};
+		};
+		{ 	creator = CREATOR;
+			owner  = owner;
+			total_bundles =  Trie.size(bundles);
+			name  = metadata.name;
+			description = metadata.description;
+			logo_url =logo_url;
+		};
+	};
 
 	public query func total_supply_by_creator(identity:CommonTypes.Identity) : async Nat {
 		switch (creator2bundle_get(identity)) {
@@ -541,14 +600,25 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
     };	
 	/**
-	* Returns bundle ids for the owner
+	* Returns bundle ids for the tag
 	*/
     public query func get_bundle_ids_for_tag(tag:Text) : async [Text] {
 		switch (tags2bundle_get(tag)) {
 			case (?bundle_ids) {List.toArray(bundle_ids)};
 			case (null) {[]};
 		};
-    };     
+    };
+
+    public query func get_bundles(ids:[Text]) : async [Conversion.BundleView] {
+		let res = Buffer.Buffer<Conversion.BundleView>(Array.size(ids));
+		for (id in ids.vals()) {
+			switch (bundle_get(id)) {
+				case (?bundle) { res.add(Conversion.convert_bundle_view(bundle)); };
+				case (null) {  };
+			};
+		};
+		Buffer.toArray(res);
+    };	    
 
    	private func bundle_http_response(key : Text, tag: ?Text) : Http.Response {
 		if (key == Utils.ROOT) {
@@ -593,14 +663,14 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) {
 						let logo_result = await bucket_actor.store_resource(logo_val.value, {
 							content_type = logo_val.content_type;
-							name = "logo";
+							name = Utils.LOGO;
 							parent_id = ?bundle.data_path.resource_id; parent_path = null; ttl = null; readonly = null;}
 						);
 						switch (logo_result) {
 							case (#ok(l_path)) {	
 								bundle.logo := ?{
 									locale=null; 
-									name = ?"logo";
+									name = ?Utils.LOGO;
 									url=l_path.url; 
 									bucket_id=l_path.partition; 
 									resource_id=l_path.id;
@@ -638,7 +708,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
             case (#Hash) { Utils.hash_time_based(canister_id, _bundle_counter)};
         };
 		// init directory
-		let bucket_id:Text = Utils.unwrap(data_store.active_bucket);
+		let bucket_id:Text = CommonUtils.unwrap(data_store.active_bucket);
 		let bucket_actor : Types.Actor.DataBucketActor = actor (bucket_id);
 		let bundle_data = await bucket_actor.new_directory(false, {
 			content_type = null;
@@ -672,7 +742,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					var access_list = List.nil();
         		};
         		// put into store memory
-        		bundles := Trie.put(bundles, Utils.text_key(bundle_id), Text.equal, bundle).0;
+        		bundles := Trie.put(bundles, CommonUtils.text_key(bundle_id), Text.equal, bundle).0;
 				// apply tags for bundle
 				_include_tags (bundle_id, tags_list);
 
@@ -731,9 +801,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						if (leaf == bundle_id) return;
 					};
 				};
-				creator2bundle := Trie.put(creator2bundle, Utils.identity_key(identity), Text.equal, List.push(bundle_id, bundle_ids)).0;       
+				creator2bundle := Trie.put(creator2bundle, CommonUtils.identity_key(identity), Text.equal, List.push(bundle_id, bundle_ids)).0;       
 			};
-			case (null) {creator2bundle := Trie.put(creator2bundle, Utils.identity_key(identity), Text.equal, List.push(bundle_id, List.nil())).0; };
+			case (null) {creator2bundle := Trie.put(creator2bundle, CommonUtils.identity_key(identity), Text.equal, List.push(bundle_id, List.nil())).0; };
 		};
     };
 
@@ -745,9 +815,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						if (leaf == bundle_id) return;
 					};
 				};
-				owner2bundle := Trie.put(owner2bundle, Utils.identity_key(identity), Text.equal, List.push(bundle_id, bundle_ids)).0;       
+				owner2bundle := Trie.put(owner2bundle, CommonUtils.identity_key(identity), Text.equal, List.push(bundle_id, bundle_ids)).0;       
 			};
-			case (null) { owner2bundle := Trie.put(owner2bundle, Utils.identity_key(identity), Text.equal, List.push(bundle_id, List.nil())).0; };
+			case (null) { owner2bundle := Trie.put(owner2bundle, CommonUtils.identity_key(identity), Text.equal, List.push(bundle_id, List.nil())).0; };
 		};
     };
 
@@ -758,7 +828,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					let fbundles = List.mapFilter<Text, Text>(bundle_ids,
 						func(b:Text) : ?Text { if (b == bundle_id) { return null; } else { return ?b; }
 					});
-					owner2bundle := Trie.put(owner2bundle, Utils.identity_key(identity), Text.equal, fbundles).0;       
+					owner2bundle := Trie.put(owner2bundle, CommonUtils.identity_key(identity), Text.equal, fbundles).0;       
 				};
 			};
 			case (null) { };
@@ -805,8 +875,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		let data_group:Types.DataGroup = switch (await _assert_data_group(bundle, args.group)) {
 			case (#ok(g)){
 				switch (g) {
-					case (#POI) {Utils.unwrap(bundle.payload.poi_group);};
-					case (#Additions) {Utils.unwrap(bundle.payload.additions_group);};
+					case (#POI) {CommonUtils.unwrap(bundle.payload.poi_group);};
+					case (#Additions) {CommonUtils.unwrap(bundle.payload.additions_group);};
 				}
 			};
 			case (#err(_)) { return #err(#ActionFailed); };
@@ -854,7 +924,12 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (?name) {name;};
 					case (null) {Utils.resolve_resource_name(args.category, args.locale)};
 				};
-				let replace_path:?CommonTypes.ResourcePath = List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool {   Option.get(k.name, "") == resource_name and Option.get(k.locale, "") == Option.get(args.locale, "")});
+				let replace_path:?CommonTypes.ResourcePath = switch (args.nested_path) {
+					// replace opportunity is just an "extra feature, sugar" to quickly update simple resources
+					case (null) { List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool {   Option.get(k.name, "") == resource_name and Option.get(k.locale, "") == Option.get(args.locale, "")}) };
+					// replace is not supported in case of nested path
+					case (?path) {null};
+				};
 				// resource_path
 				let section_path:CommonTypes.ResourcePath = switch (await _submit_data(active_path,
 						replace_path, resource_name, args.locale, args.payload)) {
@@ -1004,18 +1079,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						// check on group
 						case (?group_obj) {
 							if (not List.isNil(group_obj.access_list)) {
-								Option.isSome(List.find(group_obj.access_list , func (k:CommonTypes.Identity):Bool { Utils.identity_equals(identity, k)}))
-							} else Utils.identity_equals(identity, bundle.owner); 						
+								Option.isSome(List.find(group_obj.access_list , func (k:CommonTypes.Identity):Bool { CommonUtils.identity_equals(identity, k)}))
+							} else CommonUtils.identity_equals(identity, bundle.owner); 						
 						};
 						// // check on bundle
-						case (null) { Utils.identity_equals(identity, bundle.owner) };
+						case (null) { CommonUtils.identity_equals(identity, bundle.owner) };
 					};
 				};
 				// check based on bundle level only
 				case (null) { 
 					if (not List.isNil(bundle.access_list)) {
-						Option.isSome(List.find(bundle.access_list , func (k:CommonTypes.Identity):Bool { Utils.identity_equals(identity, k)}))
-					} else Utils.identity_equals(identity, bundle.owner); }
+						Option.isSome(List.find(bundle.access_list , func (k:CommonTypes.Identity):Bool { CommonUtils.identity_equals(identity, k)}))
+					} else CommonUtils.identity_equals(identity, bundle.owner); }
 			};
 	};
 

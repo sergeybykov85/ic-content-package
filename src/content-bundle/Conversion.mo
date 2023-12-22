@@ -28,7 +28,6 @@ module {
 		data: [CommonTypes.ResourcePath];
 	};
 
-	
 	public type DataIndexView = {
 		location : ?CommonTypes.Location;
 	};
@@ -124,6 +123,19 @@ module {
 			case (_)  { return #err(#NotSupported)};
 		};
 		#ok(blob_to_save);
+	};
+
+	public func to_metadata (args : ?Types.MetadataArgs) : Types.Metadata {
+		switch (args) {
+			case (?m) {
+				{
+				var name = m.name;
+				var description = m.description;
+				var logo = m.logo;
+				}
+			};
+			case (null) {{var name = ""; var description = ""; var logo = null}};
+		}
 	};
 
 };

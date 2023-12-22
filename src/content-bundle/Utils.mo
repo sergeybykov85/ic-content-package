@@ -24,13 +24,9 @@ import Types "./Types";
 
 module {
     public let VERSION = "0.1";
-   // public let FORMAT_DATES_SCRIPT = "<script>let dates = document.getElementsByClassName(\"js_date\"); for (let i=0; i<dates.length; i++) { dates[i].innerHTML = (new Date(dates[i].textContent/1000000).toLocaleString()); } </script>";    
     public let DEF_BUCKET_CYCLES:Nat = 9_000_000_000;
-
-
     public let ROOT = "/";
-
-  //  public let DEF_BODY_STYLE = " a { text-decoration: underscore; color:#090909; } body { background-color: #FFFDE7; color:#090909; font-family: helvetica; }";
+    public let LOGO:Text = "logo";
 
     let HEX_SYMBOLS =  [
     '0', '1', '2', '3', '4', '5', '6', '7',
@@ -46,7 +42,7 @@ module {
     private type ResourceUrlArgs = {
         resource_id : Text;
         canister_id : Text;
-        network : Types.Network;
+        network : CommonTypes.Network;
         view_mode : Types.ViewMode;
         route : ?Types.Route;
     };
@@ -99,16 +95,8 @@ module {
         let x = Text.map(token , Prim.charToLower);
     };
 
-    public func get_identity_key (identity: CommonTypes.Identity) : Text {
-        Text.map(resolve_identity_type(identity.identity_type)#identity.identity_id , Prim.charToLower);
-    };     
-
-    public func text_key(id: Text) : Trie.Key<Text> = { key = id; hash = Text.hash id };
     public func tag_key(id: Text) : Trie.Key<Text> = { key = normalize_tag(id); hash = Text.hash (normalize_tag(id)) };
-    public func identity_key(identity: CommonTypes.Identity) : Trie.Key<Text>  { 
-        let _k = get_identity_key(identity);
-        {key = _k; hash = Text.hash (_k) }
-    };
+
 
     public func unwrap<T>(x: ?T) : T {
         switch x {
@@ -138,14 +126,10 @@ module {
     public func build_resource_url(args : ResourceUrlArgs) : Text {
         let router_id = switch (args.view_mode) {
             case (#Index) {INDEX_ROUTE};
-            case (#Open) {
-                RESOURCE_ROUTE;
-               /* switch (args.route) {
-                    case (#Logo) {RESOURCE_ROUTE};
-                    case (_) {RESOURCE_ROUTE};
-                };*/
-            };
+            // it is ok to use RESOURCE_ROUTE always for  now
+            case (#Open) {RESOURCE_ROUTE};
         };
+
 
         switch (args.network){
             case (#Local(location)) return Text.join("",(["http://", args.canister_id, ".", location, router_id, args.resource_id].vals()));
@@ -162,7 +146,7 @@ module {
             return ?{
                 id = _fetch_id_from_uri(url);
                 view_mode = #Open;
-                route = #Logo;
+                route = #Asset;
                 tag = null;
             };
         };       
@@ -237,12 +221,7 @@ module {
     	res.add(b);        
     	Buffer.toArray(res);
     };
-
-	public func identity_equals (identity1: CommonTypes.Identity, identity2: CommonTypes.Identity) : Bool {
-		return (identity1.identity_type == identity2.identity_type
-		and identity1.identity_id == identity2.identity_id);
-	};    
-
+ 
     public func resolve_resource_name (category: CommonTypes.CategoryId, locale: ?Text) : Text {
         var suffix = switch (locale) {
             case (?loc) {"_"#loc};
@@ -268,13 +247,6 @@ module {
             case (#Additions) {"additions"};
         };
     };
-
-    public func resolve_identity_type (identity_type: CommonTypes.IdentityType) : (Text) {
-        switch (identity_type) {
-            case (#ICP) { "ICP"};
-            case (#EvmChain) {"EvmChain"};
-        };
-    };     
 
     public func resolve_category_name (category: CommonTypes.CategoryId) : (Text) {
         switch (category) {

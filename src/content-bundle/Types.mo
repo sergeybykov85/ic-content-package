@@ -19,8 +19,7 @@ module {
 
 	public type Route = {
 		#Bundle;
-		#Logo;     
-		#POI;     
+		#Asset;     
 	};	
 
 	public type ViewMode = {
@@ -37,16 +36,20 @@ module {
 		var last_update : ?Time.Time;
 	};
 
-	public type DataStoreView = {
-		buckets : [Text];
-		active_bucket : Text;
-		last_update : Time.Time;
-	};	
+	public type Metadata = {
+		var name : Text;
+		var description : Text;
+		var logo : ?DataRawPayload;
+	};
 
-	public type Network = {
-        #IC;
-        #Local: Text; // host details like localhost:4943
-    };
+	public type PackageDetails = {
+		creator : CommonTypes.Identity;
+		owner : CommonTypes.Identity;
+		total_bundles : Nat;
+		name : Text;
+		description : Text;
+		logo_url : ?Text;
+	};	
 
 	// mode governs the behavior who can create new bundle
 	public type SubmissionMode = {
@@ -180,15 +183,29 @@ module {
 		description : ?Text;
 		logo : ?DataRawPayload;
 		tags : ?[Text];
-	};		
+	};
+
+	public type MetadataArgs = {
+		name : Text;
+		description : Text;
+		logo : ?DataRawPayload;
+	};
+
+	
+	public type MetadataUpdateArgs = {
+		name : ?Text;
+		description : ?Text;
+		logo : ?DataRawPayload;
+	};	
 
 	// input arguments to install a new BundlePackage actor
 	public type BundlePackageArgs = {
-		network : Network;
+		network : CommonTypes.Network;
 		// mode
 		mode : ?Mode;
 		// target owner. If not specified, then onwer = who installs the canister
 		owner : ?CommonTypes.Identity;
+		metadata : ?MetadataArgs;
 	};
 
 	/**

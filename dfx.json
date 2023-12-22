@@ -4,7 +4,12 @@
       "main": "src/content-bundle/BundlePackage.mo",
       "type": "motoko",
       "dependencies": []
-    }
+    },
+    "registry": {
+      "main": "src/content-bundle-registry/PackageRegistry.mo",
+      "type": "motoko",
+      "dependencies": []
+    }    
   },
   "defaults": {
     "build": {

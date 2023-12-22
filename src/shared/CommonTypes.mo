@@ -13,14 +13,18 @@ module {
 
 	public type Coordinates = {latitude : Float; longitude : Float};
 
-	public type AccessList = {owner : Principal; operators : [Principal]};
-
 	public type ResourcePath = {url : Text; bucket_id:Text; resource_id: Text; locale:?Text;  name:?Text};
 
 	public type IdentityType = {
 		#ICP;
 		#EvmChain; 
 	};
+
+	
+	public type Network = {
+        #IC;
+        #Local: Text; // host details like localhost:4943
+    };
 
 	public type Identity = {
 		identity_type : IdentityType;
