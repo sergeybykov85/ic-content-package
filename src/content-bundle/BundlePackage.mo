@@ -39,6 +39,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		identity_type = #ICP;
 		identity_id = Principal.toText(installation.caller);
 	};
+	let CREATED = Time.now();
 
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
@@ -47,7 +48,11 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	stable var metadata : Types.Metadata = Conversion.to_metadata(initArgs.metadata);
 
 	stable let NETWORK = initArgs.network;
+   
     stable let MODE = Option.get(initArgs.mode, Types.DEFAULT_MODE);
+
+	// who can create bundles. It works only for Mode = Shared
+	stable var contributors : List.List<CommonTypes.Identity> = List.nil();
 
     // data store  model. More attributes could be placed here
     stable var data_store : Types.DataStore = {
@@ -107,22 +112,50 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		owner :=to;
 		#ok();
 	};
+
+
+	/**
+	* Apply logo for the bundle item. If not specified, then the existing logo is removed
+	* Allowed only to the owner of the bundle.
+	*/
+	public shared ({ caller }) func apply_contributors (access_list : [CommonTypes.Identity]) : async Result.Result<(), CommonTypes.Errors> {
+		// different restrictions based on the mode
+        switch (MODE.submission) {
+			case (#Shared) {
+				// only owner
+				if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
+				contributors:= List.fromArray(access_list);
+				return #ok();
+			};
+			case (_) {return #err(#OperationNotAllowed)};
+		};
+
+	};
+
     
 	/**
 	* Registers a new bunle.
 	*/
 	public shared ({ caller }) func register_bundle (args : Types.BundleArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		// different restrictions based on the mode
+		let caller_identity = _build_identity(caller);
         switch (MODE.submission) {
-            case (#Installer) {
-				if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
-                await _register_bundle(args, _build_identity(caller));
+            case (#Private) {
+				if (not CommonUtils.identity_equals(caller_identity, owner)) return #err(#AccessDenied);
+                await _register_bundle(args, caller_identity);
             };
-            case (#Public) {
-                await _register_bundle(args, _build_identity(caller));
+            case (#Public) { 
+                await _register_bundle(args, caller_identity);
             };
+            case (#Shared) {
+				if (not CommonUtils.identity_equals(caller_identity, owner)
+					or  Option.isSome(List.find(contributors , CommonUtils.find_identity(caller_identity)))) return #err(#AccessDenied);
+				
+                await _register_bundle(args, caller_identity);
+            };			
         };
     };
+
 
 	/**
 	* Updates an existing bundle, just override  description, tags, logo and if they specified
@@ -559,9 +592,11 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			};
 			case (null) {null};
 		};
-		{ 	creator = CREATOR;
+		{ 	submission = MODE.submission;
+			creator = CREATOR;
 			owner  = owner;
 			total_bundles =  Trie.size(bundles);
+			created = CREATED;
 			name  = metadata.name;
 			description = metadata.description;
 			logo_url =logo_url;
@@ -618,7 +653,14 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			};
 		};
 		Buffer.toArray(res);
-    };	    
+    };
+
+	/**
+	* Returns contributors if they have set
+	*/
+    public query func get_contributors() : async [CommonTypes.Identity] {
+        List.toArray(contributors);
+    };		    
 
    	private func bundle_http_response(key : Text, tag: ?Text) : Http.Response {
 		if (key == Utils.ROOT) {
@@ -1079,7 +1121,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						// check on group
 						case (?group_obj) {
 							if (not List.isNil(group_obj.access_list)) {
-								Option.isSome(List.find(group_obj.access_list , func (k:CommonTypes.Identity):Bool { CommonUtils.identity_equals(identity, k)}))
+								Option.isSome(List.find(group_obj.access_list , CommonUtils.find_identity(identity)))
 							} else CommonUtils.identity_equals(identity, bundle.owner); 						
 						};
 						// // check on bundle
@@ -1089,7 +1131,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				// check based on bundle level only
 				case (null) { 
 					if (not List.isNil(bundle.access_list)) {
-						Option.isSome(List.find(bundle.access_list , func (k:CommonTypes.Identity):Bool { CommonUtils.identity_equals(identity, k)}))
+						Option.isSome(List.find(bundle.access_list , CommonUtils.find_identity(identity)))
 					} else CommonUtils.identity_equals(identity, bundle.owner); }
 			};
 	};

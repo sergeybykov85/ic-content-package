@@ -97,14 +97,6 @@ module {
 
     public func tag_key(id: Text) : Trie.Key<Text> = { key = normalize_tag(id); hash = Text.hash (normalize_tag(id)) };
 
-
-    public func unwrap<T>(x: ?T) : T {
-        switch x {
-            case null { Prelude.unreachable() };
-            case (?x_) { x_ };
-        }
-    }; 
-
     public func invalid_tag_name (name : Text) : Bool {
         Text.contains(name, #predicate (func(c) { Option.isSome(Array.find(NOT_ALLOWED_FOR_TAG, func (x: Char) : Bool { x == c } ))  })  );
     };
@@ -115,7 +107,7 @@ module {
 
     public func is_readonly (r: Types.DataGroup) : Bool {
 		if (Option.isSome(r.readonly)) { 
-			return (Time.now() < unwrap(r.readonly));
+			return (Time.now() < Option.get(r.readonly, 0));
 		};
 		return false;	
 	};	
@@ -140,7 +132,7 @@ module {
     public func get_resource_id(url : Text) : ?Types.RequestedObject {
 
         if (Text.startsWith(url, #text RESOURCE_ROUTE) ) {
-            let path = unwrap(Text.stripStart(url, #text RESOURCE_ROUTE));
+            let path = Option.get(Text.stripStart(url, #text RESOURCE_ROUTE), "");
             if (path == "" or Text.startsWith(path, #char '?'))  return null;
 
             return ?{
@@ -151,7 +143,7 @@ module {
             };
         };       
         if (Text.startsWith(url, #text INDEX_ROUTE)) {
-            let path = unwrap(Text.stripStart(url, #text INDEX_ROUTE));
+            let path = Option.get(Text.stripStart(url, #text INDEX_ROUTE),"");
             if (path == "" or Text.startsWith(path, #char '?')) {
                 let tag = switch (_fetch_param_from_uri(url, PARAM_TAG)) {
                     case (?t) {?un_escape_browser_token(t)};

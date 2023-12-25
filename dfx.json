@@ -5,7 +5,7 @@
       "type": "motoko",
       "dependencies": []
     },
-    "registry": {
+    "package_registry": {
       "main": "src/content-bundle-registry/PackageRegistry.mo",
       "type": "motoko",
       "dependencies": []

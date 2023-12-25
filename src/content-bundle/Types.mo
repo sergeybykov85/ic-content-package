@@ -42,29 +42,35 @@ module {
 		var logo : ?DataRawPayload;
 	};
 
-	public type PackageDetails = {
-		creator : CommonTypes.Identity;
-		owner : CommonTypes.Identity;
-		total_bundles : Nat;
-		name : Text;
-		description : Text;
-		logo_url : ?Text;
-	};	
-
 	// mode governs the behavior who can create new bundle
-	public type SubmissionMode = {
-		#Installer; 
+	public type Submission = {
+		// only single owner can register a new bundle
+		#Private; 
+		// anyone
 		#Public;
+		// owner can apply list of users that can contribute with their bundles
+		#Shared;
 	};
 	// mode governs the identifier style for new bundle
-	public type IdentifierMode = {
+	public type Identifier = {
 		#Ordinal;
 		#Hash;
 	};
 
+	public type PackageDetails = {
+		submission : Submission;
+		creator : CommonTypes.Identity;
+		owner : CommonTypes.Identity;
+		created : Int;
+		total_bundles : Nat;
+		name : Text;
+		description : Text;
+		logo_url : ?Text;
+	};		
+
 	public type Mode = {
-		submission : SubmissionMode;
-		identifier : IdentifierMode;
+		submission : Submission;
+		identifier : Identifier;
 	};
 
 	public let DEFAULT_MODE : Mode = {

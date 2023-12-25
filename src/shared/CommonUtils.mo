@@ -14,17 +14,16 @@ module {
     public func identity_equals (identity1: CommonTypes.Identity, identity2: CommonTypes.Identity) : Bool {
 		return (identity1.identity_type == identity2.identity_type
 		and identity1.identity_id == identity2.identity_id);
-	}; 
+	};
 
-    public func resolve_identity_type (identity_type: CommonTypes.IdentityType) : (Text) {
-        switch (identity_type) {
-            case (#ICP) { "ICP"};
-            case (#EvmChain) {"EvmChain"};
-        };
-    };     
+
+    public func find_identity (identity:CommonTypes.Identity): (k:CommonTypes.Identity) -> Bool {
+		func (k:CommonTypes.Identity):Bool { identity_equals(identity, k)};
+	};
+
 
     public func get_identity_key (identity: CommonTypes.Identity) : Text {
-        Text.map(resolve_identity_type(identity.identity_type)#identity.identity_id , Prim.charToLower);
+        Text.map(_resolve_identity_type(identity.identity_type)#"@"#identity.identity_id , Prim.charToLower);
     }; 
   
     public func identity_key(identity: CommonTypes.Identity) : Trie.Key<Text>  { 
@@ -38,5 +37,12 @@ module {
             case (?x_) { x_ };
         }
     }; 
+
+    private func _resolve_identity_type (identity_type: CommonTypes.IdentityType) : (Text) {
+        switch (identity_type) {
+            case (#ICP) { "ICP"};
+            case (#EvmChain) {"ETH"};
+        };
+    };     
 
 };

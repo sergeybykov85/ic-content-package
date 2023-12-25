@@ -18,8 +18,10 @@ import Http "../shared/Http";
 import CommonTypes "../shared/CommonTypes";
 import CommonUtils "../shared/CommonUtils";
 
+import Utils "./Utils";
 import Types "./Types";
 import Conversion "./Conversion";
+import EmbededUI "./EmbededUI";
 
 shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegistryArgs) = this {
 
@@ -45,7 +47,10 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
     stable var provider2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
 	// all registered packages, order is maintaited
-	stable var all_packages : List.List<Text> = List.nil();	
+	stable var all_packages : List.List<Text> = List.nil();
+
+	// type to package
+    stable var kind2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
     // all providers, key - identity
     stable var providers : Trie.Trie<Text, Types.Provider> = Trie.empty();
@@ -58,6 +63,8 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
     private func provider2package_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(provider2package, CommonUtils.identity_key(identity), Text.equal);
 
     private func package_get(id : Text) : ?Types.BundlePackage = Trie.get(packages, CommonUtils.text_key(id), Text.equal);
+
+    private func kind2package_get(id : Text) : ?List.List<Text> = Trie.get(kind2package, Utils.submission_key(id), Text.equal);	
 
     private func provider_get(identity : CommonTypes.Identity) : ?Types.Provider = Trie.get(providers, CommonUtils.identity_key(identity), Text.equal);
 
@@ -135,8 +142,8 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	* Registerrs a new package provider (who is authorized to add new packages)
 	*/
 	public shared ({ caller }) func register_package (args : Types.PackageRequestArgs) : async Result.Result<(), CommonTypes.Errors> {
-		let identity = _build_identity(caller);
-		switch (provider_get(identity)) {
+		let provider_identity = _build_identity(caller);
+		switch (provider_get(provider_identity)) {
 			case (?provider) {
 				let package_id = Principal.toText(args.package);
 				switch (package_get(package_id)) {
@@ -144,35 +151,152 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 					case (null) {
 
 						let package_actor : Types.Actor.BundlePackageActor = actor (package_id);
-						let package_creator = await package_actor.get_creator();
+						let package_details = await package_actor.get_details();
 
 						packages := Trie.put(packages, CommonUtils.text_key(package_id), Text.equal, {
-							var name = args.name;
-							var description = args.description;
-							var urls = List.fromArray(args.urls);
-							created = Time.now();
+							submission = package_details.submission;
+							var name = package_details.name;
+							var description = package_details.description;
+							var logo_url = package_details.logo_url;
+							var references = List.fromArray(args.references);
+							creator = package_details.creator;
+							provider = provider_identity;
+							created = package_details.created;
+							registered = Time.now();
 						}:Types.BundlePackage).0;
 
 						provider.packages:=List.push(package_id, provider.packages);
 						// index for all packages
 						all_packages:= List.push(package_id, all_packages);
 						// index for provider
-						switch (provider2package_get(identity)) {
-							case (?by_provider) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(identity), Text.equal, List.push(package_id, by_provider)).0; };
-							case (null) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(identity), Text.equal, List.push(package_id, List.nil())).0;}
+						switch (provider2package_get(provider_identity)) {
+							case (?by_provider) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, by_provider)).0; };
+							case (null) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, List.nil())).0;}
 						};
 						// index for creator
-						switch (creator2package_get(identity)) {
-							case (?by_creator) {creator2package := Trie.put(provider2package, CommonUtils.identity_key(identity), Text.equal, List.push(package_id, by_creator)).0; };
-							case (null) {creator2package := Trie.put(provider2package, CommonUtils.identity_key(identity), Text.equal, List.push(package_id, List.nil())).0;}
-						};						
+						switch (creator2package_get(package_details.creator)) {
+							case (?by_creator) {creator2package := Trie.put(provider2package, CommonUtils.identity_key(package_details.creator), Text.equal, List.push(package_id, by_creator)).0; };
+							case (null) {creator2package := Trie.put(provider2package, CommonUtils.identity_key(package_details.creator), Text.equal, List.push(package_id, List.nil())).0;}
+						};
+
+						// index by kind
+						let submission_key = Utils.resolve_submission_name(package_details.submission);
+						switch (kind2package_get(submission_key)) {
+							case (?by_kind) {kind2package := Trie.put(kind2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
+							case (null) {kind2package := Trie.put(kind2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
+						};					
 						return #ok();
 					};
 				};
 			};
 			case (null) { return #err(#AccessDenied); };
 		}
+	};
+
+
+	public shared ({ caller }) func register_package_dummy (package_id : Text, name : Text, description : Text, logo_url:Text, submission : Types.Submission) : async Result.Result<(), CommonTypes.Errors> {
+		let provider_identity = _build_identity(caller);
+		switch (package_get(package_id)) {
+			case (?pack) {return #err(#DuplicateRecord)};
+			case (null) {
+				packages := Trie.put(packages, CommonUtils.text_key(package_id), Text.equal, {
+					submission = submission;
+					var name = name;
+					var description = description;
+					var logo_url = ?logo_url;
+					var references = List.nil();
+					creator = provider_identity;
+					provider = provider_identity;
+					created = (Time.now() - 500000000000);
+					registered = Time.now();
+				}:Types.BundlePackage).0;
+
+				// index for all packages
+				all_packages:= List.push(package_id, all_packages);
+						// index for provider
+				switch (provider2package_get(provider_identity)) {
+					case (?by_provider) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, by_provider)).0; };
+					case (null) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, List.nil())).0;}
+				};
+				// index by kind
+				let submission_key = Utils.resolve_submission_name(submission);
+				switch (kind2package_get(submission_key)) {
+					case (?by_kind) {kind2package := Trie.put(kind2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
+					case (null) {kind2package := Trie.put(kind2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
+				};					
+
+					
+				return #ok();
+			};
+		};
 	};	
+
+	/**
+	* Regreshes the information about the registered package like name, description, logo
+	*/
+	public shared ({ caller }) func refresh_package (package : Principal) : async Result.Result<(), CommonTypes.Errors> {
+		let caller_identity = _build_identity(caller);
+		let package_id = Principal.toText(package);
+		switch (package_get(package_id)) {
+			case (null) {return #err(#NotFound)};
+			case (?pack) {
+				// check authorization : only package creator or package provider
+				if (not (CommonUtils.identity_equals (caller_identity, pack.creator) or
+					CommonUtils.identity_equals (caller_identity, pack.provider)))  return #err(#AccessDenied); 
+
+
+				let package_actor : Types.Actor.BundlePackageActor = actor (package_id);
+				let package_details = await package_actor.get_details();
+
+				pack.name :=package_details.name;
+				pack.description :=package_details.description;
+				pack.logo_url :=package_details.logo_url;
+										
+				return #ok();
+			};
+		};
+	};
+
+	public shared query ({ caller }) func http_request(request : Http.Request) : async Http.Response {
+		switch (Utils.get_resource_id(request.url)) {
+			case (?r) {
+				//view_mode is ignore for now
+				return package_http_response( r.id, r.submission_type);
+			};
+			case null { return Http.not_found();};
+		};
+	};	
+
+	private func package_http_response(key : Text, submission_type: ?Text) : Http.Response {
+		if (key == Utils.ROOT) {
+				let canister_id = Principal.toText(Principal.fromActor(this));
+				var out_html = EmbededUI.render_root_header(submission_type);
+				switch (submission_type) {
+					case (?t) {
+						let submission = Utils.normalize(t);
+						switch (kind2package_get(submission)) {
+							case (?package_ids) {
+								for (id in List.toIter(package_ids)) {
+									switch (package_get(id)) {
+            							case (null) { };
+            							case (? r)  { out_html:=out_html # EmbededUI.render_overview(canister_id,initArgs.network, id, r);};
+									};
+								};
+							};
+							case (null) {};
+						};
+					};						
+					case (null) {
+						for ((id, r) in Trie.iter(packages)) {
+							out_html:=out_html # EmbededUI.render_overview(canister_id, initArgs.network, id, r);
+						};						
+					};
+				};
+				return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
+		};
+		EmbededUI.page_response( Principal.toText(Principal.fromActor(this)), initArgs.network, key, package_get(key));
+    };
+
 
 	public shared func wallet_receive() {
     	let amount = Cycles.available();
@@ -265,15 +389,11 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		let identity = {identity_type = #ICP; identity_id = Principal.toText(caller)};
 		if (CommonUtils.identity_equals(identity, owner)) return true;
 		// check access list
-		return Option.isSome(List.find(access_list , func (k:CommonTypes.Identity):Bool { CommonUtils.identity_equals(identity, k)}));
+		return Option.isSome(List.find(access_list , CommonUtils.find_identity(identity)));
     };
 
 	private func _is_operator (identity : CommonTypes.Identity) : Bool {
-		Option.isSome(List.find(access_list , func (k:CommonTypes.Identity):Bool { CommonUtils.identity_equals(identity, k)}));
+		Option.isSome(List.find(access_list , CommonUtils.find_identity(identity)));
     };
 
-/*	private func _is_operator(id: Principal) : Bool {
-    	Option.isSome(Array.find(operators, func (x: Principal) : Bool { x == id }))
-    };	
-*/
 }

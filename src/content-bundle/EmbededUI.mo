@@ -55,7 +55,7 @@ module {
 		};
 
 		resource_html := resource_html # "<p><u>Created</u> : <span class=\"js_date\">"# Int.toText(r.created) # "</span></p>";
-		resource_html := resource_html # "<p><u>Creaator</u> : "# debug_show(r.creator) # "</p>";
+		resource_html := resource_html # "<p><u>Creator</u> : "# debug_show(r.creator) # "</p>";
 		resource_html := resource_html # "<p><u>Owner</u> : "# debug_show(r.owner) # "</p>";
 
 		if (List.size(r.tags) > 0) {
@@ -82,7 +82,7 @@ module {
 		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>ID</b> : <span class=\"right\">"# debug_show(id) # "</span></div>";
 		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Root data path</b> : <span class=\"right\"><a  href=\"" # r.data_path.url #"\" target = \"_blank\">"#r.data_path.url#"</a></span></div>";
 		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Created</b> : <span class=\"right\"><span class=\"js_date\">"# Int.toText(r.created) # "</span></span></div>";
-		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Creaator</b> : <span class=\"right\">"# debug_show(r.creator) # "</span></div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Creator</b> : <span class=\"right\">"# debug_show(r.creator) # "</span></div>";
 		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Owner</b> : <span class=\"right\">"# debug_show(r.owner) # "</span></div>";		
 		
 		switch (r.payload.poi_group) {

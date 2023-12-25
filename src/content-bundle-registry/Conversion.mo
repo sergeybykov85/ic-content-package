@@ -13,10 +13,11 @@ module {
 	public type BundlePackageView = {
 		// principal id
 		id : Text;
+		submission : Types.Submission;
 		name : Text;
 		description : Text;
-		urls : [CommonTypes.NameValue];
 		created: Time.Time;
+		registered: Time.Time;
 	};
 
 	public type ProviderView = {
@@ -31,10 +32,11 @@ module {
 	public func convert_package_view (id: Text, info: Types.BundlePackage) : BundlePackageView {
         return {
 			id = id;
+			submission = info.submission;
 			name = info.name;
 			description = info.description;
-			urls = List.toArray (info.urls);
 			created = info.created;
+			registered = info.registered;
         };
     };		
 

@@ -11,10 +11,26 @@ import BundlePackage "../content-bundle/BundlePackage";
 
 module {
 
+	public type RequestedObject = {
+		id : Text;
+		view_mode : ViewMode;
+		submission_type : ?Text;
+	};
+
+	public type Submission = {
+		#Private; 
+		#Public;
+		#Shared;
+	};
+
 	public type ImageData = {
 		value : Blob;
 		content_type : ?Text;
 	};
+
+	public type ViewMode = {
+		#Index;     // index, names could be used as a part of browser url
+	};	
 
 	public type PackageRegistryArgs = {
 		network : CommonTypes.Network;
@@ -38,17 +54,22 @@ module {
 
 	public type PackageRequestArgs = {
 		package : Principal;
-		name : Text;
-		description : Text;
-		urls : [CommonTypes.NameValue];
+		references : [CommonTypes.NameValue];
 	};
 
 	public type BundlePackage = {
 		var name : Text;
 		var description : Text;
+		var logo_url : ?Text;
 		// any urls related to the package
-		var urls : List.List<CommonTypes.NameValue>;
-		created: Time.Time;	
+		var references : List.List<CommonTypes.NameValue>;
+		submission : Submission;
+		// who created a package
+		creator : CommonTypes.Identity;
+		// who registered a package
+		provider : CommonTypes.Identity;
+		created: Time.Time;
+		registered: Time.Time;
 	};
 
 	public type Provider = {
@@ -65,8 +86,20 @@ module {
 	*/
 	public module Actor {
 
+		public type PackageDetails = {
+			submission : Submission;
+			creator : CommonTypes.Identity;
+			owner : CommonTypes.Identity;
+			created : Int;
+			total_bundles : Nat;
+			name : Text;
+			description : Text;
+			logo_url : ?Text;
+		};
+
 		public type BundlePackageActor = actor {
 			get_creator : shared () -> async CommonTypes.Identity;
+			get_details : shared () -> async PackageDetails;
 		};
 	};
 };
