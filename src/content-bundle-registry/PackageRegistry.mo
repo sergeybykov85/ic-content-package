@@ -37,36 +37,36 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 
 	stable let NETWORK = initArgs.network;
 
-	// who can manage providers
+	// who can manage package submitters
 	stable var access_list : List.List<CommonTypes.Identity> = List.nil();
 
 	// crreator of the package
     stable var creator2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
 	// who submitted a package : service or channel partner
-    stable var provider2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();
+    stable var submitter2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
 	// all registered packages, order is maintaited
 	stable var all_packages : List.List<Text> = List.nil();
 
 	// type to package
-    stable var kind2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();
+    stable var type2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
-    // all providers, key - identity
-    stable var providers : Trie.Trie<Text, Types.Provider> = Trie.empty();
+    // all submitters, key - identity
+    stable var submitters : Trie.Trie<Text, Types.Submitter> = Trie.empty();
 
     // all packages, key - principal id
     stable var packages : Trie.Trie<Text, Types.BundlePackage> = Trie.empty();
 
     private func creator2package_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(creator2package, CommonUtils.identity_key(identity), Text.equal);
 
-    private func provider2package_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(provider2package, CommonUtils.identity_key(identity), Text.equal);
+    private func submitter2package_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(submitter2package, CommonUtils.identity_key(identity), Text.equal);
 
     private func package_get(id : Text) : ?Types.BundlePackage = Trie.get(packages, CommonUtils.text_key(id), Text.equal);
 
-    private func kind2package_get(id : Text) : ?List.List<Text> = Trie.get(kind2package, Utils.submission_key(id), Text.equal);	
+    private func type2package_get(id : Text) : ?List.List<Text> = Trie.get(type2package, Utils.submission_key(id), Text.equal);	
 
-    private func provider_get(identity : CommonTypes.Identity) : ?Types.Provider = Trie.get(providers, CommonUtils.identity_key(identity), Text.equal);
+    private func submitter_get(identity : CommonTypes.Identity) : ?Types.Submitter = Trie.get(submitters, CommonUtils.identity_key(identity), Text.equal);
 
 
 	/**
@@ -89,19 +89,19 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	/**
 	* Registerrs a new package provider (who is authorized to add new packages)
 	*/
-	public shared ({ caller }) func register_provider (args : Types.CommonArgs) : async Result.Result<(), CommonTypes.Errors> {
+	public shared ({ caller }) func register_submitter (args : Types.CommonArgs) : async Result.Result<(), CommonTypes.Errors> {
 		if (not can_manage(caller)) return #err(#AccessDenied);
-		switch (provider_get(args.identity)) {
+		switch (submitter_get(args.identity)) {
 			case (?customer) { return #err(#DuplicateRecord); };
 			case (null) {
-				let provider : Types.Provider = {
+				let submitter : Types.Submitter = {
 					var name = args.name;
 					var description = args.description;
 					identity = args.identity;
 					var packages = List.nil();
 					created = Time.now();
 				};
-				providers := Trie.put(providers, CommonUtils.identity_key(args.identity), Text.equal, provider).0;
+				submitters := Trie.put(submitters, CommonUtils.identity_key(args.identity), Text.equal, submitter).0;
 				#ok();
 			}
 		};
@@ -109,12 +109,12 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	/**
 	* Removes an existing package provider (who is authorized to add new packages)
 	*/
-	public shared ({ caller }) func remove_provider (identity : CommonTypes.Identity) : async Result.Result<(), CommonTypes.Errors> {
+	public shared ({ caller }) func remove_submitter (identity : CommonTypes.Identity) : async Result.Result<(), CommonTypes.Errors> {
 		if (not can_manage(caller)) return #err(#AccessDenied);
-		switch (provider_get(identity)) {
+		switch (submitter_get(identity)) {
 			case (null) { return #err(#NotFound); };
 			case (?customer) {
-				providers := Trie.remove(providers, CommonUtils.identity_key(identity), Text.equal).0; 
+				submitters := Trie.remove(submitters, CommonUtils.identity_key(identity), Text.equal).0; 
 				#ok();
 			}
 		}
@@ -122,9 +122,9 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	/**
 	* Updates an existing package provider (who is authorized to add new packages)
 	*/
-	public shared ({ caller }) func update_provider (args : Types.CommonUpdateArgs) : async Result.Result<(), CommonTypes.Errors> {
+	public shared ({ caller }) func update_submitter (args : Types.CommonUpdateArgs) : async Result.Result<(), CommonTypes.Errors> {
 		if (not can_manage(caller)) return #err(#AccessDenied);
-		switch (provider_get(args.identity)) {
+		switch (submitter_get(args.identity)) {
 			case (null) { return #err(#NotFound); };
 			case (?customer) {
 				if (Option.isSome(args.name)) {
@@ -142,9 +142,9 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	* Registerrs a new package provider (who is authorized to add new packages)
 	*/
 	public shared ({ caller }) func register_package (args : Types.PackageRequestArgs) : async Result.Result<(), CommonTypes.Errors> {
-		let provider_identity = _build_identity(caller);
-		switch (provider_get(provider_identity)) {
-			case (?provider) {
+		let submitter_identity = _build_identity(caller);
+		switch (submitter_get(submitter_identity)) {
+			case (?submitter) {
 				let package_id = Principal.toText(args.package);
 				switch (package_get(package_id)) {
 					case (?pack) {return #err(#DuplicateRecord)};
@@ -160,30 +160,30 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							var logo_url = package_details.logo_url;
 							var references = List.fromArray(args.references);
 							creator = package_details.creator;
-							provider = provider_identity;
+							submitter = submitter_identity;
 							created = package_details.created;
 							registered = Time.now();
 						}:Types.BundlePackage).0;
 
-						provider.packages:=List.push(package_id, provider.packages);
+						submitter.packages:=List.push(package_id, submitter.packages);
 						// index for all packages
 						all_packages:= List.push(package_id, all_packages);
-						// index for provider
-						switch (provider2package_get(provider_identity)) {
-							case (?by_provider) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, by_provider)).0; };
-							case (null) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, List.nil())).0;}
+						// index for submitter
+						switch (submitter2package_get(submitter_identity)) {
+							case (?by_provider) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(submitter_identity), Text.equal, List.push(package_id, by_provider)).0; };
+							case (null) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(submitter_identity), Text.equal, List.push(package_id, List.nil())).0;}
 						};
 						// index for creator
 						switch (creator2package_get(package_details.creator)) {
-							case (?by_creator) {creator2package := Trie.put(provider2package, CommonUtils.identity_key(package_details.creator), Text.equal, List.push(package_id, by_creator)).0; };
-							case (null) {creator2package := Trie.put(provider2package, CommonUtils.identity_key(package_details.creator), Text.equal, List.push(package_id, List.nil())).0;}
+							case (?by_creator) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(package_details.creator), Text.equal, List.push(package_id, by_creator)).0; };
+							case (null) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(package_details.creator), Text.equal, List.push(package_id, List.nil())).0;}
 						};
 
 						// index by kind
 						let submission_key = Utils.resolve_submission_name(package_details.submission);
-						switch (kind2package_get(submission_key)) {
-							case (?by_kind) {kind2package := Trie.put(kind2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
-							case (null) {kind2package := Trie.put(kind2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
+						switch (type2package_get(submission_key)) {
+							case (?by_kind) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
+							case (null) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
 						};					
 						return #ok();
 					};
@@ -206,7 +206,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 					var logo_url = ?logo_url;
 					var references = List.nil();
 					creator = provider_identity;
-					provider = provider_identity;
+					submitter = provider_identity;
 					created = (Time.now() - 500000000000);
 					registered = Time.now();
 				}:Types.BundlePackage).0;
@@ -214,18 +214,17 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 				// index for all packages
 				all_packages:= List.push(package_id, all_packages);
 						// index for provider
-				switch (provider2package_get(provider_identity)) {
-					case (?by_provider) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, by_provider)).0; };
-					case (null) {provider2package := Trie.put(provider2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, List.nil())).0;}
+				switch (submitter2package_get(provider_identity)) {
+					case (?by_provider) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, by_provider)).0; };
+					case (null) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, List.nil())).0;}
 				};
 				// index by kind
 				let submission_key = Utils.resolve_submission_name(submission);
-				switch (kind2package_get(submission_key)) {
-					case (?by_kind) {kind2package := Trie.put(kind2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
-					case (null) {kind2package := Trie.put(kind2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
+				switch (type2package_get(submission_key)) {
+					case (?by_kind) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
+					case (null) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
 				};					
 
-					
 				return #ok();
 			};
 		};
@@ -242,7 +241,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (?pack) {
 				// check authorization : only package creator or package provider
 				if (not (CommonUtils.identity_equals (caller_identity, pack.creator) or
-					CommonUtils.identity_equals (caller_identity, pack.provider)))  return #err(#AccessDenied); 
+					CommonUtils.identity_equals (caller_identity, pack.submitter)))  return #err(#AccessDenied); 
 
 
 				let package_actor : Types.Actor.BundlePackageActor = actor (package_id);
@@ -261,42 +260,38 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		switch (Utils.get_resource_id(request.url)) {
 			case (?r) {
 				//view_mode is ignore for now
-				return package_http_response( r.id, r.submission_type);
+				//return package_http_response( r.id, r.submission_type);
+				if (r.id == Utils.ROOT) {
+					let canister_id = Principal.toText(Principal.fromActor(this));
+					var out_html = EmbededUI.render_root_header(r.submission_type);
+					switch (r.submission_type) {
+						case (?t) {
+							let submission = Utils.normalize(t);
+							switch (type2package_get(submission)) {
+								case (?package_ids) {
+									for (id in List.toIter(package_ids)) {
+										switch (package_get(id)) {
+            								case (null) { };
+            								case (? r)  { out_html:=out_html # EmbededUI.render_overview(canister_id,initArgs.network, id, r);};
+										};
+									};
+								};
+								case (null) {};
+							};
+						};						
+						case (null) {
+							for ((id, r) in Trie.iter(packages)) {
+								out_html:=out_html # EmbededUI.render_overview(canister_id, initArgs.network, id, r);
+							};						
+						};
+					};
+					return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
+				};
+				EmbededUI.page_response( Principal.toText(Principal.fromActor(this)), initArgs.network, r.id, package_get(r.id));				
 			};
 			case null { return Http.not_found();};
 		};
 	};	
-
-	private func package_http_response(key : Text, submission_type: ?Text) : Http.Response {
-		if (key == Utils.ROOT) {
-				let canister_id = Principal.toText(Principal.fromActor(this));
-				var out_html = EmbededUI.render_root_header(submission_type);
-				switch (submission_type) {
-					case (?t) {
-						let submission = Utils.normalize(t);
-						switch (kind2package_get(submission)) {
-							case (?package_ids) {
-								for (id in List.toIter(package_ids)) {
-									switch (package_get(id)) {
-            							case (null) { };
-            							case (? r)  { out_html:=out_html # EmbededUI.render_overview(canister_id,initArgs.network, id, r);};
-									};
-								};
-							};
-							case (null) {};
-						};
-					};						
-					case (null) {
-						for ((id, r) in Trie.iter(packages)) {
-							out_html:=out_html # EmbededUI.render_overview(canister_id, initArgs.network, id, r);
-						};						
-					};
-				};
-				return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
-		};
-		EmbededUI.page_response( Principal.toText(Principal.fromActor(this)), initArgs.network, key, package_get(key));
-    };
-
 
 	public shared func wallet_receive() {
     	let amount = Cycles.available();
@@ -320,8 +315,8 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	/**
 	* Returns packages for the provider
 	*/
-    public query func get_packages_for_provider(identity:CommonTypes.Identity) : async [Conversion.BundlePackageView] {
-		switch (provider2package_get(identity)) {
+    public query func get_packages_for_submitter(identity:CommonTypes.Identity) : async [Conversion.BundlePackageView] {
+		switch (submitter2package_get(identity)) {
 			case (?ids) { _get_packages(List.toArray(ids)) };
 			case (null) { [] };
 		};

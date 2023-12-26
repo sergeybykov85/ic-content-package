@@ -20,7 +20,7 @@ module {
 		registered: Time.Time;
 	};
 
-	public type ProviderView = {
+	public type SubmitterView = {
 		identity : CommonTypes.Identity;
 		name : Text;
 		description : Text;
@@ -40,7 +40,7 @@ module {
         };
     };		
 
-	public func convert_provider_view (info: Types.Provider) : ProviderView {
+	public func convert_submitter_view (info: Types.Submitter) : SubmitterView {
         return {
 			name = info.name;
 			description = info.description;

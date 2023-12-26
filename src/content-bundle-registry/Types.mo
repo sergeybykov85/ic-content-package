@@ -67,12 +67,12 @@ module {
 		// who created a package
 		creator : CommonTypes.Identity;
 		// who registered a package
-		provider : CommonTypes.Identity;
+		submitter : CommonTypes.Identity;
 		created: Time.Time;
 		registered: Time.Time;
 	};
 
-	public type Provider = {
+	public type Submitter = {
 		var name : Text;
 		var description : Text;
 		identity : CommonTypes.Identity;
