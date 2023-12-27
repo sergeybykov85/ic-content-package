@@ -138,4 +138,16 @@ module {
 		}
 	};
 
+	public func to_contributors (package_type:Types.Submission, contributors : ?[CommonTypes.Identity]) : List.List<CommonTypes.Identity> {
+		switch (package_type) {
+			case (#Shared) {
+				switch (contributors) {
+					case (?con) {List.fromArray(con)};
+					case (null) {List.nil()};
+				}
+			};
+			case (_) {List.nil()};
+		};
+	};	
+
 };

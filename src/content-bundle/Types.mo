@@ -211,6 +211,8 @@ module {
 		mode : ?Mode;
 		// target owner. If not specified, then onwer = who installs the canister
 		owner : ?CommonTypes.Identity;
+		// request is rejected if mode if not Shared
+		contributors : ?[CommonTypes.Identity];
 		metadata : ?MetadataArgs;
 	};
 

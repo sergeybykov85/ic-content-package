@@ -37,7 +37,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 
 	stable let NETWORK = initArgs.network;
 
-	// who can manage package submitters
+	// who can manage service : who can register new submitters etc
 	stable var access_list : List.List<CommonTypes.Identity> = List.nil();
 
 	// crreator of the package
@@ -141,11 +141,11 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	/**
 	* Registerrs a new package provider (who is authorized to add new packages)
 	*/
-	public shared ({ caller }) func register_package (args : Types.PackageRequestArgs) : async Result.Result<(), CommonTypes.Errors> {
+	public shared ({ caller }) func register_package (package : Principal) : async Result.Result<(), CommonTypes.Errors> {
 		let submitter_identity = _build_identity(caller);
 		switch (submitter_get(submitter_identity)) {
 			case (?submitter) {
-				let package_id = Principal.toText(args.package);
+				let package_id = Principal.toText(package);
 				switch (package_get(package_id)) {
 					case (?pack) {return #err(#DuplicateRecord)};
 					case (null) {
@@ -158,7 +158,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							var name = package_details.name;
 							var description = package_details.description;
 							var logo_url = package_details.logo_url;
-							var references = List.fromArray(args.references);
+							var references = List.nil();
 							creator = package_details.creator;
 							submitter = submitter_identity;
 							created = package_details.created;
@@ -193,43 +193,6 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		}
 	};
 
-
-	public shared ({ caller }) func register_package_dummy (package_id : Text, name : Text, description : Text, logo_url:Text, submission : Types.Submission) : async Result.Result<(), CommonTypes.Errors> {
-		let provider_identity = _build_identity(caller);
-		switch (package_get(package_id)) {
-			case (?pack) {return #err(#DuplicateRecord)};
-			case (null) {
-				packages := Trie.put(packages, CommonUtils.text_key(package_id), Text.equal, {
-					submission = submission;
-					var name = name;
-					var description = description;
-					var logo_url = ?logo_url;
-					var references = List.nil();
-					creator = provider_identity;
-					submitter = provider_identity;
-					created = (Time.now() - 500000000000);
-					registered = Time.now();
-				}:Types.BundlePackage).0;
-
-				// index for all packages
-				all_packages:= List.push(package_id, all_packages);
-						// index for provider
-				switch (submitter2package_get(provider_identity)) {
-					case (?by_provider) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, by_provider)).0; };
-					case (null) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(provider_identity), Text.equal, List.push(package_id, List.nil())).0;}
-				};
-				// index by kind
-				let submission_key = Utils.resolve_submission_name(submission);
-				switch (type2package_get(submission_key)) {
-					case (?by_kind) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
-					case (null) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
-				};					
-
-				return #ok();
-			};
-		};
-	};	
-
 	/**
 	* Regreshes the information about the registered package like name, description, logo
 	*/
@@ -260,7 +223,6 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		switch (Utils.get_resource_id(request.url)) {
 			case (?r) {
 				//view_mode is ignore for now
-				//return package_http_response( r.id, r.submission_type);
 				if (r.id == Utils.ROOT) {
 					let canister_id = Principal.toText(Principal.fromActor(this));
 					var out_html = EmbededUI.render_root_header(r.submission_type);
@@ -310,7 +272,22 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (?package) { #ok(Conversion.convert_package_view(id, package)); };
 			case (null) { return #err(#NotFound); };
 		};
-    };		
+    };
+
+    public query func get_submitter(identity:CommonTypes.Identity) : async Result.Result<Conversion.SubmitterView, CommonTypes.Errors> {
+		switch (submitter_get(identity)) {
+			case (?submitter) { #ok(Conversion.convert_submitter_view(submitter)); };
+			case (null) { return #err(#NotFound); };
+		};
+    };
+
+    public query func is_submitter(identity:CommonTypes.Identity) : async Bool {
+		switch (submitter_get(identity)) {
+			case (?submitter) { true; };
+			case (null) { false; };
+		};
+    };	
+	
 
 	/**
 	* Returns packages for the provider
@@ -321,6 +298,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (null) { [] };
 		};
     };
+	
 
 	/**
 	* Returns packages for the creator

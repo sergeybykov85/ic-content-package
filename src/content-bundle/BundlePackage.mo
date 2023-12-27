@@ -52,7 +52,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     stable let MODE = Option.get(initArgs.mode, Types.DEFAULT_MODE);
 
 	// who can create bundles. It works only for Mode = Shared
-	stable var contributors : List.List<CommonTypes.Identity> = List.nil();
+	stable var contributors : List.List<CommonTypes.Identity> = Conversion.to_contributors(MODE.submission, initArgs.contributors );
 
     // data store  model. More attributes could be placed here
     stable var data_store : Types.DataStore = {
@@ -425,10 +425,12 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 	/**
 	* Init a store, creating a 1st data bucket
-	* Allowed only to the owner 
+	* Allowed only to the owner or creator. If active bucket is already present --> no effect
 	*/
 	public shared ({ caller }) func init_data_store (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
-		if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
+		let caller_identity = _build_identity(caller);
+		if (not (CommonUtils.identity_equals(caller_identity, owner) or 
+			CommonUtils.identity_equals(caller_identity, CREATOR))) return #err(#AccessDenied);
         // reeturn active bucket in case data store already initialized
         if (Option.isSome(data_store.active_bucket)) return #ok(CommonUtils.unwrap(data_store.active_bucket));
 
@@ -488,7 +490,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				switch (r.view_mode) {
 					case (#Index) { return bundle_http_response( r.id, r.tag);};
 					// not supported for now
-					case (#Open) {return Http.not_found();};
+					case (#Open) {return bundle_data_handler(r.id, r.route);};
 				};
 			};
 			case null { return Http.not_found();};

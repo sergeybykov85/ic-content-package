@@ -9,7 +9,12 @@
       "main": "src/content-bundle-registry/PackageRegistry.mo",
       "type": "motoko",
       "dependencies": []
-    }    
+    },
+    "package_service": {
+      "main": "src/content-bundle-service/PackageService.mo",
+      "type": "motoko",
+      "dependencies": []
+    }      
   },
   "defaults": {
     "build": {

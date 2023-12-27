@@ -24,7 +24,7 @@ import Types "./Types";
 
 module {
     public let VERSION = "0.1";
-    public let DEF_BUCKET_CYCLES:Nat = 9_000_000_000;
+    public let DEF_BUCKET_CYCLES:Nat = 800_000_000_000;
     public let ROOT = "/";
     public let LOGO:Text = "logo";
 
