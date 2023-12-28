@@ -21,6 +21,8 @@ import BundlePackage "../content-bundle/BundlePackage";
 shared (installation) actor class PackageService(initArgs : Types.PackageServiceArgs) = this {
 
 	let DEF_PACKAGE_CYCLES:Nat = 2_000_000_000_000;
+	// management actor
+	let IC : Types.Actor.ICActor = actor "aaaaa-aa";
 
 	// immutable field
 	let CREATOR:CommonTypes.Identity = {
@@ -28,7 +30,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		identity_id = Principal.toText(installation.caller);
 	};
 	// registry actor
-	let REGISTRY:Text = Option.get(initArgs.package_registry, "LOC");
+	let REGISTRY:Text = Option.get(initArgs.package_registry, "{DEFAULT_REGISTRY_PLACE_HERE}");
 
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
@@ -182,7 +184,19 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		switch (await bundle_package_actor.init_data_store(null)) {
 			// ignore in case of success
 			case (#ok(_)) {};
-			case (#err(e)) { return #err(#ActionFailed)};};
+			case (#err(e)) { return #err(#ActionFailed)};
+		};
+
+		// apply controller for the new package
+		switch (owner.identity_type) {
+			case (#ICP) {
+				ignore IC.update_settings({
+					canister_id =  Principal.fromActor(bundle_package_actor);
+					settings = { controllers = ? [ Principal.fromText(owner.identity_id), Principal.fromActor(this)]};
+				});	
+			};
+			case (_) {};
+		};
 
 		// register package
 		let registration_response = await registry_actor.register_package(package_id);

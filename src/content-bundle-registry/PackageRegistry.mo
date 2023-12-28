@@ -225,7 +225,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 				//view_mode is ignore for now
 				if (r.id == Utils.ROOT) {
 					let canister_id = Principal.toText(Principal.fromActor(this));
-					var out_html = EmbededUI.render_root_header(r.submission_type);
+					var out_html = EmbededUI.render_root_header(r.submission_type, Trie.size(packages));
 					switch (r.submission_type) {
 						case (?t) {
 							let submission = Utils.normalize(t);

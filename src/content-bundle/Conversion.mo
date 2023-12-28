@@ -36,9 +36,15 @@ module {
 		// name for internal management.
 		data_path : CommonTypes.ResourcePath;
 		sections: [DataSectionView];
-		index : ?DataIndexView;
 		readonly : ?Nat;
 	};
+
+	public type DataView = {
+		// name for internal management.
+		id : CommonTypes.DataGroupId;
+		group : DataGroupView;
+		index: ?DataIndexView;
+	};	
 
 	public type BundleView = {
 		data_path : CommonTypes.ResourcePath;
@@ -66,26 +72,23 @@ module {
     };	
 
     public func convert_datagroup_view (info: Types.DataGroup) : DataGroupView {
-
-		let index:?DataIndexView = switch (info.index) {
-			case (?index) {
-				?{location = index.location};
-			};
-			case (null) {null};
-		};
-        return {
-            data_path = info.data_path;
-            sections = List.toArray(List.map(info.sections, func (s : Types.DataSection) : DataSectionView {
-		    {
-				data_path = s.data_path;
-				category = s.category;
-				data = List.toArray(s.data);
-		    };
-		    }));
-			readonly = info.readonly;
-			index = index;
-        };
+        _convert_datagroup_view(info);
     };
+
+    public func convert_data_view (id:CommonTypes.DataGroupId,  group: Types.DataGroup, index:?Types.DataIndex) : DataView {
+		{
+			id = id;
+			group = _convert_datagroup_view(group);
+			index = switch (index){
+				case (?i) {?{location = i.location}};
+				case (null) {null};
+			};
+		}
+    };	
+
+    public func convert_index_view (info: Types.DataIndex) : DataIndexView {
+		{location = info.location};
+    };	
 
     public func convert_datastore_view (info: Types.DataStore) : DataStoreView {
         return {
@@ -148,6 +151,21 @@ module {
 			};
 			case (_) {List.nil()};
 		};
-	};	
+	};
+
+
+    private func _convert_datagroup_view (info: Types.DataGroup) : DataGroupView {
+        return {
+            data_path = info.data_path;
+            sections = List.toArray(List.map(info.sections, func (s : Types.DataSection) : DataSectionView {
+		    {
+				data_path = s.data_path;
+				category = s.category;
+				data = List.toArray(s.data);
+		    };
+		    }));
+			readonly = info.readonly;
+        };
+    };		
 
 };

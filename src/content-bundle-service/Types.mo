@@ -88,7 +88,7 @@ module {
 			description : Text;
 			logo_url : ?Text;
 		};
-
+	
 		public type PackageRegistryActor = actor {
 			is_submitter : shared(identity:CommonTypes.Identity)  -> async Bool;
 			register_package : shared(package : Principal)  -> async Result.Result<(), CommonTypes.Errors>;
@@ -99,5 +99,14 @@ module {
 			init_data_store : shared (cycles : ?Nat) -> async Result.Result<Text, CommonTypes.Errors>;
 			apply_contributors : shared (contributors: [CommonTypes.Identity])  -> async Result.Result<(), CommonTypes.Errors>;
 		};
+
+    	public type ICActor = actor {
+        	stop_canister : shared { canister_id : Principal } -> async ();
+			delete_canister : shared { canister_id : Principal } -> async ();
+        	update_settings : shared {
+            	canister_id : Principal;
+            	settings : {controllers : ?[Principal]; };
+        	} -> async ();
+    	};		
 	};
 };

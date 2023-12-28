@@ -24,7 +24,7 @@ import Types "./Types";
 
 module {
     public let VERSION = "0.1";
-    public let DEF_BUCKET_CYCLES:Nat = 800_000_000_000;
+    public let DEF_BUCKET_CYCLES:Nat = 500_000_000_000;
     public let ROOT = "/";
     public let LOGO:Text = "logo";
 
@@ -213,46 +213,5 @@ module {
     	res.add(b);        
     	Buffer.toArray(res);
     };
- 
-    public func resolve_resource_name (category: CommonTypes.CategoryId, locale: ?Text) : Text {
-        var suffix = switch (locale) {
-            case (?loc) {"_"#loc};
-            case (null) {""};
-        };
-
-        switch (category) {
-            case (#Location) { "location"#suffix#".json";};
-            case (#About) { "about"#suffix#".json";};
-            case (#AudioGuide) { "audio_guide"#suffix;};
-            case (#Audio) { "track"#suffix;};
-            case (#Video) { "video"#suffix;};
-            case (#Gallery) { "img"#suffix;};
-            case (#Article) { "index"#suffix#".html";};     
-            case (#Document) { "file"#suffix;};
-            case (_) { "res"#suffix;};
-        };
-    };
-
-    public func resolve_group_name (group: CommonTypes.DataGroupId) : (Text) {
-        switch (group) {
-            case (#POI) { "poi"};
-            case (#Additions) {"additions"};
-        };
-    };
-
-    public func resolve_category_name (category: CommonTypes.CategoryId) : (Text) {
-        switch (category) {
-            case (#Location) { "location"};
-            case (#About) {"about"};
-            case (#AudioGuide) {"audio_guide"};
-            case (#Audio) {"audio"};
-            case (#Video) {"video"};
-            case (#Gallery) {"gallery"};
-            case (#Article) {"article"};
-            case (#Document) {"doc"};
-            case (#AR) {"ar"};
-            case (#Sundry) {"sundry"};
-        };
-    };      
 
 };

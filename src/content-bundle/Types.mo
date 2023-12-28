@@ -10,6 +10,55 @@ import CommonTypes "../shared/CommonTypes";
 
 module {
 
+	public class DataShema(group_id : CommonTypes.DataGroupId, 
+					categories : [CommonTypes.CategoryId],
+					index_categories : [CommonTypes.CategoryId]) {
+		
+		public func get_categories () : [CommonTypes.CategoryId] = categories;
+
+    	public func resolve_resource_name (category: CommonTypes.CategoryId, locale: ?Text) : Text {
+        	var suffix = switch (locale) {
+            	case (?loc) {"_"#loc};
+            	case (null) {""};
+        	};
+
+        	switch (category) {
+            	case (#Location) { "location"#suffix#".json";};
+            	case (#About) { "about"#suffix#".json";};
+            	case (#AudioGuide) { "audio_guide"#suffix;};
+            	case (#Audio) { "track"#suffix;};
+            	case (#Video) { "video"#suffix;};
+            	case (#Gallery) { "img"#suffix;};
+            	case (#Article) { "index"#suffix#".html";};     
+            	case (#Document) { "file"#suffix;};
+            	case (_) { "res"#suffix;};
+        	};
+    	};
+
+    	public func resolve_group_name () : (Text) {
+        	switch (group_id) {
+            	case (#POI) { "poi"};
+            	case (#Additions) {"additions"};
+        	};
+    	};
+
+    	public func resolve_category_name (category: CommonTypes.CategoryId) : (Text) {
+        	switch (category) {
+            	case (#Location) { "location"};
+            	case (#About) {"about"};
+            	case (#AudioGuide) {"audio_guide"};
+            	case (#Audio) {"audio"};
+            	case (#Video) {"video"};
+            	case (#Gallery) {"gallery"};
+            	case (#Article) {"article"};
+            	case (#Document) {"doc"};
+            	case (#AR) {"ar"};
+            	case (#Sundry) {"sundry"};
+        	};
+    	}; 
+	};
+
+
 	public type RequestedObject = {
 		id : Text;
 		view_mode : ViewMode;
@@ -109,10 +158,6 @@ module {
 		var counter: Nat;
 	};
 
-	public type DataIndex = {
-		var location : ?CommonTypes.Location;
-	};
-
 	// represents a space for logically grouped sections
 	public type DataGroup = {
 		// name for internal management.
@@ -120,13 +165,21 @@ module {
 		var sections: List.List<DataSection>;
 		var readonly : ?Nat;
 		var access_list : List.List<CommonTypes.Identity>;
-		var index : ?DataIndex;
 		created : Time.Time;
 	};
+
+	public type DataIndex = {
+		var location : ?CommonTypes.Location;
+	};	
 
 	public type BundlePayload = {
 		var poi_group : ?DataGroup;
 		var additions_group : ?DataGroup;
+	};
+
+	public type BundleIndex = {
+		var poi: ?DataIndex;
+		var additions : ?DataIndex;
 	};
 
 	public type Bundle = {
@@ -139,6 +192,7 @@ module {
 		var tags : List.List<Text>;
 		// payload
 		var payload : BundlePayload;
+		var index : BundleIndex;
 		creator : CommonTypes.Identity;
 		var owner : CommonTypes.Identity;
 		// modifications! query is available for all, forever
@@ -265,7 +319,7 @@ module {
 			commit_batch_by_key : shared (binding_key : Text, resource_args : ResourceArgs) -> async Result.Result<IdUrl, CommonTypes.Errors>;		
 		};
 
-    	public type ICManagementActor = actor {
+    	public type ICActor = actor {
         	stop_canister : shared { canister_id : Principal } -> async ();
 			delete_canister : shared { canister_id : Principal } -> async ();
         	update_settings : shared {

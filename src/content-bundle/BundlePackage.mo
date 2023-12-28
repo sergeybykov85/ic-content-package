@@ -29,6 +29,9 @@ import EmbededUI "./EmbededUI";
 
 shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageArgs) = this {
 
+	let POI_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Location, #About, #AudioGuide, #Audio, #Video, #Gallery, #AR], [#Location]);
+	let ADDITIONS_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Audio, #Video, #Gallery, #Article, #Document], []);
+
 	let MAX_TAGS = 5;
 
     // 30 days
@@ -404,10 +407,12 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						if (args.category == #Location) {
 							switch (args.group) {
 								case (#POI) {
-									let poi = CommonUtils.unwrap(bundle.payload.poi_group);
-									switch (poi.index) {
+
+									switch (bundle.index.poi){
 										case (?index) {index.location:=args.payload.location};
-										case (null)   { poi.index := ?{var location = args.payload.location}; };
+										case (null) {
+											bundle.index.poi :=?{var location = args.payload.location};
+										};
 									};
 								};
 								case (#Additions) {};
@@ -567,6 +572,33 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
+	public query func get_data (bundle_id: Text, group_id:CommonTypes.DataGroupId) : async Result.Result<Conversion.DataView, CommonTypes.Errors> {
+		switch (bundle_get(bundle_id)) {
+			case (?bundle) {
+				let group_opt = switch (group_id) {
+					case (#POI) {bundle.payload.poi_group};
+					case (#Additions) {bundle.payload.additions_group};
+				};
+				let index_opt = switch (group_id) {
+					case (#POI) {bundle.index.poi};
+					case (#Additions) {bundle.index.additions};
+				};				
+				switch (group_opt) {
+					case (?g) { return #ok(Conversion.convert_data_view(group_id, g, index_opt));};
+					case (null) {return #err(#NotRegistered);};
+				};
+			};
+			case (null) { return #err(#NotFound); };
+		};
+	};
+
+	public query func get_supported_categories (group_id:CommonTypes.DataGroupId) : async [CommonTypes.CategoryId] {
+		switch (group_id) {
+			case (#POI) {POI_SCHEMA.get_categories()};
+			case (#Additions) {ADDITIONS_SCHEMA.get_categories()};
+		};
+	};	
+
 	public query func get_version() : async Text {
 		return Utils.VERSION;
 	};
@@ -617,7 +649,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (?ids) {List.size(ids)};
 			case (null) {0};
 		};
-	};	
+	};
+	
 	/**
 	* Returns bundle information by id. This response contains only a basic info without any details about the data groups.
 	*/
@@ -666,30 +699,44 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
    	private func bundle_http_response(key : Text, tag: ?Text) : Http.Response {
 		if (key == Utils.ROOT) {
-				let canister_id = Principal.toText(Principal.fromActor(this));
-				var out_html = EmbededUI.render_root_header(tag);
-				switch (tag) {
-					case (?t) {
-						let n_tag = Utils.normalize_tag(t);
-						switch (tags2bundle_get(n_tag)) {
-							case (?bundle_ids) {
-								for (id in List.toIter(bundle_ids)) {
-									switch (bundle_get(id)) {
-            							case (null) { };
-            							case (? r)  { out_html:=out_html # EmbededUI.render_bundle_overview(canister_id,initArgs.network, id, r);};
-									};
+			let canister_id = Principal.toText(Principal.fromActor(this));
+			// tag header : one header or all headers
+			let tag_header = switch (tag) {
+				case (?t) {?[t]};
+				case (null) {
+					if (Trie.size(tags2bundle) > 0) {
+						let tags_buff = Buffer.Buffer<Text>(Trie.size(tags2bundle));
+						for ((key, a) in Trie.iter(tags2bundle)){
+							tags_buff.add(key);
+						};
+						?Buffer.toArray(tags_buff);
+					}else null;
+				};
+			};
+			// 
+			var out_html = EmbededUI.render_root_header(tag_header, Trie.size(bundles)) #  "<div class=\"grid\">";
+			switch (tag) {
+				case (?t) {
+					let n_tag = Utils.normalize_tag(t);
+					switch (tags2bundle_get(n_tag)) {
+						case (?bundle_ids) {
+							for (id in List.toIter(bundle_ids)) {
+								switch (bundle_get(id)) {
+            						case (null) { };
+            						case (? r)  { out_html:=out_html # EmbededUI.render_bundle_overview(canister_id,initArgs.network, id, r);};
 								};
 							};
-							case (null) {};
 						};
-					};						
-					case (null) {
-						for ((id, r) in Trie.iter(bundles)) {
-							out_html:=out_html # EmbededUI.render_bundle_overview(canister_id, initArgs.network, id, r);
-						};						
+						case (null) {};
 					};
+				};						
+				case (null) {
+					for ((id, r) in Trie.iter(bundles)) {
+						out_html:=out_html # EmbededUI.render_bundle_overview(canister_id, initArgs.network, id, r);
+					};						
 				};
-				return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
+			};
+			return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #"</div>" #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
 		};
 		EmbededUI.bundle_page_response( Principal.toText(Principal.fromActor(this)), initArgs.network, key, bundle_get(key));
     };
@@ -776,10 +823,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
             		var description = args.description;
             		var logo = null;
             		var tags = tags_list;
-            		var payload = {
-						var poi_group = null;
-						var additions_group = null;
-					};
+            		var payload = { var poi_group = null; var additions_group = null; };
+					var index = { var poi = null; var additions = null; };					
 					creator = owner;
             		var owner = owner;
             		created = Time.now();
@@ -916,21 +961,24 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 	private func _apply_bundle_section (bundle: Types.Bundle, args : Types.DataPackageRawArgs) : async Result.Result<(), CommonTypes.Errors> {
 		// assert the group is initialized
-		let data_group:Types.DataGroup = switch (await _assert_data_group(bundle, args.group)) {
+		let data_group_schema:(Types.DataGroup, Types.DataShema) = switch (await _assert_data_group(bundle, args.group)) {
 			case (#ok(g)){
 				switch (g) {
-					case (#POI) {CommonUtils.unwrap(bundle.payload.poi_group);};
-					case (#Additions) {CommonUtils.unwrap(bundle.payload.additions_group);};
+					case (#POI) {(CommonUtils.unwrap(bundle.payload.poi_group), _get_schema(#POI));};
+					case (#Additions) {(CommonUtils.unwrap(bundle.payload.additions_group), _get_schema(#Additions));};
 				}
 			};
 			case (#err(_)) { return #err(#ActionFailed); };
 		};
 
+		let data_group = data_group_schema.0;
+		let schema = data_group_schema.1;
+
 		if (Utils.is_readonly(data_group)) return #err(#OperationNotAllowed);
 		let target_section =  switch (_find_section(data_group,  args.category)) {
 			case (?sec){sec};
 			case (null) {
-				switch (await _init_data_section (data_group.data_path, Utils.resolve_category_name(args.category))) {
+				switch (await _init_data_section (data_group.data_path, schema.resolve_category_name(args.category))) {
 					case (#ok(r_path)) {
 						let s : Types.DataSection = {
 							data_path = r_path;
@@ -966,7 +1014,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				// resolve final name
 				let resource_name = switch (args.name) {
 					case (?name) {name;};
-					case (null) {Utils.resolve_resource_name(args.category, args.locale)};
+					case (null) {schema.resolve_resource_name(args.category, args.locale)};
 				};
 				let replace_path:?CommonTypes.ResourcePath = switch (args.nested_path) {
 					// replace opportunity is just an "extra feature, sugar" to quickly update simple resources
@@ -1007,7 +1055,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						// resolve final name
 						let resource_name = switch (args.name) {
 							case (?name) {name;};
-							case (null) {Utils.resolve_resource_name(args.category, args.locale)};
+							case (null) {schema.resolve_resource_name(args.category, args.locale)};
 						};
 
 						let res = await bucket_actor.commit_batch_by_key(attempt.binding_key, {
@@ -1039,7 +1087,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) {
 						let poi_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #POI)) {
 							case (#ok(r_path)) {
-								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil(); var index = null;};
+								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil();};
 								bundle.payload.poi_group := ?g;
 								g;
 							};
@@ -1054,7 +1102,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) {
 						let additions_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #Additions)) {
 							case (#ok(r_path)) {
-								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil(); var index = null;};
+								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil();};
 								bundle.payload.additions_group := ?g;
 								g;
 							};
@@ -1067,11 +1115,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		#ok(group_id);
 	};
 
+	private func _get_schema (group_id : CommonTypes.DataGroupId) : Types.DataShema {
+		switch (group_id) {
+			case (#POI) {POI_SCHEMA};
+			case (#Additions) {ADDITIONS_SCHEMA}
+		};
+	};
+
 	private func _init_data_group (root_path : CommonTypes.ResourcePath, group_id : CommonTypes.DataGroupId) : async Result.Result<CommonTypes.ResourcePath, CommonTypes.Errors> {
 		let bucket_actor : Types.Actor.DataBucketActor = actor (root_path.bucket_id);
 		let res = await bucket_actor.new_directory(false, {
 			content_type = null;
-			name =  Utils.resolve_group_name(group_id);
+			name =  _get_schema(group_id).resolve_group_name();
 			parent_path = null;
 			parent_id = ?root_path.resource_id;
 			ttl = null;
