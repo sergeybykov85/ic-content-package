@@ -12,17 +12,17 @@ const MainLayout: FC<MainLayoutProps> = ({ children }) => (
       <div className={styles.container}>
         <img src="/images/dcm-logo-with-text.svg" alt="Logo DCM" />
         <div className={styles.divider} />
-        <div className={styles.title}>Content Bundle Tool</div>
+        <div className={styles['header__title']}>Content Bundle Tool</div>
       </div>
     </header>
     <main className={styles.main}>{children}</main>
     <footer className={styles.footer}>
-      <div className={styles.container}>
-        <img src="/images/dcm-logo.svg" alt="Logo DCM" />
-        <div className={styles.copyright}>
-          © {new Date().getFullYear()}, DCM Swiss
+      <div className={`${styles.container} ${styles['container--footer']}`}>
+        <div className={styles['footer__logo-and-copyright']}>
+          <img src="/images/dcm-logo.svg" alt="Logo DCM" />
+          <div>© {new Date().getFullYear()}, DCM Swiss</div>
         </div>
-        <nav className={styles['nav-links']}>
+        <nav className={styles['footer__nav-links']}>
           <ExternalLink href="https://dcm-swiss.com/">
             dcm-swiss.com
           </ExternalLink>
@@ -30,8 +30,8 @@ const MainLayout: FC<MainLayoutProps> = ({ children }) => (
             web3-experience.com
           </ExternalLink>
         </nav>
-        <div className={styles.divider} />
-        <nav className={styles['nav-socials']}>
+        <div className={styles['divider--footer']} />
+        <nav className={styles['footer__nav-socials']}>
           <ExternalLink href="https://www.linkedin.com/company/dcm-swiss">
             <img src="/images/social-linked-in.svg" alt="LinkedIn logo" />
           </ExternalLink>
