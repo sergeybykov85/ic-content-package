@@ -121,8 +121,6 @@ module {
             // it is ok to use RESOURCE_ROUTE always for  now
             case (#Open) {RESOURCE_ROUTE};
         };
-
-
         switch (args.network){
             case (#Local(location)) return Text.join("",(["http://", args.canister_id, ".", location, router_id, args.resource_id].vals()));
             case (#IC) return Text.join("", (["https://", args.canister_id, ".raw.icp0.io", router_id, args.resource_id].vals()));

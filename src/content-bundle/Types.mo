@@ -25,6 +25,7 @@ module {
         	switch (category) {
             	case (#Location) { "location"#suffix#".json";};
             	case (#About) { "about"#suffix#".json";};
+				case (#History) { "history"#suffix#".json";};
             	case (#AudioGuide) { "audio_guide"#suffix;};
             	case (#Audio) { "track"#suffix;};
             	case (#Video) { "video"#suffix;};
@@ -46,6 +47,7 @@ module {
         	switch (category) {
             	case (#Location) { "location"};
             	case (#About) {"about"};
+				case (#History) {"history"};
             	case (#AudioGuide) {"audio_guide"};
             	case (#Audio) {"audio"};
             	case (#Video) {"video"};
@@ -112,6 +114,7 @@ module {
 		owner : CommonTypes.Identity;
 		created : Int;
 		total_bundles : Nat;
+		max_supply : ?Nat;
 		name : Text;
 		description : Text;
 		logo_url : ?Text;
@@ -120,11 +123,20 @@ module {
 	public type Mode = {
 		submission : Submission;
 		identifier : Identifier;
+		// max total supply
+		max_supply : ?Nat;
+		// max supply per creator
+		max_creator_supply : ?Nat;
+		// max tags per a bundle
+		max_tag_supply : ?Nat;
 	};
 
 	public let DEFAULT_MODE : Mode = {
 		submission = #Public;
 		identifier = #Hash;
+		max_supply = null;
+		max_creator_supply = null;
+		max_tag_supply = null;
 	};
 
 	public type DataPackageAction = {
@@ -141,6 +153,8 @@ module {
 	public type DataDomainPayload = {
 		location : ?CommonTypes.Location;
 		about : ?CommonTypes.AboutData;
+		reference : ?CommonTypes.ReferenceData;
+		history : ?CommonTypes.HistoryData;
 	};	
 
 	public type ChunkUploadAttempt = {

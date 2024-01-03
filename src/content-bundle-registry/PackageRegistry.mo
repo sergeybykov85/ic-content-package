@@ -141,7 +141,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	/**
 	* Registerrs a new package provider (who is authorized to add new packages)
 	*/
-	public shared ({ caller }) func register_package (package : Principal) : async Result.Result<(), CommonTypes.Errors> {
+	public shared ({ caller }) func register_package (package : Principal) : async Result.Result<Text, CommonTypes.Errors> {
 		let submitter_identity = _build_identity(caller);
 		switch (submitter_get(submitter_identity)) {
 			case (?submitter) {
@@ -185,7 +185,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							case (?by_kind) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
 							case (null) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
 						};					
-						return #ok();
+						return #ok(package_id);
 					};
 				};
 			};
@@ -287,7 +287,6 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (null) { false; };
 		};
     };	
-	
 
 	/**
 	* Returns packages for the provider
@@ -298,7 +297,6 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (null) { [] };
 		};
     };
-	
 
 	/**
 	* Returns packages for the creator
@@ -307,6 +305,17 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		switch (creator2package_get(identity)) {
 			case (?ids) { _get_packages(List.toArray(ids)) };
 			case (null) { [] };
+		};
+    };
+
+	/**
+	* Returns packages for the type
+	*/
+    public query func get_packages_by_type(kind:Types.Submission) : async [Conversion.BundlePackageView] {
+		let kind_key = Utils.resolve_submission_name(kind);
+		switch (type2package_get(kind_key)) {
+			case (?by_kind) {  _get_packages(List.toArray(by_kind)) };
+			case (null) {[]};
 		};
     };	
 
@@ -322,6 +331,18 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		return Trie.size(packages);
 	};
 
+	public query func total_supply_by_types(types: [Text]) : async [Nat] {
+		let res = Buffer.Buffer<Nat>(Array.size(types));
+		for (t in types.vals()) {
+			let i = switch (type2package_get(t)) {
+				case (?by_kind) {List.size(by_kind)};
+				case (null) {0};
+			};
+			res.add(i);
+		};
+		Buffer.toArray(res);		
+	};
+
 	public query func total_supply_by_creator(identity:CommonTypes.Identity) : async Nat {
 		switch (creator2package_get(identity)) {
 			case (?ids) {List.size(ids)};
@@ -330,7 +351,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	};
 
 	public query func total_supply_by_provider(identity:CommonTypes.Identity) : async Nat {
-		switch (creator2package_get(identity)) {
+		switch (submitter2package_get(identity)) {
 			case (?ids) {List.size(ids)};
 			case (null) {0};
 		};
