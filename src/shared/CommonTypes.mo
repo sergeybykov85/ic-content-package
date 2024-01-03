@@ -7,9 +7,13 @@ module {
 
 	public type NameValue = {name : Text; value : Text; };
 
-	public type Location = {country_code2:Text; region:?Text; city:?Text; coordinates:Coordinates};
+	public type Location = {country_code2:Text; country:?Text; region:?Text; city:?Text; coordinates:Coordinates};
 
 	public type AboutData = { name : Text; description : Text; locale : Text; attributes : [NameValue];};
+
+	public type HistoryData = {date_from:?Nat; date_to:?Nat; period:?Text; title : Text; body : Text; locale : Text;};
+
+	public type ReferenceData = { title : Text; url : Text};
 
 	public type Coordinates = {latitude : Float; longitude : Float};
 
@@ -39,6 +43,7 @@ module {
 	public type CategoryId = {
 		#Location;
 		#About;
+		#History;
 		#AudioGuide;
 		#Audio;
 		#Video;

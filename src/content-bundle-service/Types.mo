@@ -26,10 +26,25 @@ module {
 	public type Mode = {
 		submission : Submission;
 		identifier : Identifier;
+		// max total supply
+		max_supply : ?Nat;
+		// max supply per creator
+		max_creator_supply : ?Nat;
+		// max tags per a bundle
+		max_tag_supply : ?Nat;
 	};
 
 	public type PackageCreationRequest = {
-		mode : Mode;
+		mode : {
+			submission : Submission;
+			identifier : Identifier;
+			// max total supply
+			max_supply : ?Nat;
+			// max supply per creator
+			max_creator_supply : ?Nat;
+			// max tags per a bundle
+			max_tag_supply : ?Nat;
+		};
 		owner : CommonTypes.Identity;
 		metadata : ?MetadataArgs;
 		contributors : ?[CommonTypes.Identity];
@@ -40,6 +55,13 @@ module {
 		name : Text;
 		description : Text;
 		logo : ?DataRawPayload;
+	};
+
+	public type PackageOptions = {
+		max_creator_supply : ?Nat; 
+		max_supply : ?Nat;
+		max_tag_supply : ?Nat;
+		identifier_type : ?Identifier;
 	};
 
 	public type DataRawPayload = {
@@ -69,9 +91,11 @@ module {
 		allowed_packages : Nat;
 	};
 
-	public type Counter = {
-		var created_packages : Nat;
-	};	
+	public type Activity = {
+		// deployed packages
+		deployed_packages : [Text];
+		allowance : Nat;
+	};
 
 	/**
 		Module to inter-canister calls
@@ -91,7 +115,7 @@ module {
 	
 		public type PackageRegistryActor = actor {
 			is_submitter : shared(identity:CommonTypes.Identity)  -> async Bool;
-			register_package : shared(package : Principal)  -> async Result.Result<(), CommonTypes.Errors>;
+			register_package : shared(package : Principal)  -> async Result.Result<Text, CommonTypes.Errors>;
 		};		
 
 		public type BundlePackageActor = actor {

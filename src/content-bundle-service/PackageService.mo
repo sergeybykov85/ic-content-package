@@ -20,9 +20,12 @@ import BundlePackage "../content-bundle/BundlePackage";
 
 shared (installation) actor class PackageService(initArgs : Types.PackageServiceArgs) = this {
 
-	let DEF_PACKAGE_CYCLES:Nat = 2_000_000_000_000;
+	let DEF_PACKAGE_CYCLES:Nat = 1_500_000_000_000;
 	// management actor
 	let IC : Types.Actor.ICActor = actor "aaaaa-aa";
+
+	// Max tag supply per a bundle
+	let MAX_TAG_SUPPLY = 5;
 
 	// immutable field
 	let CREATOR:CommonTypes.Identity = {
@@ -44,16 +47,18 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
     // all allowances, key - identity, value - allowance
     stable var allowance : Trie.Trie<Text, Types.Allowance> = Trie.empty();
 
-    // all counters, key - identity, value - counter
-    stable var counter : Trie.Trie<Text, Types.Counter> = Trie.empty();	
+	// identity to deployed package.
+	/**
+	* Package registry contains the global mapping. More that one service can register packages.
+	* But the meaning of creator2package here is activity inside the package service
+	*/
+    stable var creator2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();	
 
 	stable var total : Nat = 0;
 
+	private func creator2package_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(creator2package, CommonUtils.identity_key(identity), Text.equal);
+
     private func allowance_get(identity : CommonTypes.Identity) : ?Types.Allowance = Trie.get(allowance, CommonUtils.identity_key(identity), Text.equal);
-	
-	private func counter_get(identity : CommonTypes.Identity) : ?Types.Counter = Trie.get(counter, CommonUtils.identity_key(identity), Text.equal);
-
-
 	/**
 	* Applies list of users who can manage providers
 	*/
@@ -104,14 +109,31 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	/**
 	* Deploys a public package
 	*/
-	public shared ({ caller }) func deploy_public_package (metadata:Types.MetadataArgs, identifier_type : ?Types.Identifier) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func deploy_public_package (metadata:Types.MetadataArgs, options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors> {
 		let identity = _build_identity(caller);
 		switch (allowance_get(identity)) {
 			case (?allowance) {
 				// any extra resticitons could be added based on the package type
 				if (allowance.allowed_packages == 0)  return #err(#AccessDenied);
 				await _deploy_package({
-					mode  = { submission = #Public; identifier = Option.get(identifier_type, #Ordinal);	};
+					mode  = { submission = #Public; 
+						identifier = switch (options) {
+							case (?opt) {Option.get(opt.identifier_type, #Ordinal)};
+							case (null) {#Ordinal};
+						};
+						max_supply = switch (options) {
+							case (?opt) {opt.max_supply};
+							case (null) {null};
+						}; 
+						max_creator_supply = switch (options) {
+							case (?opt) {opt.max_creator_supply};
+							case (null) {null};
+						};
+						max_tag_supply = switch (options) {
+							case (?opt) {opt.max_tag_supply};
+							case (null) {?MAX_TAG_SUPPLY};
+						}
+					};
 					caller = identity;
 					owner = identity;
 					metadata = ?metadata;
@@ -126,14 +148,29 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	/**
 	* Deploys a private package
 	*/
-	public shared ({ caller }) func deploy_private_package (metadata:Types.MetadataArgs, identifier_type : ?Types.Identifier) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func deploy_private_package (metadata:Types.MetadataArgs, options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors> {
 		let identity = _build_identity(caller);
 		switch (allowance_get(identity)) {
 			case (?allowance) {
 				// any extra resticitons could be added based on the package type
 				if (allowance.allowed_packages == 0)  return #err(#AccessDenied);
 				await _deploy_package({
-					mode  = { submission = #Private; identifier = Option.get(identifier_type, #Ordinal); };
+					mode  = {
+						submission = #Private; 
+						identifier = switch (options) {
+							case (?opt) {Option.get(opt.identifier_type, #Ordinal)};
+							case (null) {#Ordinal};
+						};
+						max_supply = switch (options) {
+							case (?opt) {opt.max_supply};
+							case (null) {null};
+						}; 
+						max_creator_supply = null;
+						max_tag_supply = switch (options) {
+							case (?opt) {opt.max_tag_supply};
+							case (null) {?MAX_TAG_SUPPLY};
+						}
+					};
 					owner = identity;
 					metadata = ?metadata;
 					contributors = null;
@@ -147,13 +184,28 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	/**
 	* Deploys a shared package. Parameter contributors allows to specify list of users who can create bundles inside the package
 	*/
-	public shared ({ caller }) func deploy_shared_package (metadata:Types.MetadataArgs, contributors:[CommonTypes.Identity], identifier_type : ?Types.Identifier) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func deploy_shared_package (metadata:Types.MetadataArgs, contributors:[CommonTypes.Identity], options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors> {
 		let identity = _build_identity(caller);
 		switch (allowance_get(identity)) {
 			case (?allowance) {
 				if (allowance.allowed_packages == 0)  return #err(#AccessDenied);
 				await _deploy_package({	
-					mode  = { submission = #Private; identifier = Option.get(identifier_type, #Ordinal); };
+					mode  = {
+						submission = #Shared; 
+						identifier = switch (options) {
+							case (?opt) {Option.get(opt.identifier_type, #Ordinal)};
+							case (null) {#Ordinal};
+						};
+						max_supply = switch (options) {
+							case (?opt) {opt.max_supply};
+							case (null) {null};
+						}; 
+						max_creator_supply = null;
+						max_tag_supply = switch (options) {
+							case (?opt) {opt.max_tag_supply};
+							case (null) {?MAX_TAG_SUPPLY};
+						}
+					};
 					owner = identity;
 					metadata = ?metadata;
 					contributors = ?contributors;
@@ -180,7 +232,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		});
 
 		// init data store
-		let package_id = Principal.fromActor(bundle_package_actor);
+		let package_principal = Principal.fromActor(bundle_package_actor);
 		switch (await bundle_package_actor.init_data_store(null)) {
 			// ignore in case of success
 			case (#ok(_)) {};
@@ -199,18 +251,18 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		};
 
 		// register package
-		let registration_response = await registry_actor.register_package(package_id);
+		let registration_response = await registry_actor.register_package(package_principal);
 		switch (registration_response) {
-			case (#ok(_)) {
-				// update index
-				switch (counter_get(owner)) { 
-					case (?c) {	c.created_packages:=c.created_packages + 1; };
-					case (null) {
-						counter := Trie.put(counter, CommonUtils.identity_key(owner), Text.equal, {var created_packages = 1}).0;
-					};
-				};
+			case (#ok(package_id)) {
 				total:=total + 1;
-				#ok(Principal.toText(package_id));
+
+				// index for creator
+				switch (creator2package_get(args.owner)) {
+					case (?by_creator) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(args.owner), Text.equal, List.push(package_id, by_creator)).0; };
+					case (null) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(args.owner), Text.equal, List.push(package_id, List.nil())).0;}
+				};
+				// Principal.toText(package_principal) = package_id
+				#ok(package_id);
 			};
 			case (#err(_)) { return #err(#ActionFailed); };
 		};
@@ -230,8 +282,8 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	};
 
 	public query func total_supply_by(identity:CommonTypes.Identity) : async Nat {
-		switch (counter_get(identity)) {
-			case (?c) {c.created_packages};
+		switch (creator2package_get(identity)) {
+			case (?c) {List.size(c)};
 			case (null) {0};
 		};
 	};
@@ -241,7 +293,19 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 			case (?c) {c.allowed_packages};
 			case (null) {0};
 		};
-	};	
+	};
+
+	public query func activity_by(identity:CommonTypes.Identity) : async Types.Activity {
+		let allowance = switch (allowance_get(identity)) {
+			case (?c) {c.allowed_packages};
+			case (null) {0};
+		};
+		{ deployed_packages = switch (creator2package_get(identity)) {
+			case (?c) {List.toArray(c)};
+			case (null) {[]};
+		}; allowance = allowance;
+		};
+	};		
 
 	private func _build_identity (caller : Principal) : CommonTypes.Identity {
 		// right now we return always ICP, but it will be extended in case of ethereum authentication

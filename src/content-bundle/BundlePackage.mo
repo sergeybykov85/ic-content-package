@@ -15,7 +15,6 @@ import List "mo:base/List";
 import Nat64 "mo:base/Nat64";
 
 import DataBucket "mo:ics2/DataBucket";
-import Debug "mo:base/Debug";
 import { JSON; Candid } "mo:serde";
 
 import Http "../shared/Http";
@@ -29,10 +28,8 @@ import EmbededUI "./EmbededUI";
 
 shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageArgs) = this {
 
-	let POI_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Location, #About, #AudioGuide, #Audio, #Video, #Gallery, #AR], [#Location]);
-	let ADDITIONS_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Audio, #Video, #Gallery, #Article, #Document], []);
-
-	let MAX_TAGS = 5;
+	let POI_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Location, #About, #History, #AudioGuide, #Gallery, #AR], [#Location]);
+	let ADDITIONS_SCHEMA:Types.DataShema = Types.DataShema(#Additions, [#Audio, #Video, #Gallery, #Article, #Document], []);
 
     // 30 days
     let DEF_READONLY_SEC:Nat = 30 * 24 * 60 * 60;
@@ -177,7 +174,11 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				};
 				if (Option.isSome(args.tags)) {
 					let tags = CommonUtils.unwrap(args.tags);
-					if (Array.size(tags) > MAX_TAGS) return #err(#InvalidRequest);
+
+					switch (MODE.max_tag_supply) {
+						case (?max_tags) { if (Array.size(tags) > max_tags) return #err(#OperationNotAllowed); };
+						case (null) {};
+					};					
 					for (tag in tags.vals()) {
   						if (Utils.invalid_tag_name(tag)) return #err(#InvalidRequest);
 					};
@@ -384,7 +385,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
-				if (not _access_allowed (bundle, _build_identity(caller), ?args.group)) return #err(#AccessDenied); 
+			//	if (not _access_allowed (bundle, _build_identity(caller), ?args.group)) return #err(#AccessDenied); 
 
 				// transform into raw format
 				let blob_to_save = switch (Conversion.convert_to_blob(args.category, args.payload)) {
@@ -407,7 +408,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						if (args.category == #Location) {
 							switch (args.group) {
 								case (#POI) {
-
 									switch (bundle.index.poi){
 										case (?index) {index.location:=args.payload.location};
 										case (null) {
@@ -418,7 +418,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 								case (#Additions) {};
 							};
 						};
-
 						return #ok(bundle_id); 
 					};
 					case (#err(e)) {return #err(e);};
@@ -630,6 +629,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			creator = CREATOR;
 			owner  = owner;
 			total_bundles =  Trie.size(bundles);
+			max_supply = MODE.max_supply;
 			created = CREATED;
 			name  = metadata.name;
 			description = metadata.description;
@@ -695,7 +695,19 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
     public query func get_contributors() : async [CommonTypes.Identity] {
         List.toArray(contributors);
-    };		    
+    };
+
+    public query func get_tags() : async [Text] {
+        _get_tags();
+    };	
+
+	private func _get_tags () : [Text] {
+		let tags_buff = Buffer.Buffer<Text>(Trie.size(tags2bundle));
+		for ((key, a) in Trie.iter(tags2bundle)){
+			tags_buff.add(key);
+		};
+		Buffer.toArray(tags_buff);
+	};	    
 
    	private func bundle_http_response(key : Text, tag: ?Text) : Http.Response {
 		if (key == Utils.ROOT) {
@@ -705,11 +717,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				case (?t) {?[t]};
 				case (null) {
 					if (Trie.size(tags2bundle) > 0) {
-						let tags_buff = Buffer.Buffer<Text>(Trie.size(tags2bundle));
-						for ((key, a) in Trie.iter(tags2bundle)){
-							tags_buff.add(key);
-						};
-						?Buffer.toArray(tags_buff);
+						?_get_tags();
 					}else null;
 				};
 			};
@@ -787,7 +795,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
     private func _register_bundle(args : Types.BundleArgs, owner : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
         // validate tags
-		if (Array.size(args.tags) > MAX_TAGS) return #err(#InvalidRequest);
+		switch (MODE.max_tag_supply) {
+			case (?max_tags) { if (Array.size(args.tags) > max_tags) return #err(#OperationNotAllowed); };
+			case (null) {};
+		};
 		for (tag in args.tags.vals()) {
   			if (Utils.invalid_tag_name(tag)) return #err(#InvalidRequest);
 		};

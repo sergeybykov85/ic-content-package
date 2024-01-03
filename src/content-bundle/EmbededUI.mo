@@ -91,7 +91,7 @@ module {
 			resource_html := resource_html # "<p>"# tags_fmt # "</p>";
 		};	
 		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>ID</b> : <span class=\"right\">"# debug_show(id) # "</span></div>";
-		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Root data path</b> : <span class=\"right\"><a  href=\"" # r.data_path.url #"\" target = \"_blank\">"#r.data_path.url#"</a></span></div>";
+		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Root path</b> : <span class=\"right\"><a  href=\"" # r.data_path.url #"\" target = \"_blank\">"#r.data_path.url#"</a></span></div>";
 		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Created</b> : <span class=\"right\"><span class=\"js_date\">"# Int.toText(r.created) # "</span></span></div>";
 		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Creator</b> : <span class=\"right\">"# debug_show(r.creator) # "</span></div>";
 		resource_html := resource_html # "<div style=\"padding: 4px 3px;\"><b>Owner</b> : <span class=\"right\">"# debug_show(r.owner) # "</span></div>";		

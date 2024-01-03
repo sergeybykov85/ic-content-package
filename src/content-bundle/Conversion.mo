@@ -6,6 +6,7 @@ import Time "mo:base/Time";
 import Blob "mo:base/Blob";
 import { JSON; Candid } "mo:serde";
 import Result "mo:base/Result";
+import Debug "mo:base/Debug";
 
 import Types "./Types";
 import CommonTypes "../shared/CommonTypes";
@@ -13,7 +14,9 @@ import CommonTypes "../shared/CommonTypes";
 
 module {
 
-	let LOCATION_FIELDS = ["latitude", "longitude", "country_code2", "region", "city", "coordinates"];
+	let LOCATION_FIELDS = ["latitude", "longitude", "country", "country_code2", "region", "city", "coordinates"];
+	let REFERENCE_FIELDS = ["title","url"];
+	let HISTORY_FIELDS = ["date_from","date_to","period", "title", "body", "locale"];
 	let ABOUT_FIELDS = ["name", "value", "attributes", "locale", "description"];
 
 	public type DataStoreView = {
@@ -105,10 +108,10 @@ module {
 					case (?location) {
 						switch (JSON.toText(to_candid(location), LOCATION_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
-							case (#err (e)) { return #err(#ActionFailed)};
+							case (#err (e)) { return #err(#InvalidRequest)};
 						};
 					};
-					case (null)  { return #err(#ActionFailed)};
+					case (null)  { return #err(#InvalidRequest)};
 				};
 			};
 			case (#About) {
@@ -116,14 +119,36 @@ module {
 					case (?about) {
 						switch (JSON.toText(to_candid(about), ABOUT_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
-							case (#err (e)) { return #err(#ActionFailed)};
+							case (#err (e)) { return #err(#InvalidRequest)};
 						};
 					};
 					// no data given
-					case (null)  { return #err(#ActionFailed)};
+					case (null)  { return #err(#InvalidRequest)};
 				};
 			};
-			case (_)  { return #err(#NotSupported)};
+			case (#History) {
+				switch (args.history) {
+					case (?history) {
+						switch (JSON.toText(to_candid(history), HISTORY_FIELDS, null)) {
+							case (#ok(j)) {Text.encodeUtf8(j); };
+							case (#err (e)) { return #err(#InvalidRequest)};
+						};
+					};
+					// no data given
+					case (null)  { return #err(#InvalidRequest)};
+				};
+			};			
+			case (_) {
+				switch (args.reference) {
+					case (?reference) {
+						switch (JSON.toText(to_candid(reference), REFERENCE_FIELDS, null)) {
+							case (#ok(j)) {Text.encodeUtf8(j); };
+							case (#err (e)) { return #err(#InvalidRequest)};
+						};
+					};
+					case (null)  { return #err(#InvalidRequest)};
+				};
+			};	
 		};
 		#ok(blob_to_save);
 	};
