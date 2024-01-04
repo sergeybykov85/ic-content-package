@@ -903,6 +903,24 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
     };
 
+    private func _exclude_tag(bundle_id:Text, tag:Text) : () {
+		switch (tags2bundle_get(tag)) {
+			case (?bundle_ids) {
+				if (not List.isNil(bundle_ids)) {
+					let fbundles = List.mapFilter<Text, Text>(bundle_ids,
+					func(b:Text) : ?Text {
+						if (b == bundle_id) { return null; }
+						else { return ?b; }
+					}
+					);
+					tags2bundle := Trie.put(tags2bundle, Utils.tag_key(tag), Text.equal, fbundles).0;       
+				};
+			};
+			case (null) {
+			};
+		};
+    };	
+
     private func _track_creator(identity:CommonTypes.Identity, bundle_id:Text) : () {
 		switch (creator2bundle_get(identity)) {
 			case (?bundle_ids) {
@@ -945,40 +963,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
     };			
 
-    private func _exclude_tag(bundle_id:Text, tag:Text) : () {
-		switch (tags2bundle_get(tag)) {
-			case (?bundle_ids) {
-				if (not List.isNil(bundle_ids)) {
-					let fbundles = List.mapFilter<Text, Text>(bundle_ids,
-					func(b:Text) : ?Text {
-						if (b == bundle_id) { return null; }
-						else { return ?b; }
-					}
-					);
-					tags2bundle := Trie.put(tags2bundle, Utils.tag_key(tag), Text.equal, fbundles).0;       
-				};
-			};
-			case (null) {
-			};
-		};
-    };	
-
-
-    private func _register_tag(bundle_id:Text, tag:Text) : () {
-		switch (tags2bundle_get(tag)) {
-			case (?bundle_ids) {
-				if (not List.isNil(bundle_ids)) {
-					for (leaf in List.toIter(bundle_ids)){
-						if (leaf == bundle_id) return;
-					};
-				};
-				tags2bundle := Trie.put(tags2bundle, Utils.tag_key(tag), Text.equal, List.push(bundle_id, bundle_ids)).0;       
-			};
-			case (null) {
-				tags2bundle := Trie.put(tags2bundle, Utils.tag_key(tag), Text.equal, List.push(bundle_id, List.nil())).0;       
-			};
-		};
-    };	
 
 	private func _apply_bundle_section (bundle: Types.Bundle, args : Types.DataPackageRawArgs) : async Result.Result<(), CommonTypes.Errors> {
 		// assert the group is initialized
