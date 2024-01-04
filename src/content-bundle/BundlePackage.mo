@@ -176,21 +176,23 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					let tags = CommonUtils.unwrap(args.tags);
 
 					switch (MODE.max_tag_supply) {
-						case (?max_tags) { if (Array.size(tags) > max_tags) return #err(#OperationNotAllowed); };
+						case (?max_tags) { if (Array.size(tags) > max_tags) return #err(#LimitExceeded); };
 						case (null) {};
 					};					
 					for (tag in tags.vals()) {
   						if (Utils.invalid_tag_name(tag)) return #err(#InvalidRequest);
 					};
+					//let normalized_tags = List.map(Array.map<Text, Text>(tags, func t = Utils.normalize_tag(t)));
+
 					if (List.size(bundle.tags) > 0) {
 						// exclude and include
 						_exclude_tags (id, bundle.tags);
+						// store original form
 						bundle.tags:= List.fromArray(tags);
 						_include_tags (id, bundle.tags);
 					} else {
-						// only save
+						// store original form
 						bundle.tags:= List.fromArray(tags);
-						// apply tags for bundle
 						_include_tags (id, bundle.tags);
 					};
 				};
@@ -385,7 +387,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
-			//	if (not _access_allowed (bundle, _build_identity(caller), ?args.group)) return #err(#AccessDenied); 
+				if (not _access_allowed (bundle, _build_identity(caller), ?args.group)) return #err(#AccessDenied); 
 
 				// transform into raw format
 				let blob_to_save = switch (Conversion.convert_to_blob(args.category, args.payload)) {
@@ -794,9 +796,14 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	};
 
     private func _register_bundle(args : Types.BundleArgs, owner : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
-        // validate tags
+        // validate supply
+		switch (MODE.max_supply) {
+			case (?max_supply) { if (Trie.size(bundles) > max_supply) return #err(#LimitExceeded); };
+			case (null) {};
+		};
+		// validate tags
 		switch (MODE.max_tag_supply) {
-			case (?max_tags) { if (Array.size(args.tags) > max_tags) return #err(#OperationNotAllowed); };
+			case (?max_tags) { if (Array.size(args.tags) > max_tags) return #err(#LimitExceeded); };
 			case (null) {};
 		};
 		for (tag in args.tags.vals()) {
@@ -822,7 +829,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		});		
 		switch (bundle_data) {
 			case (#ok(idUrl)) {
-       			let tags_list = List.fromArray(Array.map<Text, Text>(args.tags, func t = Utils.normalize_tag(t)));
+       			let normalized_tags = List.fromArray(Array.map<Text, Text>(args.tags, func t = Utils.normalize_tag(t)));
+				
+				
 				let bundle:Types.Bundle = {
 					data_path = {
 						locale = null; name = null;
@@ -833,7 +842,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
             		var name = args.name;
             		var description = args.description;
             		var logo = null;
-            		var tags = tags_list;
+					// original version
+            		var tags = List.fromArray(args.tags);
             		var payload = { var poi_group = null; var additions_group = null; };
 					var index = { var poi = null; var additions = null; };					
 					creator = owner;
@@ -844,7 +854,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         		// put into store memory
         		bundles := Trie.put(bundles, CommonUtils.text_key(bundle_id), Text.equal, bundle).0;
 				// apply tags for bundle
-				_include_tags (bundle_id, tags_list);
+				_include_tags (bundle_id, normalized_tags);
 
 				// logo
 				switch (args.logo) {

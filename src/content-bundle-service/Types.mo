@@ -108,6 +108,7 @@ module {
 			owner : CommonTypes.Identity;
 			created : Int;
 			total_bundles : Nat;
+			max_supply : ?Nat;
 			name : Text;
 			description : Text;
 			logo_url : ?Text;

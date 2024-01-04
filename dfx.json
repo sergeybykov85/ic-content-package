@@ -14,7 +14,12 @@
       "main": "src/content-bundle-service/PackageService.mo",
       "type": "motoko",
       "dependencies": []
-    }      
+    },
+    "tag_service": {
+      "main": "src/tag-service/TagService.mo",
+      "type": "motoko",
+      "dependencies": []
+    }            
   },
   "defaults": {
     "build": {

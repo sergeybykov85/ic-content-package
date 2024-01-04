@@ -64,6 +64,7 @@ module {
 		// any urls related to the package
 		var references : List.List<CommonTypes.NameValue>;
 		submission : Submission;
+		max_supply : ?Nat;
 		// who created a package
 		creator : CommonTypes.Identity;
 		// who registered a package
@@ -92,6 +93,7 @@ module {
 			owner : CommonTypes.Identity;
 			created : Int;
 			total_bundles : Nat;
+			max_supply : ?Nat;
 			name : Text;
 			description : Text;
 			logo_url : ?Text;

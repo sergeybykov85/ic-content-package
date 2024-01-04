@@ -40,7 +40,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	// who can manage service : who can register new submitters etc
 	stable var access_list : List.List<CommonTypes.Identity> = List.nil();
 
-	// crreator of the package
+	// creator of the package
     stable var creator2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
 	// who submitted a package : service or channel partner
@@ -159,6 +159,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							var description = package_details.description;
 							var logo_url = package_details.logo_url;
 							var references = List.nil();
+							max_supply = package_details.max_supply;
 							creator = package_details.creator;
 							submitter = submitter_identity;
 							created = package_details.created;
