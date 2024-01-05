@@ -15,6 +15,13 @@ module {
 		var last_scan : Time.Time;
 	};	
 
+	public type PackageRefView = {
+		id : Text;
+		registered: Time.Time;
+		last_scan : Time.Time;
+		tags : [Text];
+	};	
+
 	/**
 		Module to inter-canister calls
 	*/

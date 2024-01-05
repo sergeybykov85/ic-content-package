@@ -31,6 +31,9 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		identity_id = Principal.toText(installation.caller);
 	};
 
+	// registry actor
+	var tag_service:Text = Option.get(initArgs.tag_service, "{DEFAULT_TAGSERVICE_PLACE_HERE}");	
+
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
 	});
@@ -86,6 +89,16 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		owner :=to;
 		#ok();
 	};
+
+
+	/**
+	* Change the tag service
+	*/
+	public shared ({ caller }) func apply_tag_service (to : Principal) : async Result.Result<(), CommonTypes.Errors> {
+		if (not CommonUtils.identity_equals({identity_type = #ICP; identity_id = Principal.toText(caller);}, owner)) return #err(#AccessDenied);
+		tag_service := Principal.toText(to);
+		#ok();
+	};	
 	/**
 	* Registerrs a new package provider (who is authorized to add new packages)
 	*/
@@ -185,7 +198,11 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 						switch (type2package_get(submission_key)) {
 							case (?by_kind) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
 							case (null) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
-						};					
+						};
+
+						// register in the tag service
+						let tag_service_actor : Types.Actor.TagServiceActor = actor (tag_service);
+						ignore await tag_service_actor.register_package(package);	
 						return #ok(package_id);
 					};
 				};
@@ -356,7 +373,11 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (?ids) {List.size(ids)};
 			case (null) {0};
 		};
-	};			
+	};
+
+	public query func get_tag_service() : async Text {
+		return tag_service;
+	};				
 
     private func _get_packages(ids:[Text]) : [Conversion.BundlePackageView] {
 		let res = Buffer.Buffer<Conversion.BundlePackageView>(Array.size(ids));

@@ -34,6 +34,7 @@ module {
 
 	public type PackageRegistryArgs = {
 		network : CommonTypes.Network;
+		tag_service : ?Text;
 		// target owner. If not specified, then onwer = who installs the canister
 		owner : ?CommonTypes.Identity;
 	};
@@ -97,6 +98,10 @@ module {
 			name : Text;
 			description : Text;
 			logo_url : ?Text;
+		};
+
+		public type TagServiceActor = actor {
+			register_package : shared (package : Principal)  -> async Result.Result<(Text), CommonTypes.Errors>;
 		};
 
 		public type BundlePackageActor = actor {

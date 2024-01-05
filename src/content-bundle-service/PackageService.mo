@@ -33,7 +33,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		identity_id = Principal.toText(installation.caller);
 	};
 	// registry actor
-	let REGISTRY:Text = Option.get(initArgs.package_registry, "{DEFAULT_REGISTRY_PLACE_HERE}");
+	var registry:Text = Option.get(initArgs.package_registry, "{DEFAULT_REGISTRY_PLACE_HERE}");
 
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
@@ -76,6 +76,15 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		owner :=to;
 		#ok();
 	};
+
+	/**
+	* Change the package registry
+	*/
+	public shared ({ caller }) func apply_registry (to : Principal) : async Result.Result<(), CommonTypes.Errors> {
+		if (not CommonUtils.identity_equals({identity_type = #ICP; identity_id = Principal.toText(caller);}, owner)) return #err(#AccessDenied);
+		registry := Principal.toText(to);
+		#ok();
+	};	
 	/**
 	* Registers an allowance
 	*/
@@ -206,7 +215,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	};	
 
 	private func _deploy_package (args : Types.PackageCreationRequest) : async Result.Result<Text, CommonTypes.Errors> {
-		let registry_actor : Types.Actor.PackageRegistryActor = actor (REGISTRY);
+		let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
 		// if the caller is able to register any package
 		if  (not (await registry_actor.is_submitter({identity_type=#ICP; identity_id=Principal.toText(Principal.fromActor(this)) }))) { return #err(#AccessDenied); };
 		Cycles.add(Option.get(args.cycles, DEF_PACKAGE_CYCLES));
@@ -271,7 +280,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	};
 
 	public query func get_registry() : async Text {
-		return REGISTRY;
+		return registry;
 	};	
 
 	public query func total_supply_by(identity:CommonTypes.Identity) : async Nat {

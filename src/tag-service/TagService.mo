@@ -16,8 +16,10 @@ import CommonTypes "../shared/CommonTypes";
 
 shared  (installation) actor class TagService(initArgs : Types.TagServiceArgs) = this {
 
-	// def scan period is 60 min = 3600 sec
-	let SYNC_TAG_SEC = 3600;
+	// def scan period is 5 min = 300 sec
+	let SYNC_TAG_SEC = 300;
+	// expiration period for chunk = 60 sec (in nanosec)
+	let MIN_RESCAN_PERIOD =  60 * 1_000_000_000;
 
     let CREATOR = installation.caller;
 
@@ -128,7 +130,9 @@ shared  (installation) actor class TagService(initArgs : Types.TagServiceArgs) =
 
 	private func _sync_tags () : async () {
 		for ((id, r) in Trie.iter(packages)) {
-			ignore await _sync_package(id, r);
+			let delta = (Time.now() - r.last_scan);
+			// if package just added, then it was scanner recently. No need to synch tags again
+			if (delta > MIN_RESCAN_PERIOD) ignore await _sync_package(id, r);
 		};
 	};
 	
@@ -194,10 +198,27 @@ shared  (installation) actor class TagService(initArgs : Types.TagServiceArgs) =
 		}
 	};
 
-	public query func get_tags_by_package(tag:Text) : async [Text] {
-		switch (package2tag_get(tag)) {
+	public query func get_tags_by_package(package_id:Text) : async [Text] {
+		switch (package2tag_get(package_id)) {
 			case (?ids) {ids };
 			case (null) {[]};
+		}
+	};
+
+	public query func get_package_ref(package_id:Text) : async  Result.Result<Types.PackageRefView, CommonTypes.Errors>{
+		switch (package_get(package_id)) {
+			case (?r) {
+				return #ok({
+					id = package_id;
+					registered = r.registered;
+					last_scan = r.last_scan;
+					tags = switch (package2tag_get(package_id)) {
+						case (?ids) {ids };
+						case (null) {[]};
+					};
+				}); 
+			};
+			case (null) { return #err(#NotRegistered)};
 		}
 	};		
 
@@ -217,6 +238,10 @@ shared  (installation) actor class TagService(initArgs : Types.TagServiceArgs) =
 	public query func get_operators() : async [Principal] {
 		operators;
 	};
+
+	public query func get_sync_tags_sec() : async Nat {
+		return sync_tags_sec;
+	};	
 
 	private func _is_operator(id: Principal) : Bool {
     	Option.isSome(Array.find(operators, func (x: Principal) : Bool { x == id }))
