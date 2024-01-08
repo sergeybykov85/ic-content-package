@@ -29,39 +29,6 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ],
-    "rules": {
-      "quotes": [
-        "warn",
-        "single",
-        {
-          "allowTemplateLiterals": true
-        }
-      ],
-      "jsx-quotes": [
-        "warn",
-        "prefer-double"
-      ],
-      "indent": [
-        "warn",
-        2,
-        {
-          "ignoreComments": true,
-          "SwitchCase": 1,
-          "MemberExpression": 1,
-          "ArrayExpression": 1,
-          "ObjectExpression": 1,
-          "ImportDeclaration": 1,
-          "flatTernaryExpressions": false,
-          "offsetTernaryExpressions": false
-        }
-      ]
-    }
-  },
   "browserslist": {
     "production": [
       ">0.2%",

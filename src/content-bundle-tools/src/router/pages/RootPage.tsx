@@ -1,9 +1,9 @@
 import MainLayout from 'components/layouts/MainLayout'
-import LogInSection from 'components/features/LogInSection'
+import WelcomeSection from 'components/features/WelcomeSection'
 
 const RootPage = () => (
   <MainLayout>
-    <LogInSection />
+    <WelcomeSection />
   </MainLayout>
 )
 

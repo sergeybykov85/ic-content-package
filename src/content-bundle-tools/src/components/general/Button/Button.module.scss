@@ -1,0 +1,22 @@
+@import "src/styles/variables";
+
+.button {
+  display: inline-flex;
+  padding: 16px;
+  border-radius: 4px;
+  background-color: $primary-blue-color;
+  transition: .3s;
+  cursor: pointer;
+  &:hover {
+    opacity: .7;
+  }
+  &:active {
+    transform: scale(.9);
+  }
+
+  /* Font */
+  color: #FFF;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+}
