@@ -34,7 +34,7 @@ module {
 
 	public type PackageRegistryArgs = {
 		network : CommonTypes.Network;
-		tag_service : ?Text;
+		index_service : ?Text;
 		// target owner. If not specified, then onwer = who installs the canister
 		owner : ?CommonTypes.Identity;
 	};

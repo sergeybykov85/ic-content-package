@@ -3,6 +3,7 @@ import List "mo:base/List";
 import Option "mo:base/Option";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
+import Float "mo:base/Float";
 import Blob "mo:base/Blob";
 import { JSON; Candid } "mo:serde";
 import Result "mo:base/Result";
@@ -18,6 +19,8 @@ module {
 	let REFERENCE_FIELDS = ["title","url"];
 	let HISTORY_FIELDS = ["date_from","date_to","period", "title", "body", "locale"];
 	let ABOUT_FIELDS = ["name", "value", "attributes", "locale", "description"];
+	// unfortunately,  serge lib can't serialize Float properly, better to save it as text
+	public type LocationJson = {country_code2:Text; country:Text; region:Text; city:Text; latitude : Text; longitude : Text};
 
 	public type DataStoreView = {
 		buckets : [Text];
@@ -53,6 +56,7 @@ module {
 		data_path : CommonTypes.ResourcePath;
 		name : Text;
 		description : Text;
+		classification : Text;
 		// simple light weigh logo
 		logo : ?CommonTypes.ResourcePath;
 		tags : [Text];
@@ -66,8 +70,9 @@ module {
 			data_path = info.data_path;
 			name = info.name;
 			description = info.description;
+			classification = info.index.classification;
 			logo = info.logo;
-			tags = List.toArray (info.tags);
+			tags = List.toArray (info.index.tags);
 			creator = info.creator;
 			owner = info.owner;
 			created = info.created;
@@ -106,7 +111,15 @@ module {
 			case (#Location) {
 				switch (args.location) {
 					case (?location) {
-						switch (JSON.toText(to_candid(location), LOCATION_FIELDS, null)) {
+						let lj:LocationJson = {
+							country_code2 = location.country_code2;
+							country = Option.get(location.country,"");
+							region = Option.get(location.region,"");
+							city = Option.get(location.city,"");
+							latitude = Float.toText(location.coordinates.latitude);
+							longitude = Float.toText(location.coordinates.longitude);
+						};
+						switch (JSON.toText(to_candid(lj), LOCATION_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
 							case (#err (e)) { return #err(#InvalidRequest)};
 						};

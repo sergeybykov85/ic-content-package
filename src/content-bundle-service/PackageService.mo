@@ -95,7 +95,6 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 			case (null) {
 				allowance := Trie.put(allowance, CommonUtils.identity_key(args.identity), Text.equal, {
 					allowed_packages = args.allowed_packages;
-					var created_packages = 0;
 				}).0;
 				#ok();
 			}

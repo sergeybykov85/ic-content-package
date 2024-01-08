@@ -31,7 +31,14 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	let POI_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Location, #About, #History, #AudioGuide, #Gallery, #AR], [#Location]);
 	let ADDITIONS_SCHEMA:Types.DataShema = Types.DataShema(#Additions, [#Audio, #Video, #Gallery, #Article, #Document], []);
 
-    // 30 days
+	// list of classifications could be declared as a parameter
+	let SUPPORTED_CLASSIFICATION:[Text] = [
+			"local_landmark", "cultural_site", 
+			"architectural_site", "scenic_spot", 
+			"recreational_place", "building", 
+			"business", "other"];
+    
+	// 30 days
     let DEF_READONLY_SEC:Nat = 30 * 24 * 60 * 60;
 	let NANOSEC:Nat = 1_000_000_000;
 	// immutable field
@@ -66,7 +73,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     // increment counter, internal needs
 	stable var _bundle_counter : Nat = 0;
 	// tag to bundle
-    stable var tags2bundle : Trie.Trie<Text, List.List<Text>> = Trie.empty();
+    stable var tag2bundle : Trie.Trie<Text, List.List<Text>> = Trie.empty();
+
+	// classification to bundle
+    stable var classification2bundle : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
 	// creator to bundle
     stable var creator2bundle : Trie.Trie<Text, List.List<Text>> = Trie.empty();
@@ -77,7 +87,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     // all bunles inside this package
     stable var bundles : Trie.Trie<Text, Types.Bundle> = Trie.empty();
 
-    private func tags2bundle_get(id : Text) : ?List.List<Text> = Trie.get(tags2bundle, Utils.tag_key(id), Text.equal);
+    private func tag2bundle_get(id : Text) : ?List.List<Text> = Trie.get(tag2bundle, Utils.tag_key(id), Text.equal);
+
+    private func classification2bundle_get(classification :Text) : ?List.List<Text> = Trie.get(classification2bundle, CommonUtils.text_key(classification), Text.equal);
 
     private func creator2bundle_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(creator2bundle, CommonUtils.identity_key(identity), Text.equal);
 
@@ -131,7 +143,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 
 	};
-
     
 	/**
 	* Registers a new bunle.
@@ -172,6 +183,20 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				if (Option.isSome(args.description)) {
 					bundle.description:= CommonUtils.unwrap(args.description);
 				};
+
+				if (Option.isSome(args.classification)) {
+					let clazz = CommonUtils.unwrap(args.classification);
+					// reject wrong classificaton
+					if (Option.isNull(Array.find(SUPPORTED_CLASSIFICATION, CommonUtils.find_text(clazz)))){
+			 			return #err(#InvalidRequest);
+					};
+					let old_clazz = bundle.index.classification;		
+					bundle.index.classification:= clazz;
+					if (not (old_clazz == clazz)) {
+						_exclude_classification (id, old_clazz);
+						_include_classification (id, clazz);
+					};
+				};				
 				if (Option.isSome(args.tags)) {
 					let tags = CommonUtils.unwrap(args.tags);
 
@@ -184,16 +209,16 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					};
 					//let normalized_tags = List.map(Array.map<Text, Text>(tags, func t = Utils.normalize_tag(t)));
 
-					if (List.size(bundle.tags) > 0) {
+					if (List.size(bundle.index.tags) > 0) {
 						// exclude and include
-						_exclude_tags (id, bundle.tags);
+						_exclude_tags (id, bundle.index.tags);
 						// store original form
-						bundle.tags:= List.fromArray(tags);
-						_include_tags (id, bundle.tags);
+						bundle.index.tags:= List.fromArray(tags);
+						_include_tags (id, bundle.index.tags);
 					} else {
 						// store original form
-						bundle.tags:= List.fromArray(tags);
-						_include_tags (id, bundle.tags);
+						bundle.index.tags:= List.fromArray(tags);
+						_include_tags (id, bundle.index.tags);
 					};
 				};
 				// replace logo
@@ -598,6 +623,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (#POI) {POI_SCHEMA.get_categories()};
 			case (#Additions) {ADDITIONS_SCHEMA.get_categories()};
 		};
+	};
+
+	public query func get_supported_classifications () : async [Text] {
+		SUPPORTED_CLASSIFICATION;
 	};	
 
 	public query func get_version() : async Text {
@@ -665,7 +694,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle ids for the creator
 	*/
-    public query func get_bundle_ids_for_creator(identity:CommonTypes.Identity) : async [Text] {
+    public query func get_ids_for_creator(identity:CommonTypes.Identity) : async [Text] {
 		switch (creator2bundle_get(identity)) {
 			case (?bundle_ids) { List.toArray(bundle_ids) };
 			case (null) { [] };
@@ -674,12 +703,22 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle ids for the tag
 	*/
-    public query func get_bundle_ids_for_tag(tag:Text) : async [Text] {
-		switch (tags2bundle_get(tag)) {
+    public query func get_ids_for_tag(tag:Text) : async [Text] {
+		switch (tag2bundle_get(tag)) {
 			case (?bundle_ids) {List.toArray(bundle_ids)};
 			case (null) {[]};
 		};
     };
+
+	/**
+	* Returns bundle ids for the classification
+	*/
+    public query func get_ids_for_classification(classification:Text) : async [Text] {
+		switch (classification2bundle_get(classification)) {
+			case (?bundle_ids) {List.toArray(bundle_ids)};
+			case (null) {[]};
+		};
+    };	
 
     public query func get_bundles(ids:[Text]) : async [Conversion.BundleView] {
 		let res = Buffer.Buffer<Conversion.BundleView>(Array.size(ids));
@@ -698,14 +737,30 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     public query func get_contributors() : async [CommonTypes.Identity] {
         List.toArray(contributors);
     };
+	/**
+	* Returns all registered classifications if they have set
+	*/
+	public query func get_classifications() : async [Text] {
+        _get_classifications();
+    };
 
+	private func _get_classifications () : [Text] {
+		let class_buff = Buffer.Buffer<Text>(Trie.size(classification2bundle));
+		for ((key, a) in Trie.iter(classification2bundle)){
+			class_buff.add(key);
+		};
+		Buffer.toArray(class_buff);
+	};	
+	/**
+	* Returns all registered tags
+	*/
     public query func get_tags() : async [Text] {
         _get_tags();
     };	
 
 	private func _get_tags () : [Text] {
-		let tags_buff = Buffer.Buffer<Text>(Trie.size(tags2bundle));
-		for ((key, a) in Trie.iter(tags2bundle)){
+		let tags_buff = Buffer.Buffer<Text>(Trie.size(tag2bundle));
+		for ((key, a) in Trie.iter(tag2bundle)){
 			tags_buff.add(key);
 		};
 		Buffer.toArray(tags_buff);
@@ -718,7 +773,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			let tag_header = switch (tag) {
 				case (?t) {?[t]};
 				case (null) {
-					if (Trie.size(tags2bundle) > 0) {
+					if (Trie.size(tag2bundle) > 0) {
 						?_get_tags();
 					}else null;
 				};
@@ -728,7 +783,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			switch (tag) {
 				case (?t) {
 					let n_tag = Utils.normalize_tag(t);
-					switch (tags2bundle_get(n_tag)) {
+					switch (tag2bundle_get(n_tag)) {
 						case (?bundle_ids) {
 							for (id in List.toIter(bundle_ids)) {
 								switch (bundle_get(id)) {
@@ -809,6 +864,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		for (tag in args.tags.vals()) {
   			if (Utils.invalid_tag_name(tag)) return #err(#InvalidRequest);
 		};
+		// reject wrong classificaton
+		if (Option.isNull(Array.find(SUPPORTED_CLASSIFICATION, CommonUtils.find_text(args.classification)))){
+			 return #err(#InvalidRequest);
+		};
 		// increment counter
 		_bundle_counter  := _bundle_counter + 1;
         let canister_id = Principal.toText(Principal.fromActor(this));
@@ -831,7 +890,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (#ok(idUrl)) {
        			let normalized_tags = List.fromArray(Array.map<Text, Text>(args.tags, func t = Utils.normalize_tag(t)));
 				
-				
 				let bundle:Types.Bundle = {
 					data_path = {
 						locale = null; name = null;
@@ -842,10 +900,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
             		var name = args.name;
             		var description = args.description;
             		var logo = null;
-					// original version
-            		var tags = List.fromArray(args.tags);
             		var payload = { var poi_group = null; var additions_group = null; };
-					var index = { var poi = null; var additions = null; };					
+					var index = { var classification = args.classification; var tags = List.fromArray(args.tags); var poi = null; var additions = null; };					
 					creator = owner;
             		var owner = owner;
             		created = Time.now();
@@ -855,6 +911,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         		bundles := Trie.put(bundles, CommonUtils.text_key(bundle_id), Text.equal, bundle).0;
 				// apply tags for bundle
 				_include_tags (bundle_id, normalized_tags);
+
+				_include_classification(bundle_id, args.classification);
 
 				// logo
 				switch (args.logo) {
@@ -888,36 +946,56 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	};
 
     private func _include_tag(bundle_id:Text, tag:Text) : () {
-		switch (tags2bundle_get(tag)) {
+		switch (tag2bundle_get(tag)) {
 			case (?bundle_ids) {
-				if (not List.isNil(bundle_ids)) {
-					for (leaf in List.toIter(bundle_ids)){
-						if (leaf == bundle_id) return;
-					};
+				for (leaf in List.toIter(bundle_ids)){
+					if (leaf == bundle_id) return;
 				};
-				tags2bundle := Trie.put(tags2bundle, Utils.tag_key(tag), Text.equal, List.push(bundle_id, bundle_ids)).0;       
+				tag2bundle := Trie.put(tag2bundle, Utils.tag_key(tag), Text.equal, List.push(bundle_id, bundle_ids)).0;       
 			};
-			case (null) {
-				tags2bundle := Trie.put(tags2bundle, Utils.tag_key(tag), Text.equal, List.push(bundle_id, List.nil())).0;       
-			};
+			case (null) { tag2bundle := Trie.put(tag2bundle, Utils.tag_key(tag), Text.equal, List.push(bundle_id, List.nil())).0; };
 		};
     };
 
     private func _exclude_tag(bundle_id:Text, tag:Text) : () {
-		switch (tags2bundle_get(tag)) {
+		switch (tag2bundle_get(tag)) {
 			case (?bundle_ids) {
-				if (not List.isNil(bundle_ids)) {
-					let fbundles = List.mapFilter<Text, Text>(bundle_ids,
-					func(b:Text) : ?Text {
-						if (b == bundle_id) { return null; }
-						else { return ?b; }
-					}
-					);
-					tags2bundle := Trie.put(tags2bundle, Utils.tag_key(tag), Text.equal, fbundles).0;       
+				let fbundles = List.mapFilter<Text, Text>(bundle_ids,
+				func(b:Text) : ?Text {
+					if (b == bundle_id) { return null; }
+					else { return ?b; }
+				}
+				);
+				tag2bundle := Trie.put(tag2bundle, Utils.tag_key(tag), Text.equal, fbundles).0;       
+			};
+			case (null) {};
+		};
+    };
+
+	private func _include_classification(bundle_id:Text, classification:Text) : () {
+		switch (classification2bundle_get(classification)) {
+			case (?bundle_ids) {
+				for (leaf in List.toIter(bundle_ids)){
+					if (leaf == bundle_id) return;
 				};
+				classification2bundle := Trie.put(classification2bundle, CommonUtils.text_key(classification), Text.equal, List.push(bundle_id, bundle_ids)).0;       
 			};
-			case (null) {
+			case (null) { classification2bundle := Trie.put(classification2bundle, CommonUtils.text_key(classification), Text.equal, List.push(bundle_id, List.nil())).0; };
+		};
+    };
+
+    private func _exclude_classification(bundle_id:Text, classification:Text) : () {
+		switch (classification2bundle_get(classification)) {
+			case (?bundle_ids) {
+				let fbundles = List.mapFilter<Text, Text>(bundle_ids,
+				func(b:Text) : ?Text {
+					if (b == bundle_id) { return null; }
+					else { return ?b; }
+				}
+				);
+				classification2bundle := Trie.put(classification2bundle, CommonUtils.text_key(classification), Text.equal, fbundles).0;       
 			};
+			case (null) {};
 		};
     };	
 
@@ -962,7 +1040,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (null) { };
 		};
     };			
-
 
 	private func _apply_bundle_section (bundle: Types.Bundle, args : Types.DataPackageRawArgs) : async Result.Result<(), CommonTypes.Errors> {
 		// assert the group is initialized

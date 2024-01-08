@@ -15,8 +15,8 @@
       "type": "motoko",
       "dependencies": []
     },
-    "tag_service": {
-      "main": "src/tag-service/TagService.mo",
+    "index_service": {
+      "main": "src/index-service/IndexService.mo",
       "type": "motoko",
       "dependencies": []
     }            

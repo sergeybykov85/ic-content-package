@@ -32,7 +32,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	};
 
 	// registry actor
-	var tag_service:Text = Option.get(initArgs.tag_service, "{DEFAULT_TAGSERVICE_PLACE_HERE}");	
+	var index_service:Text = Option.get(initArgs.index_service, "{DEFAULT_INDEXSERVICE_PLACE_HERE}");	
 
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
@@ -92,11 +92,11 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 
 
 	/**
-	* Change the tag service
+	* Change the index service
 	*/
-	public shared ({ caller }) func apply_tag_service (to : Principal) : async Result.Result<(), CommonTypes.Errors> {
+	public shared ({ caller }) func apply_index_service (to : Principal) : async Result.Result<(), CommonTypes.Errors> {
 		if (not CommonUtils.identity_equals({identity_type = #ICP; identity_id = Principal.toText(caller);}, owner)) return #err(#AccessDenied);
-		tag_service := Principal.toText(to);
+		index_service := Principal.toText(to);
 		#ok();
 	};	
 	/**
@@ -201,8 +201,8 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 						};
 
 						// register in the tag service
-						let tag_service_actor : Types.Actor.TagServiceActor = actor (tag_service);
-						ignore await tag_service_actor.register_package(package);	
+						let index_service_actor : Types.Actor.TagServiceActor = actor (index_service);
+						ignore await index_service_actor.register_package(package);	
 						return #ok(package_id);
 					};
 				};
@@ -223,7 +223,6 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 				// check authorization : only package creator or package provider
 				if (not (CommonUtils.identity_equals (caller_identity, pack.creator) or
 					CommonUtils.identity_equals (caller_identity, pack.submitter)))  return #err(#AccessDenied); 
-
 
 				let package_actor : Types.Actor.BundlePackageActor = actor (package_id);
 				let package_details = await package_actor.get_details();
@@ -368,15 +367,15 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		};
 	};
 
-	public query func total_supply_by_provider(identity:CommonTypes.Identity) : async Nat {
+	public query func total_supply_by_submitter(identity:CommonTypes.Identity) : async Nat {
 		switch (submitter2package_get(identity)) {
 			case (?ids) {List.size(ids)};
 			case (null) {0};
 		};
 	};
 
-	public query func get_tag_service() : async Text {
-		return tag_service;
+	public query func get_index_service() : async Text {
+		return index_service;
 	};				
 
     private func _get_packages(ids:[Text]) : [Conversion.BundlePackageView] {

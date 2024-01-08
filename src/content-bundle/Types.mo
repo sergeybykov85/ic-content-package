@@ -194,6 +194,8 @@ module {
 	public type BundleIndex = {
 		var poi: ?DataIndex;
 		var additions : ?DataIndex;
+		var tags : List.List<Text>;
+		var classification : Text;
 	};
 
 	public type Bundle = {
@@ -203,7 +205,6 @@ module {
 		var description : Text;
 		// simple light weigh logo
 		var logo : ?CommonTypes.ResourcePath;
-		var tags : List.List<Text>;
 		// payload
 		var payload : BundlePayload;
 		var index : BundleIndex;
@@ -217,6 +218,7 @@ module {
 	public type BundleArgs = {
 		name : Text;
 		description : Text;
+		classification : Text;
 		logo : ?DataRawPayload;
 		tags : [Text];
 	};
@@ -257,6 +259,7 @@ module {
 		description : ?Text;
 		logo : ?DataRawPayload;
 		tags : ?[Text];
+		classification : ?Text;
 	};
 
 	public type MetadataArgs = {
@@ -264,7 +267,6 @@ module {
 		description : Text;
 		logo : ?DataRawPayload;
 	};
-
 	
 	public type MetadataUpdateArgs = {
 		name : ?Text;

@@ -4,7 +4,7 @@ import CommonTypes "../shared/CommonTypes";
 
 module {
 
-	public type TagServiceArgs = {
+	public type IndexServiceArgs = {
 		network : CommonTypes.Network;
 		// operators to work with a repo
 		operators : [Principal];		
@@ -20,6 +20,7 @@ module {
 		registered: Time.Time;
 		last_scan : Time.Time;
 		tags : [Text];
+		classifications : [Text];
 	};	
 
 	/**
@@ -29,6 +30,7 @@ module {
 
 		public type BundlePackageActor = actor {
 			get_tags : shared ()  -> async [Text];
+			get_classifications : shared ()  -> async [Text];
 		};
 
 	};
