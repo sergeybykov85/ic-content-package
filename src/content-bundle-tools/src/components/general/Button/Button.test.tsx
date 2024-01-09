@@ -1,5 +1,19 @@
-describe('Button component', () => {
-  test.todo('Make button test')
-})
+import { fireEvent, render, screen } from '@testing-library/react'
+import Button from 'components/general/Button/Button'
 
-export {}
+describe('Button component', () => {
+  const text = "I'm Button"
+  test('Button renders text', () => {
+    render(<Button>{text}</Button>)
+    const button = screen.getByText(text)
+    expect(button).toBeInTheDocument()
+  })
+
+  test('onClick working', () => {
+    const onClick = jest.fn()
+    render(<Button onClick={onClick}>{text}</Button>)
+    const button = screen.getByText(text)
+    fireEvent.click(button)
+    expect(onClick).toHaveBeenCalled()
+  })
+})
