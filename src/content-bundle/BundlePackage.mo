@@ -704,20 +704,14 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Returns bundle ids for the tag
 	*/
     public query func get_ids_for_tag(tag:Text) : async [Text] {
-		switch (tag2bundle_get(tag)) {
-			case (?bundle_ids) {List.toArray(bundle_ids)};
-			case (null) {[]};
-		};
+		_get_ids_for(tag2bundle_get, tag);
     };
 
 	/**
 	* Returns bundle ids for the classification
 	*/
     public query func get_ids_for_classification(classification:Text) : async [Text] {
-		switch (classification2bundle_get(classification)) {
-			case (?bundle_ids) {List.toArray(bundle_ids)};
-			case (null) {[]};
-		};
+		_get_ids_for(classification2bundle_get, classification);
     };	
 
     public query func get_bundles(ids:[Text]) : async [Conversion.BundleView] {
@@ -744,19 +738,27 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         _get_classifications();
     };
 
+	/**
+	* Returns all registered tags
+	*/
+    public query func get_tags() : async [Text] {
+        _get_tags();
+    };
+
+    private func _get_ids_for(get : (classification :Text) -> ?List.List<Text>, key:Text) : [Text] {
+		switch (get(key)) {
+			case (?bundle_ids) {List.toArray(bundle_ids)};
+			case (null) {[]};
+		};
+    };			
+
 	private func _get_classifications () : [Text] {
 		let class_buff = Buffer.Buffer<Text>(Trie.size(classification2bundle));
 		for ((key, a) in Trie.iter(classification2bundle)){
 			class_buff.add(key);
 		};
 		Buffer.toArray(class_buff);
-	};	
-	/**
-	* Returns all registered tags
-	*/
-    public query func get_tags() : async [Text] {
-        _get_tags();
-    };	
+	};
 
 	private func _get_tags () : [Text] {
 		let tags_buff = Buffer.Buffer<Text>(Trie.size(tag2bundle));

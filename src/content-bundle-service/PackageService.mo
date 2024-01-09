@@ -289,6 +289,13 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		};
 	};
 
+    public query func get_package_by(identity:CommonTypes.Identity) : async [Text] {
+		switch (creator2package_get(identity)) {
+			case (?ids) { List.toArray(ids) };
+			case (null) { [] };
+		};
+    };	
+
 	public query func allowance_by(identity:CommonTypes.Identity) : async Nat {
 		switch (allowance_get(identity)) {
 			case (?c) {c.allowed_packages};

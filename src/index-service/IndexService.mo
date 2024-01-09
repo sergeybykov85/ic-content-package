@@ -56,32 +56,20 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 
 	private func package2classification_get(id : Text) : ?[Text] = Trie.get(package2classification, CommonUtils.text_key(id), Text.equal);	
 
-    private func _tag_include_package(tag:Text, package_id:Text) : () {
-		switch (tag2package_get(tag)) {
+    private func _index_include_package(get : (id : Text) -> ?List.List<Text>, index : Trie.Trie<Text, List.List<Text>>,  value:Text, package_id:Text) :  Trie.Trie<Text, List.List<Text>> {
+		switch (get(value)) {
 			case (?package_ids) {
 				for (leaf in List.toIter(package_ids)){
-					if (leaf == package_id) return;
+					if (leaf == package_id) return index;
 				};
-				tag2package := Trie.put(tag2package, CommonUtils.text_key(tag), Text.equal, List.push(package_id, package_ids)).0;       
+				Trie.put(classification2package, CommonUtils.text_key(value), Text.equal, List.push(package_id, package_ids)).0;       
 			};
-			case (null) { tag2package := Trie.put(tag2package, CommonUtils.text_key(tag), Text.equal, List.push(package_id, List.nil())).0; };
+			case (null) { Trie.put(index, CommonUtils.text_key(value), Text.equal, List.push(package_id, List.nil())).0; };
 		};
     };
 
-    private func _classification_include_package(classification:Text, package_id:Text) : () {
-		switch (classification2package_get(classification)) {
-			case (?package_ids) {
-				for (leaf in List.toIter(package_ids)){
-					if (leaf == package_id) return;
-				};
-				classification2package := Trie.put(classification2package, CommonUtils.text_key(classification), Text.equal, List.push(package_id, package_ids)).0;       
-			};
-			case (null) { classification2package := Trie.put(classification2package, CommonUtils.text_key(classification), Text.equal, List.push(package_id, List.nil())).0; };
-		};
-    };	
-
-    private func _tag_exclude_package(tag:Text, package_id:Text) : () {
-		switch (tag2package_get(tag)) {
+    private func _index_exclude_package(get : (id : Text) -> ?List.List<Text>, index : Trie.Trie<Text, List.List<Text>>, value:Text, package_id:Text) : Trie.Trie<Text, List.List<Text>> {
+		switch (get(value)) {
 			case (?package_ids) {
 				let fpack = List.mapFilter<Text, Text>(package_ids,
 					func(b:Text) : ?Text {
@@ -89,27 +77,12 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 						else { return ?b; }
 					}
 				);
-				tag2package := Trie.put(tag2package, CommonUtils.text_key(tag), Text.equal, fpack).0;       
+				Trie.put(index, CommonUtils.text_key(value), Text.equal, fpack).0;       
 			};
-			case (null) {};
+			case (null) {index};
 		};
-    };
+    };			
 
-    private func _classification_exclude_package(classification:Text, package_id:Text) : () {
-		switch (classification2package_get(classification)) {
-			case (?package_ids) {
-				let fpack = List.mapFilter<Text, Text>(package_ids,
-					func(b:Text) : ?Text {
-						if (b == package_id) { return null; }
-						else { return ?b; }
-					}
-				);
-				classification2package := Trie.put(classification2package, CommonUtils.text_key(classification), Text.equal, fpack).0;       
-			};
-			case (null) {};
-		};
-    };	
-	
 	private func _process_package_tags (package_id:Text, tags:[Text]) : () {
 		let ex_in:([Text],[Text]) = switch (package2tag_get(package_id)) {
 			case (?current) {
@@ -138,11 +111,11 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 		};
 		// exclude not relevant  tags
 		for (t in ex_in.0.vals()) {
-			_tag_exclude_package(t, package_id);
+			tag2package := _index_exclude_package(tag2package_get, tag2package, t, package_id);
 		};		
 		// include new tags
 		for (t in ex_in.1.vals()) {
-			_tag_include_package(t, package_id);
+			tag2package := _index_include_package(tag2package_get, tag2package, t, package_id);
 		};
 		// replace all tags for the package
 		package2tag := Trie.put(package2tag, CommonUtils.text_key(package_id), Text.equal, tags).0;       
@@ -173,10 +146,10 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 			case (null) {([], classifications)};
 		};
 		for (t in ex_in.0.vals()) {
-			_classification_exclude_package(t, package_id);
+			classification2package := _index_exclude_package(classification2package_get, classification2package, t, package_id);
 		};		
 		for (t in ex_in.1.vals()) {
-			_classification_include_package(t, package_id);
+			classification2package := _index_include_package(classification2package_get, classification2package, t, package_id);
 		};
 		// replace all classifications for the package
 		package2classification := Trie.put(package2classification, CommonUtils.text_key(package_id), Text.equal, classifications).0;       
