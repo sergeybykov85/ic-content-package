@@ -15,6 +15,10 @@
       "type": "motoko",
       "dependencies": []
     },
+    "internet_identity" : {
+      "type": "pull",
+      "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+    },
     "content-bundle-tools": {
       "frontend": {
         "entrypoint": "src/content-bundle-tools/build/index.html"

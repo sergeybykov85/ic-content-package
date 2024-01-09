@@ -1,7 +1,7 @@
 {
-  "extends": ["react-app", "react-app/jest", "plugin:@typescript-eslint/recommended"],
+  "extends": ["react-app", "react-app/jest", "plugin:@typescript-eslint/recommended", "plugin:react-hooks/recommended"],
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "react-hooks"],
   "rules": {
     "quotes": ["warn", "single", { "allowTemplateLiterals": true }],
     "jsx-quotes": ["warn", "prefer-double"],
@@ -20,6 +20,7 @@
       }
     ],
     "@typescript-eslint/consistent-type-imports": "warn",
-    "@typescript-eslint/explicit-function-return-type": "warn"
+    "@typescript-eslint/explicit-function-return-type": "warn",
+    "react-hooks/exhaustive-deps": "warn"
   }
 }
