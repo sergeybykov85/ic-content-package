@@ -28,8 +28,8 @@ import EmbededUI "./EmbededUI";
 
 shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageArgs) = this {
 
-	let POI_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Location, #About, #History, #AudioGuide, #Gallery, #AR], [#Location]);
-	let ADDITIONS_SCHEMA:Types.DataShema = Types.DataShema(#Additions, [#Audio, #Video, #Gallery, #Article, #Document], []);
+	let POI_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Location, #About, #History, #AudioGuide, #Gallery, #AR]);
+	let ADDITIONS_SCHEMA:Types.DataShema = Types.DataShema(#Additions, [#Audio, #Video, #Gallery, #Article, #Document]);
 
 	// list of classifications could be declared as a parameter
 	let SUPPORTED_CLASSIFICATION:[Text] = [
@@ -429,21 +429,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					payload = { value = blob_to_save; content_type = ?"application/json"; };
 					action = args.action;
 				})) {
-					// any post processing could be added here
 					case (#ok()) { 
-						// apply an index
-						if (args.category == #Location) {
-							switch (args.group) {
-								case (#POI) {
-									switch (bundle.index.poi){
-										case (?index) {index.location:=args.payload.location};
-										case (null) {
-											bundle.index.poi :=?{var location = args.payload.location};
-										};
-									};
+						// apply an index only for POI data
+						switch (args.group) {
+							case (#POI) {
+								if (args.category == #Location) {
+									bundle.index.location:=args.payload.location
 								};
-								case (#Additions) {};
+								if (args.category == #About) {
+									bundle.index.about:=args.payload.about
+								};								
 							};
+							case (#Additions) {};
 						};
 						return #ok(bundle_id); 
 					};
@@ -598,32 +595,16 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
 	};
 
-	public query func get_data (bundle_id: Text, group_id:CommonTypes.DataGroupId) : async Result.Result<Conversion.DataView, CommonTypes.Errors> {
-		switch (bundle_get(bundle_id)) {
-			case (?bundle) {
-				let group_opt = switch (group_id) {
-					case (#POI) {bundle.payload.poi_group};
-					case (#Additions) {bundle.payload.additions_group};
-				};
-				let index_opt = switch (group_id) {
-					case (#POI) {bundle.index.poi};
-					case (#Additions) {bundle.index.additions};
-				};				
-				switch (group_opt) {
-					case (?g) { return #ok(Conversion.convert_data_view(group_id, g, index_opt));};
-					case (null) {return #err(#NotRegistered);};
-				};
-			};
-			case (null) { return #err(#NotFound); };
-		};
-	};
-
 	public query func get_supported_categories (group_id:CommonTypes.DataGroupId) : async [CommonTypes.CategoryId] {
 		switch (group_id) {
 			case (#POI) {POI_SCHEMA.get_categories()};
 			case (#Additions) {ADDITIONS_SCHEMA.get_categories()};
 		};
 	};
+
+	public query func get_supported_groups () : async [CommonTypes.DataGroupId] {
+		[POI_SCHEMA.get_group_id(), ADDITIONS_SCHEMA.get_group_id()];
+	};	
 
 	public query func get_supported_classifications () : async [Text] {
 		SUPPORTED_CLASSIFICATION;
@@ -903,7 +884,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
             		var description = args.description;
             		var logo = null;
             		var payload = { var poi_group = null; var additions_group = null; };
-					var index = { var classification = args.classification; var tags = List.fromArray(args.tags); var poi = null; var additions = null; };					
+					var index = { var classification = args.classification; var tags = List.fromArray(args.tags); var location = null; var about = null; };					
 					creator = owner;
             		var owner = owner;
             		created = Time.now();

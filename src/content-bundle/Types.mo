@@ -10,9 +10,9 @@ import CommonTypes "../shared/CommonTypes";
 
 module {
 
-	public class DataShema(group_id : CommonTypes.DataGroupId, 
-					categories : [CommonTypes.CategoryId],
-					index_categories : [CommonTypes.CategoryId]) {
+	public class DataShema(group_id : CommonTypes.DataGroupId, categories : [CommonTypes.CategoryId]) {
+		
+		public func get_group_id () : CommonTypes.DataGroupId = group_id;
 		
 		public func get_categories () : [CommonTypes.CategoryId] = categories;
 
@@ -192,8 +192,10 @@ module {
 	};
 
 	public type BundleIndex = {
-		var poi: ?DataIndex;
-		var additions : ?DataIndex;
+		// only from POI
+		var location : ?CommonTypes.Location;
+		// only from POI
+		var about : ?CommonTypes.AboutData;
 		var tags : List.List<Text>;
 		var classification : Text;
 	};

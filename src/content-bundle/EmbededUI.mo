@@ -105,13 +105,8 @@ module {
 					resource_html := resource_html # "<div style=\"padding: 3px 12px;\">&#128274; readonly untill : <span class=\"right\"><span class=\"js_date\">"# Int.toText(CommonUtils.unwrap(poi.readonly)) # "</span></span></div>";
 				};
 				// render index
-				switch (r.index.poi) {
-					case (?index) {
-						switch (index.location) {
-							case (?location) { resource_html := resource_html # "<div style=\"padding: 3px 12px;\">country | region | city | (latitude, longitude) : <span class=\"right\">"# location.country_code2 # " | "# (Option.get(location.region, "--/--")) # " | " #  (Option.get(location.city, "--/--")) # " ("# Float.toText(location.coordinates.latitude) # ", "# Float.toText(location.coordinates.longitude) #")</span></div>"; };
-							case (null) {};
-						};
-					};
+				switch (r.index.location) {
+					case (?location) { resource_html := resource_html # "<div style=\"padding: 3px 12px;\">country | region | city | (latitude, longitude) : <span class=\"right\">"# location.country_code2 # " | "# (Option.get(location.region, "--/--")) # " | " #  (Option.get(location.city, "--/--")) # " ("# Float.toText(location.coordinates.latitude) # ", "# Float.toText(location.coordinates.longitude) #")</span></div>"; };
 					case (null) {};
 				};
 				// render sections

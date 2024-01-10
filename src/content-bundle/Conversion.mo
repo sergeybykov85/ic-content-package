@@ -35,7 +35,12 @@ module {
 	};
 
 	public type DataIndexView = {
+		// only from POI
 		location : ?CommonTypes.Location;
+		// only from POI
+		about : ?CommonTypes.AboutData;
+		tags : [Text];
+		classification : Text;
 	};
 
 	public type DataGroupView = {
@@ -49,7 +54,6 @@ module {
 		// name for internal management.
 		id : CommonTypes.DataGroupId;
 		group : DataGroupView;
-		index: ?DataIndexView;
 	};	
 
 	public type BundleView = {
@@ -65,6 +69,17 @@ module {
 		created : Time.Time;
 	};
 
+	public type BundleExtendedView = {
+		data_path : CommonTypes.ResourcePath;
+		name : Text;
+		description : Text;
+		logo : ?CommonTypes.ResourcePath;
+		index : DataIndexView;
+		creator : CommonTypes.Identity;
+		owner : CommonTypes.Identity;
+		created : Time.Time;
+	};	
+
     public func convert_bundle_view (info: Types.Bundle) : BundleView {
         return {
 			data_path = info.data_path;
@@ -77,26 +92,29 @@ module {
 			owner = info.owner;
 			created = info.created;
         };
-    };	
+    };
+
+    public func convert_bundle_extended_view (info: Types.Bundle) : BundleExtendedView {
+        return {
+			data_path = info.data_path;
+			name = info.name;
+			description = info.description;
+			logo = info.logo;
+			index = {
+				tags = List.toArray (info.index.tags);
+				classification = info.index.classification;
+				location = info.index.location;
+				about = info.index.about;
+			};
+			creator = info.creator;
+			owner = info.owner;
+			created = info.created;
+        };
+    };		
 
     public func convert_datagroup_view (info: Types.DataGroup) : DataGroupView {
         _convert_datagroup_view(info);
     };
-
-    public func convert_data_view (id:CommonTypes.DataGroupId,  group: Types.DataGroup, index:?Types.DataIndex) : DataView {
-		{
-			id = id;
-			group = _convert_datagroup_view(group);
-			index = switch (index){
-				case (?i) {?{location = i.location}};
-				case (null) {null};
-			};
-		}
-    };	
-
-    public func convert_index_view (info: Types.DataIndex) : DataIndexView {
-		{location = info.location};
-    };	
 
     public func convert_datastore_view (info: Types.DataStore) : DataStoreView {
         return {
