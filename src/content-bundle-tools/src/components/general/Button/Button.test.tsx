@@ -2,7 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import Button from 'components/general/Button/Button'
 
 describe('Button component', () => {
-  const text = "I'm Button"
+  // prettier-ignore
+  const text = 'I\'m Button'
   test('Button renders text', () => {
     render(<Button>{text}</Button>)
     const button = screen.getByText(text)

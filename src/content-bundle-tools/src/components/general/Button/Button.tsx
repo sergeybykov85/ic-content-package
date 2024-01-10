@@ -1,8 +1,8 @@
-import type { ButtonHTMLAttributes, FC } from 'react'
+import type { ComponentPropsWithoutRef, FC } from 'react'
 import clsx from 'clsx'
 import styles from './Button.module.scss'
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement>
+type ButtonProps = ComponentPropsWithoutRef<'button'>
 
 const Button: FC<ButtonProps> = ({ className, children, ...props }) => (
   <button className={clsx(styles.button, className)} {...props}>
