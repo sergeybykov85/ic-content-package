@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { type FC } from 'react'
 import Button from 'components/general/Button'
 import styles from './LoginForm.module.scss'
 import { useAuth } from 'context/AuthContext'

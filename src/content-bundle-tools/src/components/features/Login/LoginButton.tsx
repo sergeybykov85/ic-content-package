@@ -26,7 +26,9 @@ const LoginButton: FC<LoginButtonProps> = ({ className }) => {
 
   return (
     <>
-      <Button {...{ onClick, className }}>{!isAuthenticated ? 'Log in' : 'Log out'}</Button>
+      <Button variant={!isAuthenticated ? 'contained' : 'text'} {...{ onClick, className }}>
+        {!isAuthenticated ? 'Log in' : 'Log out'}
+      </Button>
       <Dialog {...{ open: open && !isAuthenticated, onClose }}>
         <LoginForm />
       </Dialog>
