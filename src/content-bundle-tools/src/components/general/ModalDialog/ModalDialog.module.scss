@@ -8,25 +8,22 @@
   height: 100vh;
   transition: $transition-time;
   display: none;
+
   &-enter {
     opacity: 0;
     display: flex;
-  }
-  &-enter-active {
-    opacity: 1;
-    display: flex;
-  }
-  &-enter-done {
-    opacity: 1;
-    display: flex;
+    &-active, &-done {
+      opacity: 1;
+      display: flex;
+    }
   }
   &-exit {
     opacity: 1;
     display: flex;
-  }
-  &-exit-active {
-    opacity: 0;
-    display: flex;
+    &-active {
+      opacity: 0;
+      display: flex;
+    }
   }
 
   background: rgb(0, 0, 0, .5);

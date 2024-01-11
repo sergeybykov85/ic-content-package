@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { CSSTransition } from 'react-transition-group'
 import useClickAway from 'hooks/useClickAway'
 import clsx from 'clsx'
-import styles from 'components/general/ModalDialog/ModalDialog.module.scss'
+import styles from './ModalDialog.module.scss'
 import usePressEsc from 'hooks/usePressEsc'
 import useCssTransitionClassNames from 'hooks/useCssTransitionClassNames'
 
