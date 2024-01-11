@@ -22,6 +22,7 @@
     "@typescript-eslint/consistent-type-imports": "warn",
     "@typescript-eslint/explicit-function-return-type": "warn",
     "react-hooks/exhaustive-deps": "warn",
-    "object-curly-spacing": ["warn", "always"]
+    "object-curly-spacing": ["warn", "always"],
+    "no-console": ["warn", { "allow": ["warn", "error", "info", "time", "timeEnd"] }]
   }
 }
