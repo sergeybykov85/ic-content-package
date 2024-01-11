@@ -36,5 +36,9 @@
     position: relative;
     border-radius: $border-radius;
     padding: 32px;
+
+    margin: 32px;
+    max-width: 600px;
+    width: 100%;
   }
 }

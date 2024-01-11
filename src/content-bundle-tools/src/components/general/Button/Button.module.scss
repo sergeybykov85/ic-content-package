@@ -4,19 +4,31 @@
   display: inline-flex;
   padding: 16px;
   border-radius: $border-radius;
-  background-color: $primary-blue-color;
   transition: $transition-time;
-  cursor: pointer;
-  &:hover {
-    opacity: .7;
+  &:hover:not(:disabled) {
+    cursor: pointer;
   }
-  &:active {
+  &:active:not(:disabled) {
     transform: scale(.9);
   }
 
   /* Font */
-  color: #FFF;
   font-size: 16px;
   font-style: normal;
   font-weight: 600;
+}
+
+.contained:not(:disabled) {
+  background-color: $primary-blue-color;
+  color: #FFF;
+  &:hover {
+    opacity: .7;
+  }
+}
+.text {
+  background-color: #FFF;
+  color: $primary-blue-color;
+  &:hover {
+    background-color: rgba(44, 68, 218, .2);
+  }
 }

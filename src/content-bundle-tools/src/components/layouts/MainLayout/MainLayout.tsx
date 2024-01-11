@@ -3,7 +3,7 @@ import styles from './MainLayout.module.scss'
 import ExternalLink from 'components/general/ExternalLink'
 import content from './MainLayout.content.json'
 import clsx from 'clsx'
-import LogInButton from 'components/features/LogInButton'
+import { LoginButton } from 'components/features/Login'
 
 interface MainLayoutProps {
   children: ReactNode
@@ -16,7 +16,7 @@ const MainLayout: FC<MainLayoutProps> = ({ children }) => (
         <img src="/images/dcm-logo.svg" alt="Logo DCM" />
         <div className={styles.divider} />
         <div className={styles['header__title']}>{content.headerTitle}</div>
-        <LogInButton className={styles['header__button']} />
+        <LoginButton className={styles['header__button']} />
       </div>
     </header>
     <main className={styles.main}>{children}</main>
