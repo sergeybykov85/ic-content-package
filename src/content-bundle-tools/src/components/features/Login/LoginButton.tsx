@@ -17,7 +17,7 @@ const LoginButton: FC<LoginButtonProps> = ({ className }) => {
       e.stopPropagation() // Prevents firing clickAway in the ModalDialog
       isAuthenticated ? logout() : setOpen(true)
     },
-    [isAuthenticated],
+    [isAuthenticated, logout],
   )
 
   const onClose = useCallback(() => {

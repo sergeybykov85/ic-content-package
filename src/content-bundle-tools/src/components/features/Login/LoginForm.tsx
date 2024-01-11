@@ -2,6 +2,7 @@ import React, { type FC } from 'react'
 import Button from 'components/general/Button'
 import styles from './LoginForm.module.scss'
 import { useAuth } from 'context/AuthContext'
+import FileInput from 'components/general/FileInput'
 
 const LoginForm: FC = props => {
   const { login } = useAuth()
@@ -10,7 +11,11 @@ const LoginForm: FC = props => {
       <Button onClick={login}>
         Internet Identity <img src="/images/icp-logo.svg" alt="ICP logo" />
       </Button>
-      <Button variant="text">Log in with PEM file</Button>
+      <Button variant="text" className={styles.file}>
+        <FileInput accept=".pem" onLoaded={readerResult => console.log(readerResult)}>
+          Log in with PEM file
+        </FileInput>
+      </Button>
       <Button disabled>
         MetaMask <img src="/images/metamask-logo.svg" alt="ICP logo" />
       </Button>
