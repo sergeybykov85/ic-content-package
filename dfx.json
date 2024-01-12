@@ -11,7 +11,7 @@
       "dependencies": []
     },
     "package_service": {
-      "main": "src/content-bundle-service/PackageService.mo",
+      "main": "src/content-bundle-tools-service/PackageService.mo",
       "type": "motoko",
       "dependencies": []
     },
@@ -19,7 +19,13 @@
       "main": "src/index-service/IndexService.mo",
       "type": "motoko",
       "dependencies": []
-    }            
+    },
+    "widget_service": {
+      "main": "src/content-bundle-widget-service/WidgetService.mo",
+      "type": "motoko",
+      "dependencies": []
+    } 
+   
   },
   "defaults": {
     "build": {

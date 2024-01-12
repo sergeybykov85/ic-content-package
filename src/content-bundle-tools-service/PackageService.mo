@@ -289,7 +289,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		};
 	};
 
-    public query func get_package_by(identity:CommonTypes.Identity) : async [Text] {
+    public query func get_package_ids_by(identity:CommonTypes.Identity) : async [Text] {
 		switch (creator2package_get(identity)) {
 			case (?ids) { List.toArray(ids) };
 			case (null) { [] };

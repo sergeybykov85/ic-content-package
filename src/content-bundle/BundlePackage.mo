@@ -87,6 +87,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     // all bunles inside this package
     stable var bundles : Trie.Trie<Text, Types.Bundle> = Trie.empty();
 
+	// all registered bundles, order is maintaited
+	stable var all_bundles : List.List<Text> = List.nil();	
+
     private func tag2bundle_get(id : Text) : ?List.List<Text> = Trie.get(tag2bundle, Utils.tag_key(id), Text.equal);
 
     private func classification2bundle_get(classification :Text) : ?List.List<Text> = Trie.get(classification2bundle, CommonUtils.text_key(classification), Text.equal);
@@ -892,6 +895,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         		};
         		// put into store memory
         		bundles := Trie.put(bundles, CommonUtils.text_key(bundle_id), Text.equal, bundle).0;
+
+				// index for all packages
+				all_bundles:= List.push(bundle_id, all_bundles);
 				// apply tags for bundle
 				_include_tags (bundle_id, normalized_tags);
 

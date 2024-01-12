@@ -53,11 +53,6 @@ module {
 		urls : [CommonTypes.NameValue];
 	};	
 
-	public type PackageRequestArgs = {
-		package : Principal;
-		references : [CommonTypes.NameValue];
-	};
-
 	public type BundlePackage = {
 		var name : Text;
 		var description : Text;

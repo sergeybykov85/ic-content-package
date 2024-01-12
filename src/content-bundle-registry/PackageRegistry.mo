@@ -387,7 +387,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			};
 		};
 		Buffer.toArray(res);
-    };		
+    };	
 
 	private func _build_identity (caller : Principal) : CommonTypes.Identity {
 		// right now we return always ICP, but it will be extended in case of ethereum authentication
