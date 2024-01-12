@@ -12,7 +12,7 @@ const LoginForm: FC = props => {
         Internet Identity <img src="/images/icp-logo.svg" alt="ICP logo" />
       </Button>
       <Button variant="text" className={styles.file}>
-        <FileInput accept=".pem" onLoaded={readerResult => console.log(readerResult)}>
+        <FileInput accept=".pem" onLoaded={readerResult => console.log(readerResult)} getAs="text">
           Log in with PEM file
         </FileInput>
       </Button>
