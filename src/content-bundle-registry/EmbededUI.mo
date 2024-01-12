@@ -75,6 +75,9 @@ module {
 
 		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>ID</b> : <span class=\"right\"><a  href=\"" # package_url #"\" target = \"_blank\">"#id#"</a></span></div>";
 		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Submission type</b> : <span class=\"right\"><span class=\"tag\">"#Utils.resolve_submission_name(r.submission)#"</span></span></div>";
+		if (Option.isSome(r.max_supply)) {
+			resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Max supply</b> : <span class=\"right\">"# Nat.toText(CommonUtils.unwrap(r.max_supply)) # "</span></div>";
+		};		
 		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Created</b> : <span class=\"right\"><span class=\"js_date\">"# Int.toText(r.created) # "</span></span></div>";
 		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Creator</b> : <span class=\"right\">"# debug_show(r.creator) # "</span></div>";
 		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Registered</b> : <span class=\"right\"><span class=\"js_date\">"# Int.toText(r.registered) # "</span></span></div>";

@@ -3,6 +3,7 @@ import List "mo:base/List";
 import Option "mo:base/Option";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
+import Float "mo:base/Float";
 import Blob "mo:base/Blob";
 import { JSON; Candid } "mo:serde";
 import Result "mo:base/Result";
@@ -18,6 +19,8 @@ module {
 	let REFERENCE_FIELDS = ["title","url"];
 	let HISTORY_FIELDS = ["date_from","date_to","period", "title", "body", "locale"];
 	let ABOUT_FIELDS = ["name", "value", "attributes", "locale", "description"];
+	// unfortunately,  serge lib can't serialize Float properly, better to save it as text
+	public type LocationJson = {country_code2:Text; country:Text; region:Text; city:Text; latitude : Text; longitude : Text};
 
 	public type DataStoreView = {
 		buckets : [Text];
@@ -32,7 +35,12 @@ module {
 	};
 
 	public type DataIndexView = {
+		// only from POI
 		location : ?CommonTypes.Location;
+		// only from POI
+		about : ?CommonTypes.AboutData;
+		tags : [Text];
+		classification : Text;
 	};
 
 	public type DataGroupView = {
@@ -46,13 +54,13 @@ module {
 		// name for internal management.
 		id : CommonTypes.DataGroupId;
 		group : DataGroupView;
-		index: ?DataIndexView;
 	};	
 
 	public type BundleView = {
 		data_path : CommonTypes.ResourcePath;
 		name : Text;
 		description : Text;
+		classification : Text;
 		// simple light weigh logo
 		logo : ?CommonTypes.ResourcePath;
 		tags : [Text];
@@ -61,37 +69,52 @@ module {
 		created : Time.Time;
 	};
 
+	public type BundleExtendedView = {
+		data_path : CommonTypes.ResourcePath;
+		name : Text;
+		description : Text;
+		logo : ?CommonTypes.ResourcePath;
+		index : DataIndexView;
+		creator : CommonTypes.Identity;
+		owner : CommonTypes.Identity;
+		created : Time.Time;
+	};	
+
     public func convert_bundle_view (info: Types.Bundle) : BundleView {
         return {
 			data_path = info.data_path;
 			name = info.name;
 			description = info.description;
+			classification = info.index.classification;
 			logo = info.logo;
-			tags = List.toArray (info.tags);
+			tags = List.toArray (info.index.tags);
 			creator = info.creator;
 			owner = info.owner;
 			created = info.created;
         };
-    };	
+    };
+
+    public func convert_bundle_extended_view (info: Types.Bundle) : BundleExtendedView {
+        return {
+			data_path = info.data_path;
+			name = info.name;
+			description = info.description;
+			logo = info.logo;
+			index = {
+				tags = List.toArray (info.index.tags);
+				classification = info.index.classification;
+				location = info.index.location;
+				about = info.index.about;
+			};
+			creator = info.creator;
+			owner = info.owner;
+			created = info.created;
+        };
+    };		
 
     public func convert_datagroup_view (info: Types.DataGroup) : DataGroupView {
         _convert_datagroup_view(info);
     };
-
-    public func convert_data_view (id:CommonTypes.DataGroupId,  group: Types.DataGroup, index:?Types.DataIndex) : DataView {
-		{
-			id = id;
-			group = _convert_datagroup_view(group);
-			index = switch (index){
-				case (?i) {?{location = i.location}};
-				case (null) {null};
-			};
-		}
-    };	
-
-    public func convert_index_view (info: Types.DataIndex) : DataIndexView {
-		{location = info.location};
-    };	
 
     public func convert_datastore_view (info: Types.DataStore) : DataStoreView {
         return {
@@ -106,7 +129,15 @@ module {
 			case (#Location) {
 				switch (args.location) {
 					case (?location) {
-						switch (JSON.toText(to_candid(location), LOCATION_FIELDS, null)) {
+						let lj:LocationJson = {
+							country_code2 = location.country_code2;
+							country = Option.get(location.country,"");
+							region = Option.get(location.region,"");
+							city = Option.get(location.city,"");
+							latitude = Float.toText(location.coordinates.latitude);
+							longitude = Float.toText(location.coordinates.longitude);
+						};
+						switch (JSON.toText(to_candid(lj), LOCATION_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
 							case (#err (e)) { return #err(#InvalidRequest)};
 						};

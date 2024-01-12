@@ -65,6 +65,8 @@ module {
 		#DuplicateRecord;
 		// action not allowed by the logic or constraints
         #OperationNotAllowed;
+		// exceed the restriction
+		#LimitExceeded;
         // not registered
         #NotRegistered;
 		// when input argument contains wrong value

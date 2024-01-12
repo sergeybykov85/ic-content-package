@@ -31,6 +31,9 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		identity_id = Principal.toText(installation.caller);
 	};
 
+	// registry actor
+	var index_service:Text = Option.get(initArgs.index_service, "{DEFAULT_INDEXSERVICE_PLACE_HERE}");	
+
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
 	});
@@ -40,7 +43,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	// who can manage service : who can register new submitters etc
 	stable var access_list : List.List<CommonTypes.Identity> = List.nil();
 
-	// crreator of the package
+	// creator of the package
     stable var creator2package : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
 	// who submitted a package : service or channel partner
@@ -86,6 +89,16 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		owner :=to;
 		#ok();
 	};
+
+
+	/**
+	* Change the index service
+	*/
+	public shared ({ caller }) func apply_index_service (to : Principal) : async Result.Result<(), CommonTypes.Errors> {
+		if (not CommonUtils.identity_equals({identity_type = #ICP; identity_id = Principal.toText(caller);}, owner)) return #err(#AccessDenied);
+		index_service := Principal.toText(to);
+		#ok();
+	};	
 	/**
 	* Registerrs a new package provider (who is authorized to add new packages)
 	*/
@@ -159,6 +172,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							var description = package_details.description;
 							var logo_url = package_details.logo_url;
 							var references = List.nil();
+							max_supply = package_details.max_supply;
 							creator = package_details.creator;
 							submitter = submitter_identity;
 							created = package_details.created;
@@ -184,7 +198,11 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 						switch (type2package_get(submission_key)) {
 							case (?by_kind) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, by_kind)).0; };
 							case (null) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal, List.push(package_id, List.nil())).0;}
-						};					
+						};
+
+						// register in the tag service
+						let index_service_actor : Types.Actor.TagServiceActor = actor (index_service);
+						ignore await index_service_actor.register_package(package);	
 						return #ok(package_id);
 					};
 				};
@@ -205,7 +223,6 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 				// check authorization : only package creator or package provider
 				if (not (CommonUtils.identity_equals (caller_identity, pack.creator) or
 					CommonUtils.identity_equals (caller_identity, pack.submitter)))  return #err(#AccessDenied); 
-
 
 				let package_actor : Types.Actor.BundlePackageActor = actor (package_id);
 				let package_details = await package_actor.get_details();
@@ -350,12 +367,16 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		};
 	};
 
-	public query func total_supply_by_provider(identity:CommonTypes.Identity) : async Nat {
+	public query func total_supply_by_submitter(identity:CommonTypes.Identity) : async Nat {
 		switch (submitter2package_get(identity)) {
 			case (?ids) {List.size(ids)};
 			case (null) {0};
 		};
-	};			
+	};
+
+	public query func get_index_service() : async Text {
+		return index_service;
+	};				
 
     private func _get_packages(ids:[Text]) : [Conversion.BundlePackageView] {
 		let res = Buffer.Buffer<Conversion.BundlePackageView>(Array.size(ids));
@@ -366,7 +387,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			};
 		};
 		Buffer.toArray(res);
-    };		
+    };	
 
 	private func _build_identity (caller : Principal) : CommonTypes.Identity {
 		// right now we return always ICP, but it will be extended in case of ethereum authentication

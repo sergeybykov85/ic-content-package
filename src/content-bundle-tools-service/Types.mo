@@ -76,12 +76,6 @@ module {
 		owner : ?CommonTypes.Identity;
 	};
 
-	public type PackageRequestArgs = {
-		package : Principal;
-		references : [CommonTypes.NameValue];
-	};
-	
-
 	public type AllowanceArgs = {
 		identity : CommonTypes.Identity;
 		allowed_packages : Nat;
@@ -108,6 +102,7 @@ module {
 			owner : CommonTypes.Identity;
 			created : Int;
 			total_bundles : Nat;
+			max_supply : ?Nat;
 			name : Text;
 			description : Text;
 			logo_url : ?Text;

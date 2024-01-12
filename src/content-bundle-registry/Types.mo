@@ -34,6 +34,7 @@ module {
 
 	public type PackageRegistryArgs = {
 		network : CommonTypes.Network;
+		index_service : ?Text;
 		// target owner. If not specified, then onwer = who installs the canister
 		owner : ?CommonTypes.Identity;
 	};
@@ -52,11 +53,6 @@ module {
 		urls : [CommonTypes.NameValue];
 	};	
 
-	public type PackageRequestArgs = {
-		package : Principal;
-		references : [CommonTypes.NameValue];
-	};
-
 	public type BundlePackage = {
 		var name : Text;
 		var description : Text;
@@ -64,6 +60,7 @@ module {
 		// any urls related to the package
 		var references : List.List<CommonTypes.NameValue>;
 		submission : Submission;
+		max_supply : ?Nat;
 		// who created a package
 		creator : CommonTypes.Identity;
 		// who registered a package
@@ -92,9 +89,14 @@ module {
 			owner : CommonTypes.Identity;
 			created : Int;
 			total_bundles : Nat;
+			max_supply : ?Nat;
 			name : Text;
 			description : Text;
 			logo_url : ?Text;
+		};
+
+		public type TagServiceActor = actor {
+			register_package : shared (package : Principal)  -> async Result.Result<(Text), CommonTypes.Errors>;
 		};
 
 		public type BundlePackageActor = actor {

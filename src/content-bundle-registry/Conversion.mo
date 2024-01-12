@@ -14,6 +14,7 @@ module {
 		// principal id
 		id : Text;
 		submission : Types.Submission;
+		max_supply : ?Nat;
 		name : Text;
 		description : Text;
 		created: Time.Time;
@@ -33,6 +34,7 @@ module {
         return {
 			id = id;
 			submission = info.submission;
+			max_supply = info.max_supply;
 			name = info.name;
 			description = info.description;
 			created = info.created;

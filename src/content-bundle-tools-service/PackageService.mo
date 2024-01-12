@@ -33,7 +33,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		identity_id = Principal.toText(installation.caller);
 	};
 	// registry actor
-	let REGISTRY:Text = Option.get(initArgs.package_registry, "{DEFAULT_REGISTRY_PLACE_HERE}");
+	var registry:Text = Option.get(initArgs.package_registry, "{DEFAULT_REGISTRY_PLACE_HERE}");
 
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
@@ -76,6 +76,15 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		owner :=to;
 		#ok();
 	};
+
+	/**
+	* Change the package registry
+	*/
+	public shared ({ caller }) func apply_registry (to : Principal) : async Result.Result<(), CommonTypes.Errors> {
+		if (not CommonUtils.identity_equals({identity_type = #ICP; identity_id = Principal.toText(caller);}, owner)) return #err(#AccessDenied);
+		registry := Principal.toText(to);
+		#ok();
+	};	
 	/**
 	* Registers an allowance
 	*/
@@ -86,7 +95,6 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 			case (null) {
 				allowance := Trie.put(allowance, CommonUtils.identity_key(args.identity), Text.equal, {
 					allowed_packages = args.allowed_packages;
-					var created_packages = 0;
 				}).0;
 				#ok();
 			}
@@ -111,38 +119,34 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	*/
 	public shared ({ caller }) func deploy_public_package (metadata:Types.MetadataArgs, options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors> {
 		let identity = _build_identity(caller);
-		switch (allowance_get(identity)) {
-			case (?allowance) {
-				// any extra resticitons could be added based on the package type
-				if (allowance.allowed_packages == 0)  return #err(#AccessDenied);
-				await _deploy_package({
-					mode  = { submission = #Public; 
-						identifier = switch (options) {
-							case (?opt) {Option.get(opt.identifier_type, #Ordinal)};
-							case (null) {#Ordinal};
-						};
-						max_supply = switch (options) {
-							case (?opt) {opt.max_supply};
-							case (null) {null};
-						}; 
-						max_creator_supply = switch (options) {
-							case (?opt) {opt.max_creator_supply};
-							case (null) {null};
-						};
-						max_tag_supply = switch (options) {
-							case (?opt) {opt.max_tag_supply};
-							case (null) {?MAX_TAG_SUPPLY};
-						}
-					};
-					caller = identity;
-					owner = identity;
-					metadata = ?metadata;
-					contributors = null;
-					cycles = ?DEF_PACKAGE_CYCLES;
-				});
+		let act : Types.Activity = _activity_by(identity);
+		if (act.allowance == 0)  return #err(#AccessDenied);
+		if ((Array.size(act.deployed_packages)) >= act.allowance)  return #err(#LimitExceeded);
+		await _deploy_package({
+			mode  = { submission = #Public; 
+				identifier = switch (options) {
+					case (?opt) {Option.get(opt.identifier_type, #Ordinal)};
+					case (null) {#Ordinal};
+				};
+				max_supply = switch (options) {
+					case (?opt) {opt.max_supply};
+					case (null) {null};
+				}; 
+				max_creator_supply = switch (options) {
+					case (?opt) {opt.max_creator_supply};
+					case (null) {null};
+				};
+				max_tag_supply = switch (options) {
+					case (?opt) {opt.max_tag_supply};
+					case (null) {?MAX_TAG_SUPPLY};
+				}
 			};
-			case (null) { return #err(#AccessDenied); };
-		}
+			caller = identity;
+			owner = identity;
+			metadata = ?metadata;
+			contributors = null;
+			cycles = ?DEF_PACKAGE_CYCLES;
+		});
 	};
 
 	/**
@@ -150,35 +154,31 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	*/
 	public shared ({ caller }) func deploy_private_package (metadata:Types.MetadataArgs, options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors> {
 		let identity = _build_identity(caller);
-		switch (allowance_get(identity)) {
-			case (?allowance) {
-				// any extra resticitons could be added based on the package type
-				if (allowance.allowed_packages == 0)  return #err(#AccessDenied);
-				await _deploy_package({
-					mode  = {
-						submission = #Private; 
-						identifier = switch (options) {
-							case (?opt) {Option.get(opt.identifier_type, #Ordinal)};
-							case (null) {#Ordinal};
-						};
-						max_supply = switch (options) {
-							case (?opt) {opt.max_supply};
-							case (null) {null};
-						}; 
-						max_creator_supply = null;
-						max_tag_supply = switch (options) {
-							case (?opt) {opt.max_tag_supply};
-							case (null) {?MAX_TAG_SUPPLY};
-						}
-					};
-					owner = identity;
-					metadata = ?metadata;
-					contributors = null;
-					cycles = ?DEF_PACKAGE_CYCLES;
-				});
+		let act : Types.Activity = _activity_by(identity);
+		if (act.allowance == 0)  return #err(#AccessDenied);
+		if (Array.size(act.deployed_packages) >= act.allowance)  return #err(#LimitExceeded);
+		await _deploy_package({
+			mode  = {
+				submission = #Private; 
+				identifier = switch (options) {
+					case (?opt) {Option.get(opt.identifier_type, #Ordinal)};
+					case (null) {#Ordinal};
+				};
+				max_supply = switch (options) {
+					case (?opt) {opt.max_supply};
+					case (null) {null};
+				}; 
+				max_creator_supply = null;
+				max_tag_supply = switch (options) {
+					case (?opt) {opt.max_tag_supply};
+					case (null) {?MAX_TAG_SUPPLY};
+				}
 			};
-			case (null) { return #err(#AccessDenied); };
-		}
+			owner = identity;
+			metadata = ?metadata;
+			contributors = null;
+			cycles = ?DEF_PACKAGE_CYCLES;
+		});
 	};
 
 	/**
@@ -186,38 +186,35 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	*/
 	public shared ({ caller }) func deploy_shared_package (metadata:Types.MetadataArgs, contributors:[CommonTypes.Identity], options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors> {
 		let identity = _build_identity(caller);
-		switch (allowance_get(identity)) {
-			case (?allowance) {
-				if (allowance.allowed_packages == 0)  return #err(#AccessDenied);
-				await _deploy_package({	
-					mode  = {
-						submission = #Shared; 
-						identifier = switch (options) {
-							case (?opt) {Option.get(opt.identifier_type, #Ordinal)};
-							case (null) {#Ordinal};
-						};
-						max_supply = switch (options) {
-							case (?opt) {opt.max_supply};
-							case (null) {null};
-						}; 
-						max_creator_supply = null;
-						max_tag_supply = switch (options) {
-							case (?opt) {opt.max_tag_supply};
-							case (null) {?MAX_TAG_SUPPLY};
-						}
-					};
-					owner = identity;
-					metadata = ?metadata;
-					contributors = ?contributors;
-					cycles = ?DEF_PACKAGE_CYCLES;
-				});
+		let act : Types.Activity = _activity_by(identity);
+		if (act.allowance == 0)  return #err(#AccessDenied);
+		if (Array.size(act.deployed_packages) >= act.allowance)  return #err(#LimitExceeded);		
+		await _deploy_package({	
+			mode  = {
+				submission = #Shared; 
+				identifier = switch (options) {
+					case (?opt) {Option.get(opt.identifier_type, #Ordinal)};
+					case (null) {#Ordinal};
+				};
+				max_supply = switch (options) {
+					case (?opt) {opt.max_supply};
+					case (null) {null};
+				}; 
+				max_creator_supply = null;
+				max_tag_supply = switch (options) {
+					case (?opt) {opt.max_tag_supply};
+					case (null) {?MAX_TAG_SUPPLY};
+				}
 			};
-			case (null) { return #err(#AccessDenied); };
-		}
+			owner = identity;
+			metadata = ?metadata;
+			contributors = ?contributors;
+			cycles = ?DEF_PACKAGE_CYCLES;
+		});
 	};	
 
 	private func _deploy_package (args : Types.PackageCreationRequest) : async Result.Result<Text, CommonTypes.Errors> {
-		let registry_actor : Types.Actor.PackageRegistryActor = actor (REGISTRY);
+		let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
 		// if the caller is able to register any package
 		if  (not (await registry_actor.is_submitter({identity_type=#ICP; identity_id=Principal.toText(Principal.fromActor(this)) }))) { return #err(#AccessDenied); };
 		Cycles.add(Option.get(args.cycles, DEF_PACKAGE_CYCLES));
@@ -281,12 +278,23 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		return total;
 	};
 
+	public query func get_registry() : async Text {
+		return registry;
+	};	
+
 	public query func total_supply_by(identity:CommonTypes.Identity) : async Nat {
 		switch (creator2package_get(identity)) {
 			case (?c) {List.size(c)};
 			case (null) {0};
 		};
 	};
+
+    public query func get_package_ids_by(identity:CommonTypes.Identity) : async [Text] {
+		switch (creator2package_get(identity)) {
+			case (?ids) { List.toArray(ids) };
+			case (null) { [] };
+		};
+    };	
 
 	public query func allowance_by(identity:CommonTypes.Identity) : async Nat {
 		switch (allowance_get(identity)) {
@@ -296,6 +304,10 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	};
 
 	public query func activity_by(identity:CommonTypes.Identity) : async Types.Activity {
+		_activity_by(identity);
+	};
+
+	private func _activity_by(identity:CommonTypes.Identity) : Types.Activity {
 		let allowance = switch (allowance_get(identity)) {
 			case (?c) {c.allowed_packages};
 			case (null) {0};
@@ -305,7 +317,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 			case (null) {[]};
 		}; allowance = allowance;
 		};
-	};		
+	};			
 
 	private func _build_identity (caller : Principal) : CommonTypes.Identity {
 		// right now we return always ICP, but it will be extended in case of ethereum authentication
