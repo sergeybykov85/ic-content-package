@@ -24,7 +24,21 @@
       "main": "src/content-bundle-widget-service/WidgetService.mo",
       "type": "motoko",
       "dependencies": []
-    } 
+    },
+    "internet_identity" : {
+      "type": "pull",
+      "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+    },
+    "content-bundle-tools": {
+      "frontend": {
+        "entrypoint": "src/content-bundle-tools/build/index.html"
+      },
+      "source": [
+        "src/content-bundle-tools/build"
+      ],
+      "type": "assets",
+      "build": "npm run build:content-bundle-tools"
+    }
    
   },
   "defaults": {
