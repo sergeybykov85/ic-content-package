@@ -21,16 +21,18 @@ module {
 		// more types possible laterrr
 	};
 
+	public type CriteriaArgs = {
+		ids : [EntityRef];
+		tags : [Text];
+		classifications : [Text];
+		packages : [Text];
+	};
+
 	public type WidgetCreationRequest = {
 		name : Text;
 		description : Text;
 		type_id : WidgetType;
-		criteria : ?{
-			ids : [EntityRef];
-			tags : [Text];
-			classifications : [Text];
-			packages : [Text];
-		};
+		criteria : ?CriteriaArgs;
 	};
 
 	public type WidgetServiceArgs = {

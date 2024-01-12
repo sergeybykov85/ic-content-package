@@ -55,7 +55,6 @@ module {
 	};
 
 	public type Errors = {
-		// data store is not initialized
 		#DataStoreNotInitialized;
 		// no resource or no chunk
 		#NotFound;

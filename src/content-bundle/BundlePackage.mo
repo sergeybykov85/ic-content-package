@@ -251,6 +251,41 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	};
 
 	/**
+	* Removes an existing bundle, if no data group present
+	* Allowed only to the owner of the bundle.
+	*/
+	public shared ({ caller }) func remove_bundle (bundle_id: Text) : async Result.Result<Text, CommonTypes.Errors> {
+		switch (bundle_get(bundle_id)) {
+			case (?bundle) {
+				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
+				if (Option.isSome(bundle.payload.poi_group)) return #err(#OperationNotAllowed);
+				if (Option.isSome(bundle.payload.additions_group)) return #err(#OperationNotAllowed);
+				
+				// remove from index
+				all_bundles := List.mapFilter<Text, Text>(all_bundles,
+					func(b:Text) : ?Text { if (b == bundle_id) { return null; } else { return ?b; }}
+				);
+				// remove tags
+				if (List.size(bundle.index.tags) > 0) {
+					_exclude_tags (bundle_id, bundle.index.tags);
+				};
+				_exclude_classification(bundle_id, bundle.index.classification);
+				// remove references between creator/owner	
+				_untrack_creator(bundle.creator, bundle_id);
+				_untrack_owner (bundle.owner, bundle_id);
+				// remove bundle id
+				bundles := Trie.remove(bundles, CommonUtils.text_key(bundle_id), Text.equal).0; 	
+				// remove path to dir
+				let bucket_actor : Types.Actor.DataBucketActor = actor (bundle.data_path.bucket_id);
+				ignore await bucket_actor.delete_resource(bundle.data_path.resource_id);
+				
+				return #ok(bundle_id);
+			};
+			case (null) { return #err(#NotFound); };
+		};
+	};	
+
+	/**
 	* Apply logo for the bundle item. If not specified, then the existing logo is removed
 	* Allowed only to the owner of the bundle.
 	*/
@@ -709,6 +744,21 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		Buffer.toArray(res);
     };
 
+    public query func get_bundles_page(start: Nat, limit: Nat): async [Conversion.BundleView] {
+        let res = Buffer.Buffer<Conversion.BundleView>(limit);
+        var i = start;
+		let all = List.toArray(all_bundles);
+        while (i < start + limit and i < all.size()) {
+			let id = all[i];
+			switch (bundle_get(id)) {
+				case (?bundle) { res.add(Conversion.convert_bundle_view(bundle)); };
+				case (null) {  };
+			};
+            i += 1;
+        };
+        return Buffer.toArray(res);
+    };	
+
 	/**
 	* Returns contributors if they have set
 	*/
@@ -950,10 +1000,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		switch (tag2bundle_get(tag)) {
 			case (?bundle_ids) {
 				let fbundles = List.mapFilter<Text, Text>(bundle_ids,
-				func(b:Text) : ?Text {
-					if (b == bundle_id) { return null; }
-					else { return ?b; }
-				}
+				func(b:Text) : ?Text { if (b == bundle_id) { return null; } else { return ?b; }}
 				);
 				tag2bundle := Trie.put(tag2bundle, Utils.tag_key(tag), Text.equal, fbundles).0;       
 			};
@@ -977,10 +1024,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		switch (classification2bundle_get(classification)) {
 			case (?bundle_ids) {
 				let fbundles = List.mapFilter<Text, Text>(bundle_ids,
-				func(b:Text) : ?Text {
-					if (b == bundle_id) { return null; }
-					else { return ?b; }
-				}
+					func(b:Text) : ?Text { if (b == bundle_id) { return null; } else { return ?b; }}
 				);
 				classification2bundle := Trie.put(classification2bundle, CommonUtils.text_key(classification), Text.equal, fbundles).0;       
 			};
@@ -1001,6 +1045,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (null) {creator2bundle := Trie.put(creator2bundle, CommonUtils.identity_key(identity), Text.equal, List.push(bundle_id, List.nil())).0; };
 		};
     };
+
+    private func _untrack_creator(identity:CommonTypes.Identity, bundle_id:Text) : () {
+		switch (creator2bundle_get(identity)) {
+			case (?bundle_ids) {
+				let fbundles = List.mapFilter<Text, Text>(bundle_ids,
+					func(b:Text) : ?Text { if (b == bundle_id) { return null; } else { return ?b; }
+				});
+				creator2bundle := Trie.put(creator2bundle, CommonUtils.identity_key(identity), Text.equal, fbundles).0;       
+			};
+			case (null) {};
+		};
+    };	
 
     private func _track_owner(identity:CommonTypes.Identity, bundle_id:Text) : () {
 		switch (owner2bundle_get(identity)) {

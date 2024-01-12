@@ -116,6 +116,16 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		if (created >= allowance) return #err(#AccessDenied);
 		let cr:?Types.Criteria = switch (args.criteria) {
 			case (?criteria) {
+				// validate ids
+				if (Array.size(criteria.ids) > 0) {
+					let valid_ids = await _validate_entities(criteria.ids);
+					if (not valid_ids) return #err(#InvalidRequest);
+				};
+				// validate packages
+				if (Array.size(criteria.packages) > 0) {
+					let valid_packs = await _validate_packages(criteria.packages);
+					if (not valid_packs) return #err(#InvalidRequest);
+				};				
 				?{
 					var ids = criteria.ids;
 					var packages = criteria.packages;
@@ -152,6 +162,34 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		#ok(widget_id);
 	};
 
+	public shared ({ caller }) func update_widget_criteria (widget_id:Text, criteria: Types.CriteriaArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		switch (widget_get(widget_id)) {
+			case (?w) {
+				let identity = _build_identity(caller);
+				if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
+				
+				// validate ids
+				if (Array.size(criteria.ids) > 0) {
+					let valid_ids = await _validate_entities(criteria.ids);
+					if (not valid_ids) return #err(#InvalidRequest);
+				};
+				// validate packages
+				if (Array.size(criteria.packages) > 0) {
+					let valid_packs = await _validate_packages(criteria.packages);
+					if (not valid_packs) return #err(#InvalidRequest);
+				};
+				w.criteria:=?{
+					var ids = criteria.ids;
+					var packages = criteria.packages;
+					var tags = criteria.tags;
+					var classifications = criteria.classifications;
+				};
+				return #ok(widget_id);
+			};
+			case (null) {return #err(#NotFound)}
+		};
+	};	
+
 	/**
 	* Removes an existing widget object
 	*/
@@ -159,7 +197,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		switch (widget_get(widget_id)) {
 			case (?w) {
 				let identity = _build_identity(caller);
-			//	if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
+				if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
 				// remove widget
 				widgets := Trie.remove(widgets, CommonUtils.text_key(widget_id), Text.equal).0; 
 				// remove reference
@@ -179,6 +217,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 			case (null) {return #err(#NotFound)}
 		};
 	};
+	
 
 
 	public shared func wallet_receive() {
