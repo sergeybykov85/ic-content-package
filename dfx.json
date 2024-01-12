@@ -11,24 +11,21 @@
       "dependencies": []
     },
     "package_service": {
-      "main": "src/content-bundle-service/PackageService.mo",
+      "main": "src/content-bundle-tools-service/PackageService.mo",
       "type": "motoko",
       "dependencies": []
     },
-    "internet_identity" : {
-      "type": "pull",
-      "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+    "index_service": {
+      "main": "src/index-service/IndexService.mo",
+      "type": "motoko",
+      "dependencies": []
     },
-    "content-bundle-tools": {
-      "frontend": {
-        "entrypoint": "src/content-bundle-tools/build/index.html"
-      },
-      "source": [
-        "src/content-bundle-tools/build"
-      ],
-      "type": "assets",
-      "build": "npm run build:content-bundle-tools"
-    }
+    "widget_service": {
+      "main": "src/content-bundle-widget-service/WidgetService.mo",
+      "type": "motoko",
+      "dependencies": []
+    } 
+   
   },
   "defaults": {
     "build": {
