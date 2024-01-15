@@ -328,7 +328,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	public shared ({ caller }) func transfer_bundle_ownership (id: Text, to : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
 			case (?bundle) {
-				//if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
+				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
 				_untrack_owner(bundle.owner, id);
 				bundle.owner :=to;
 				_track_owner(to, id);
@@ -397,7 +397,19 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 										let bucket_actor : Types.Actor.DataBucketActor = actor (section.data_path.bucket_id);
 										switch (await bucket_actor.delete_resource(section.data_path.resource_id)){
 											// update model
-											case (#ok(_)) {	_exclude_section(group, category);};
+											case (#ok(_)) {	
+												switch (category) {
+													case (#Location) {
+														if (Option.isSome(bundle.index.location)) {
+															_exclude_country(bundle_id, (CommonUtils.unwrap(bundle.index.location)).country_code2);
+															bundle.index.location:=null;
+														};															
+													};
+													case (#About) {	bundle.index.about:=null;};
+													case (_) {};
+												};
+												_exclude_section(group, category);
+											};
 											case (#err(e)) {return #err(e)};
 										};
 									};
