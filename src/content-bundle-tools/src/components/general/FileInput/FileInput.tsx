@@ -3,12 +3,12 @@ import React, { type ReactNode, useCallback } from 'react'
 import clsx from 'clsx'
 import styles from './FileInput.module.scss'
 
-interface FileInputProps {
+export interface FileInputProps {
   children?: ReactNode
   className?: string
   accept?: ComponentPropsWithoutRef<'input'>['accept']
   onLoaded: (readerResult: FileReader['result'], file: File) => void
-  getAs: 'base64' | 'text'
+  getAs: 'base64' | 'string'
 }
 
 const FileInput: FC<FileInputProps> = ({ children, className, accept, onLoaded, getAs }) => {
@@ -26,11 +26,11 @@ const FileInput: FC<FileInputProps> = ({ children, className, accept, onLoaded, 
         case 'base64':
           reader.readAsDataURL(file)
           break
-        case 'text':
+        case 'string':
           reader.readAsText(file)
           break
       }
-      // target.value = null TODO: clean the input
+      target.value = '' // Clean input
     },
     [getAs, onLoaded],
   )
