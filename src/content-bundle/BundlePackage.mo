@@ -75,6 +75,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	// tag to bundle
     stable var tag2bundle : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
+	// country_code2 to bundle
+    stable var country2bundle : Trie.Trie<Text, List.List<Text>> = Trie.empty();	
+
 	// classification to bundle
     stable var classification2bundle : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
@@ -91,6 +94,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	stable var all_bundles : List.List<Text> = List.nil();	
 
     private func tag2bundle_get(id : Text) : ?List.List<Text> = Trie.get(tag2bundle, Utils.tag_key(id), Text.equal);
+
+    private func country2bundle_get(id : Text) : ?List.List<Text> = Trie.get(country2bundle, Utils.tag_key(id), Text.equal);
 
     private func classification2bundle_get(classification :Text) : ?List.List<Text> = Trie.get(classification2bundle, CommonUtils.text_key(classification), Text.equal);
 
@@ -472,10 +477,21 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 						switch (args.group) {
 							case (#POI) {
 								if (args.category == #Location) {
-									bundle.index.location:=args.payload.location
+									// exclude index
+									if (Option.isSome(bundle.index.location)) {
+										_exclude_country(bundle_id, (CommonUtils.unwrap(bundle.index.location)).country_code2);
+									};
+									// apply index
+									switch (args.payload.location){
+										case (?location) {
+											bundle.index.location:=?location;
+											_include_country(bundle_id, location.country_code2);
+										};
+										case (null) { bundle.index.location:=null; };
+									};
 								};
 								if (args.category == #About) {
-									bundle.index.about:=args.payload.about
+									bundle.index.about:=args.payload.about;
 								};								
 							};
 							case (#Additions) {};
@@ -779,6 +795,13 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         _get_tags();
     };
 
+	/**
+	* Returns all country codes (two letter country code, not the full name)
+	*/
+    public query func get_country_codes() : async [Text] {
+        _get_country_codes();
+    };	
+
     private func _get_ids_for(get : (classification :Text) -> ?List.List<Text>, key:Text) : [Text] {
 		switch (get(key)) {
 			case (?bundle_ids) {List.toArray(bundle_ids)};
@@ -800,7 +823,15 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			tags_buff.add(key);
 		};
 		Buffer.toArray(tags_buff);
-	};	    
+	};
+
+	private func _get_country_codes () : [Text] {
+		let buff = Buffer.Buffer<Text>(Trie.size(country2bundle));
+		for ((key, a) in Trie.iter(country2bundle)){
+			buff.add(key);
+		};
+		Buffer.toArray(buff);
+	};		    
 
    	private func bundle_http_response(key : Text, tag: ?Text) : Http.Response {
 		if (key == Utils.ROOT) {
@@ -1007,6 +1038,30 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (null) {};
 		};
     };
+
+    private func _include_country(bundle_id:Text, country:Text) : () {
+		switch (country2bundle_get(country)) {
+			case (?bundle_ids) {
+				for (leaf in List.toIter(bundle_ids)){
+					if (leaf == bundle_id) return;
+				};
+				country2bundle := Trie.put(country2bundle, CommonUtils.text_key(country), Text.equal, List.push(bundle_id, bundle_ids)).0;       
+			};
+			case (null) { country2bundle := Trie.put(tag2bundle, CommonUtils.text_key(country), Text.equal, List.push(bundle_id, List.nil())).0; };
+		};
+    };
+
+    private func _exclude_country(bundle_id:Text, country:Text) : () {
+		switch (country2bundle_get(country)) {
+			case (?bundle_ids) {
+				let fbundles = List.mapFilter<Text, Text>(bundle_ids,
+				func(b:Text) : ?Text { if (b == bundle_id) { return null; } else { return ?b; }}
+				);
+				country2bundle := Trie.put(country2bundle, CommonUtils.text_key(country), Text.equal, fbundles).0;       
+			};
+			case (null) {};
+		};
+    };	
 
 	private func _include_classification(bundle_id:Text, classification:Text) : () {
 		switch (classification2bundle_get(classification)) {

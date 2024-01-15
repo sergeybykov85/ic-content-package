@@ -201,7 +201,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 						};
 
 						// register in the tag service
-						let index_service_actor : Types.Actor.TagServiceActor = actor (index_service);
+						let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
 						ignore await index_service_actor.register_package(package);	
 						return #ok(package_id);
 					};
@@ -373,6 +373,26 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (null) {0};
 		};
 	};
+
+	public composite  query func get_packages_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundlePackageView] {
+		let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
+		
+		let by_country = switch (criteria.country_code) {
+			case (?country_code) { await index_service_actor.get_packages_by_country(country_code)};
+			case (null) {[]};
+		};		
+		let by_tag = switch (criteria.tag) {
+			case (?tag) { await index_service_actor.get_packages_by_tag(tag)};
+			case (null) {[]};
+		};
+		let by_class = switch (criteria.classification) {
+			case (?classification) { await index_service_actor.get_packages_by_classification(classification)};
+			case (null) {[]};
+		};
+
+		_get_packages(Utils.build_uniq([by_country, by_tag, by_class]));
+
+	};	
 
 	public query func get_index_service() : async Text {
 		return index_service;

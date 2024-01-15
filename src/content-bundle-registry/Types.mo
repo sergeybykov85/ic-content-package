@@ -30,7 +30,13 @@ module {
 
 	public type ViewMode = {
 		#Index;     // index, names could be used as a part of browser url
-	};	
+	};
+
+	public type SearchCriteriaArgs = {
+		country_code : ?Text;
+		tag : ?Text;
+		classification : ?Text;
+	};
 
 	public type PackageRegistryArgs = {
 		network : CommonTypes.Network;
@@ -95,13 +101,17 @@ module {
 			logo_url : ?Text;
 		};
 
-		public type TagServiceActor = actor {
+		public type IndexServiceActor = actor {
 			register_package : shared (package : Principal)  -> async Result.Result<(Text), CommonTypes.Errors>;
+			get_packages_by_tag : shared query (tag : Text) -> async [Text];
+			get_packages_by_classification : shared query (classification : Text) -> async [Text];
+			get_packages_by_country : shared query (country_code : Text) -> async [Text];
 		};
 
 		public type BundlePackageActor = actor {
-			get_creator : shared () -> async CommonTypes.Identity;
-			get_details : shared () -> async PackageDetails;
+			get_creator : shared query() -> async CommonTypes.Identity;
+			get_details : shared query() -> async PackageDetails;
 		};
+
 	};
 };

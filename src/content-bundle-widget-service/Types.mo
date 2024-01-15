@@ -108,7 +108,7 @@ module {
 		};
 	
 		public type PackageRegistryActor = actor {
-			get_packages: shared (ids:[Text]) -> async [PackageView];
+			get_packages: shared query (ids:[Text]) -> async [PackageView];
 		};		
 
 	};
