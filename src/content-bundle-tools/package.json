@@ -8,13 +8,15 @@
   },
   "dependencies": {
     "@dfinity/auth-client": "^0.20.2",
+    "@dfinity/identity": "^0.20.2",
+    "@dfinity/identity-secp256k1": "^0.20.2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.69",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
+    "buffer": "^6.0.3",
     "clsx": "^2.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -26,9 +28,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "browserslist": {
@@ -47,6 +49,7 @@
     "@types/node": "^20.11.2",
     "@types/react-transition-group": "^4.4.10",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "prettier": "3.1.1"
+    "prettier": "3.1.1",
+    "react-app-rewired": "^2.2.1"
   }
 }

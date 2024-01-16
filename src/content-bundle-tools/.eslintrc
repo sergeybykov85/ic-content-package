@@ -1,5 +1,5 @@
 {
-  "extends": ["react-app", "react-app/jest", "plugin:@typescript-eslint/recommended", "plugin:react-hooks/recommended"],
+  "extends": ["plugin:@typescript-eslint/recommended", "plugin:react-hooks/recommended"],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "react-hooks"],
   "rules": {
