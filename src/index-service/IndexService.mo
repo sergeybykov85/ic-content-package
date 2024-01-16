@@ -121,15 +121,12 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 
 	private func _process_package_tags (package_id:Text, tags:[Text]) : () {
 		let ex_in:([Text],[Text]) = _excluded_includeed(package2tag_get, package_id, tags);
-		// exclude not relevant  tags
 		for (t in ex_in.0.vals()) {
 			tag2package := _index_exclude_package(tag2package_get, tag2package, t, package_id);
 		};		
-		// include new tags
 		for (t in ex_in.1.vals()) {
 			tag2package := _index_include_package(tag2package_get, tag2package, t, package_id);
 		};
-		// replace all tags for the package
 		package2tag := Trie.put(package2tag, CommonUtils.text_key(package_id), Text.equal, tags).0;       
 	};
 
@@ -141,19 +138,17 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 		for (t in ex_in.1.vals()) {
 			classification2package := _index_include_package(classification2package_get, classification2package, t, package_id);
 		};
-		// replace all classifications for the package
 		package2classification := Trie.put(package2classification, CommonUtils.text_key(package_id), Text.equal, classifications).0;       
 	};	
 
 	private func _process_package_countries (package_id:Text, countries:[Text]) : () {
 		let ex_in:([Text],[Text]) = _excluded_includeed(package2country_get, package_id, countries);
 		for (t in ex_in.0.vals()) {
-			classification2package := _index_exclude_package(country2package_get, country2package, t, package_id);
+			country2package := _index_exclude_package(country2package_get, country2package, t, package_id);
 		};		
 		for (t in ex_in.1.vals()) {
-			classification2package := _index_include_package(country2package_get, country2package, t, package_id);
+			country2package := _index_include_package(country2package_get, country2package, t, package_id);
 		};
-		// replace all classifications for the package
 		package2country := Trie.put(package2country, CommonUtils.text_key(package_id), Text.equal, countries).0;       
 	};	
 
@@ -165,11 +160,12 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 			* Right method executes 3 different calls.
 			* But the initial idea could be re-designed later to have different methods or even different times
 			*/
-
 			let tags = await package_actor.get_tags();
 			let classifications = await package_actor.get_classifications();
 			let countries = await package_actor.get_country_codes();
+
 			ref.last_scan := Time.now();
+
 			_process_package_tags(package_id, tags);
 			_process_package_classifications(package_id, classifications);
 			_process_package_countries(package_id, countries);
@@ -225,7 +221,7 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 		};
 	};
 
-	public shared ({ caller }) func sync_tags (package_id:Text) : async Result.Result<(), CommonTypes.Errors> {
+	public shared ({ caller }) func sync_package (package_id:Text) : async Result.Result<(), CommonTypes.Errors> {
 		if (not (caller == CREATOR or _is_operator(caller))) return #err(#AccessDenied);
 		switch (package_get(package_id)) {
 			case (null) {return #err(#NotFound)};
