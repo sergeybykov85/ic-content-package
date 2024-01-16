@@ -1,32 +1,14 @@
-import { createContext, useContext, useCallback, useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import type { FC, ReactNode } from 'react'
 import { AuthClient } from '@dfinity/auth-client'
-import cookies from'~/utils/cookies'
-import decodeIdentity from'~/utils/decodeIdentity'
+import cookies from '~/utils/cookies'
+import decodeIdentity from '~/utils/decodeIdentity'
 import { enqueueSnackbar } from 'notistack'
-
-interface AuthContext {
-  principal: string | undefined
-  isAuthenticated: boolean
-  login: (pem?: string) => void
-  logout: () => void
-}
-export const authContext = createContext<AuthContext>({
-  principal: undefined,
-  isAuthenticated: false,
-  login: () => {
-    return
-  },
-  logout: () => {
-    return
-  },
-})
-const { Provider } = authContext
-export const useAuth = (): AuthContext => useContext(authContext)
+import { AuthContext } from './'
 
 const PRINCIPAL_COOKIE_NAME = 'principal'
 
-export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
+const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [authClient, setAuthClient] = useState<AuthClient | null>(null)
   const [principal, setPrincipal] = useState<AuthContext['principal']>(cookies.getCookie(PRINCIPAL_COOKIE_NAME))
   const isAuthenticated = useMemo(() => Boolean(principal), [principal])
@@ -103,5 +85,7 @@ export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) =
     [loginWithII, loginWithPem],
   )
 
-  return <Provider value={{ isAuthenticated, login, logout, principal }}>{children}</Provider>
+  return <AuthContext.Provider value={{ isAuthenticated, login, logout, principal }}>{children}</AuthContext.Provider>
 }
+
+export default AuthContextProvider
