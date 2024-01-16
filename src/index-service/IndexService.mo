@@ -305,7 +305,11 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 					classifications = switch (package2classification_get(package_id)) {
 						case (?ids) {ids };
 						case (null) {[]};
-					};					
+					};
+					countries = switch (package2country_get(package_id)) {
+						case (?ids) {ids };
+						case (null) {[]};
+					};									
 				}); 
 			};
 			case (null) { return #err(#NotRegistered)};

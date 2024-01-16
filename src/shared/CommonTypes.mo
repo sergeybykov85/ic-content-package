@@ -7,7 +7,7 @@ module {
 
 	public type NameValue = {name : Text; value : Text; };
 
-	public type Location = {country_code2:Text; country:?Text; region:?Text; city:?Text; coordinates:Coordinates};
+	public type Location = {country_code2:Text; region:?Text; city:?Text; coordinates:Coordinates};
 
 	public type AboutData = { name : Text; description : Text; locale : Text; attributes : [NameValue];};
 

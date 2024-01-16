@@ -21,6 +21,7 @@ module {
 		last_scan : Time.Time;
 		tags : [Text];
 		classifications : [Text];
+		countries : [Text];
 	};	
 
 	/**

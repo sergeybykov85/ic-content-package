@@ -28,6 +28,9 @@ import EmbededUI "./EmbededUI";
 
 shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageArgs) = this {
 
+	// management actor
+	let IC : Types.Actor.ICActor = actor "aaaaa-aa";
+
 	let POI_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Location, #About, #History, #AudioGuide, #Gallery, #AR]);
 	let ADDITIONS_SCHEMA:Types.DataShema = Types.DataShema(#Additions, [#Audio, #Video, #Gallery, #Article, #Document]);
 
@@ -95,7 +98,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
     private func tag2bundle_get(id : Text) : ?List.List<Text> = Trie.get(tag2bundle, Utils.tag_key(id), Text.equal);
 
-    private func country2bundle_get(id : Text) : ?List.List<Text> = Trie.get(country2bundle, Utils.tag_key(id), Text.equal);
+    private func country2bundle_get(id : Text) : ?List.List<Text> = Trie.get(country2bundle, CommonUtils.text_key(id), Text.equal);
 
     private func classification2bundle_get(classification :Text) : ?List.List<Text> = Trie.get(classification2bundle, CommonUtils.text_key(classification), Text.equal);
 
@@ -130,6 +133,22 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	public shared ({ caller }) func transfer_ownership (to : CommonTypes.Identity) : async Result.Result<(), CommonTypes.Errors> {
 		if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
 		owner :=to;
+
+		// apply controller for all buckets
+		switch (owner.identity_type) {
+			case (#ICP) {
+				let this_canister_id = Principal.fromActor(this);
+				for (bucket in List.toIter(data_store.buckets)) {				
+					// right now the user becomes the controller of the canisterr and the service canister as well.
+					// but it is ok to remove the service canister from the controller list LATER.
+					ignore IC.update_settings({
+						canister_id =  Principal.fromText(bucket);
+						settings = { controllers = ? [ Principal.fromText(owner.identity_id), this_canister_id]};
+					});
+				};
+			};
+			case (_) {};
+		};	
 		#ok();
 	};
 
@@ -737,7 +756,17 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (?bundle) { #ok(Conversion.convert_bundle_view(bundle)); };
 			case (null) { return #err(#NotFound); };
 		};
-    };	
+    };
+
+	/**
+	* Returns bundle information by id. This response contains index details as well
+	*/
+    public query func get_bundle_details(id:Text) : async Result.Result<Conversion.BundleDetailsView, CommonTypes.Errors> {
+		switch (bundle_get(id)) {
+			case (?bundle) { #ok(Conversion.convert_bundle_details_view(bundle)); };
+			case (null) { return #err(#NotFound); };
+		};
+    };		
 	/**
 	* Returns bundle ids for the creator
 	*/
@@ -759,8 +788,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
     public query func get_ids_for_classification(classification:Text) : async [Text] {
 		_get_ids_for(classification2bundle_get, classification);
-    };	
+    };
 
+	/**
+	* Returns bundle ids for the country
+	*/
+    public query func get_ids_for_country(country:Text) : async [Text] {
+		_get_ids_for(country2bundle_get, country);
+    };		
+
+	/**
+	* Returns bundles by their ids
+	*/
     public query func get_bundles(ids:[Text]) : async [Conversion.BundleView] {
 		let res = Buffer.Buffer<Conversion.BundleView>(Array.size(ids));
 		for (id in ids.vals()) {
@@ -772,6 +811,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		Buffer.toArray(res);
     };
 
+	/**
+	* Returns bundles by portions
+	*/
     public query func get_bundles_page(start: Nat, limit: Nat): async [Conversion.BundleView] {
         let res = Buffer.Buffer<Conversion.BundleView>(limit);
         var i = start;
@@ -1059,7 +1101,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				};
 				country2bundle := Trie.put(country2bundle, CommonUtils.text_key(country), Text.equal, List.push(bundle_id, bundle_ids)).0;       
 			};
-			case (null) { country2bundle := Trie.put(tag2bundle, CommonUtils.text_key(country), Text.equal, List.push(bundle_id, List.nil())).0; };
+			case (null) { country2bundle := Trie.put(country2bundle, CommonUtils.text_key(country), Text.equal, List.push(bundle_id, List.nil())).0; };
 		};
     };
 
@@ -1407,12 +1449,20 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		});
 
 		let bucket_principal = Principal.fromActor(bucket_actor);
-		// IC Application is a controller of the bucket. but other users could be added here
-		//if (Array.size(initArgs.spawned_canister_controllers) > 0){
-		/*ignore management_actor.update_settings({
-			canister_id = bucket_principal;
-			settings = { controllers = ? Utils.include(initArgs.spawned_canister_controllers, Principal.fromActor(this));};
-		});*/
+
+		// right now the user becomes the controller of the canisterr and the package canister as well.
+		// but it is ok to remove the package canister from the controller list LATER.
+		switch (owner.identity_type) {
+			case (#ICP) {
+				// right now the user becomes the controller of the canisterr and the service canister as well.
+				// but it is ok to remove the service canister from the controller list LATER.
+				ignore IC.update_settings({
+					canister_id =  bucket_principal;
+					settings = { controllers = ? [ Principal.fromText(owner.identity_id), Principal.fromActor(this)]};
+				});	
+			};
+			case (_) {};
+		};		
 		return Principal.toText(bucket_principal);
 	};    
 

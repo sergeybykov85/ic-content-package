@@ -15,12 +15,12 @@ import CommonTypes "../shared/CommonTypes";
 
 module {
 
-	let LOCATION_FIELDS = ["latitude", "longitude", "country", "country_code2", "region", "city", "coordinates"];
+	let LOCATION_FIELDS = ["latitude", "longitude", "country_code2", "region", "city", "coordinates"];
 	let REFERENCE_FIELDS = ["title","url"];
 	let HISTORY_FIELDS = ["date_from","date_to","period", "title", "body", "locale"];
 	let ABOUT_FIELDS = ["name", "value", "attributes", "locale", "description"];
 	// unfortunately,  serge lib can't serialize Float properly, better to save it as text
-	public type LocationJson = {country_code2:Text; country:Text; region:Text; city:Text; latitude : Text; longitude : Text};
+	public type LocationJson = {country_code2:Text; region:Text; city:Text; latitude : Text; longitude : Text};
 
 	public type DataStoreView = {
 		buckets : [Text];
@@ -60,16 +60,14 @@ module {
 		data_path : CommonTypes.ResourcePath;
 		name : Text;
 		description : Text;
-		classification : Text;
 		// simple light weigh logo
 		logo : ?CommonTypes.ResourcePath;
-		tags : [Text];
 		creator : CommonTypes.Identity;
 		owner : CommonTypes.Identity;
 		created : Time.Time;
 	};
 
-	public type BundleExtendedView = {
+	public type BundleDetailsView = {
 		data_path : CommonTypes.ResourcePath;
 		name : Text;
 		description : Text;
@@ -85,16 +83,14 @@ module {
 			data_path = info.data_path;
 			name = info.name;
 			description = info.description;
-			classification = info.index.classification;
 			logo = info.logo;
-			tags = List.toArray (info.index.tags);
 			creator = info.creator;
 			owner = info.owner;
 			created = info.created;
         };
     };
 
-    public func convert_bundle_extended_view (info: Types.Bundle) : BundleExtendedView {
+    public func convert_bundle_details_view (info: Types.Bundle) : BundleDetailsView {
         return {
 			data_path = info.data_path;
 			name = info.name;
@@ -131,7 +127,6 @@ module {
 					case (?location) {
 						let lj:LocationJson = {
 							country_code2 = location.country_code2;
-							country = Option.get(location.country,"");
 							region = Option.get(location.region,"");
 							city = Option.get(location.city,"");
 							latitude = Float.toText(location.coordinates.latitude);
