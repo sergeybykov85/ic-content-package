@@ -3,19 +3,21 @@ import Button from 'components/general/Button'
 import styles from './LoginForm.module.scss'
 import { useAuth } from 'context/AuthContext'
 import FileInput, { type FileInputProps } from 'components/general/FileInput'
-import decodeIdentity from 'utils/decodeIdentity'
 
 const LoginForm: FC = () => {
   const { login } = useAuth()
-  const onLoaded = useCallback<FileInputProps['onLoaded']>(result => {
-    if (typeof result === 'string') {
-      const identity = decodeIdentity(result)
-      console.log(identity.getPrincipal().toText())
-    }
-  }, [])
+  const onClick = useCallback(() => login(), [login])
+  const onLoaded = useCallback<FileInputProps['onLoaded']>(
+    result => {
+      if (typeof result === 'string') {
+        login(result)
+      }
+    },
+    [login],
+  )
   return (
     <div className={styles.container}>
-      <Button onClick={login}>
+      <Button onClick={onClick}>
         Internet Identity <img src="/images/icp-logo.svg" alt="ICP logo" />
       </Button>
       <Button variant="text" className={styles.file}>

@@ -1,14 +1,14 @@
+import { createContext, useContext, useCallback, useEffect, useState, useMemo } from 'react'
 import type { FC, ReactNode } from 'react'
-import { useContext } from 'react'
-import { createContext, useCallback, useEffect, useState } from 'react'
 import { AuthClient } from '@dfinity/auth-client'
+import cookies from 'utils/cookies'
+import decodeIdentity from 'utils/decodeIdentity'
 
 interface AuthContext {
   isAuthenticated: boolean
-  login: () => void
+  login: (pem?: string) => void
   logout: () => void
 }
-
 export const authContext = createContext<AuthContext>({
   isAuthenticated: false,
   login: () => {
@@ -19,12 +19,14 @@ export const authContext = createContext<AuthContext>({
   },
 })
 const { Provider } = authContext
-
 export const useAuth = (): AuthContext => useContext(authContext)
+
+const PRINCIPAL_COOKIE_NAME = 'principal'
 
 export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [authClient, setAuthClient] = useState<AuthClient | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [principal, setPrincipal] = useState<string | undefined>(cookies.getCookie(PRINCIPAL_COOKIE_NAME))
+  const isAuthenticated = useMemo(() => Boolean(principal), [principal])
 
   const initAuthClient = useCallback(async () => {
     try {
@@ -35,22 +37,32 @@ export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [])
 
-  const checkAuth = useCallback(async () => {
-    try {
-      const isAuth = await authClient?.isAuthenticated()
-      setIsAuthenticated(Boolean(isAuth))
-    } catch (error) {
-      console.error('Authentication error ===>', error)
-    }
-  }, [authClient])
-
   useEffect(() => {
     if (!authClient) {
-      initAuthClient().then(checkAuth)
+      void initAuthClient()
     }
-  }, [authClient, checkAuth, initAuthClient])
+  }, [authClient, initAuthClient])
 
-  const login = useCallback(async () => {
+  const logout = useCallback(() => {
+    setPrincipal(undefined)
+    cookies.deleteCookie(PRINCIPAL_COOKIE_NAME)
+    authClient?.logout()
+  }, [authClient])
+
+  const loginOnSuccess = useCallback((newPrincipal: string) => {
+    cookies.setCookie(PRINCIPAL_COOKIE_NAME, newPrincipal, 60 * 60 * 24) // 24h
+    setPrincipal(newPrincipal)
+  }, [])
+
+  const loginWithPem = useCallback(
+    (pemFile: string) => {
+      const identity = decodeIdentity(pemFile)
+      loginOnSuccess(identity.getPrincipal().toText())
+    },
+    [loginOnSuccess],
+  )
+
+  const loginWithII = useCallback(async () => {
     if (authClient) {
       await authClient.login({
         /*
@@ -61,20 +73,27 @@ export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) =
           process.env.DFX_NETWORK === 'ic'
             ? 'https://identity.ic0.app'
             : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
-        onSuccess: checkAuth,
+        onSuccess: () => {
+          loginOnSuccess(authClient.getIdentity().getPrincipal().toText())
+        },
         onError: error => {
-          console.log('Login error', error)
-          setIsAuthenticated(false)
+          console.error('Login error', error)
+          logout()
         },
       })
     }
-  }, [authClient, checkAuth])
+  }, [authClient, loginOnSuccess, logout])
 
-  const logout = useCallback(() => {
-    authClient?.logout({ returnTo: '/' }).then(() => {
-      setIsAuthenticated(false)
-    })
-  }, [authClient])
+  const login = useCallback(
+    (pemFile?: string) => {
+      if (pemFile) {
+        loginWithPem(pemFile)
+      } else {
+        void loginWithII()
+      }
+    },
+    [loginWithII, loginWithPem],
+  )
 
   return <Provider value={{ isAuthenticated, login, logout }}>{children}</Provider>
 }
