@@ -1,7 +1,7 @@
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react'
-import copyToClipboard from 'utils/copyToClipboard'
+import copyToClipboard from'~/utils/copyToClipboard'
 import styles from './Login.module.scss'
-import Button from 'components/general/Button'
+import Button from '~/components/general/Button'
 
 interface PrincipalProps {
   principal: string

@@ -1,12 +1,12 @@
 import type { FC, MouseEventHandler } from 'react'
 import { useCallback, useState } from 'react'
-import Button from 'components/general/Button'
-import Dialog from 'components/general/ModalDialog'
-import { LoginForm } from 'components/features/Login'
-import { useAuth } from 'context/AuthContext'
-import If from 'components/general/If'
+import Button from '~/components/general/Button'
+import Dialog from '~/components/general/ModalDialog'
+import { LoginForm } from '~/components/features/Login'
+import { useAuth } from '~/context/AuthContext'
+import If from '~/components/general/If'
 import clsx from 'clsx'
-import Principal from 'components/features/Login/Principal'
+import Principal from '~/components/features/Login/Principal'
 import styles from './Login.module.scss'
 
 interface LoginButtonProps {

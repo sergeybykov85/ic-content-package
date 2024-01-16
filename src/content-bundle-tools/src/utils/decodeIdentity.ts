@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer'
 import { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
-import pemFileParser from 'utils/pemFileParser'
+import pemFileParser from'~/utils/pemFileParser'
 
 export default function decodeIdentity(rawKey: string): Secp256k1KeyIdentity {
   const key = pemFileParser(rawKey)

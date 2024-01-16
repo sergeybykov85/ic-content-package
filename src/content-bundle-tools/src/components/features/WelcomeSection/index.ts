@@ -1,1 +1,1 @@
-export { default } from 'components/features/WelcomeSection/WelcomeSection'
+export { default } from '~/components/features/WelcomeSection/WelcomeSection'

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import Button from 'components/general/Button/Button'
+import Button from './Button'
+import { describe, expect, test, vi } from 'vitest'
 
 describe('Button component', () => {
   // prettier-ignore
@@ -11,7 +12,7 @@ describe('Button component', () => {
   })
 
   test('onClick working', () => {
-    const onClick = jest.fn()
+    const onClick = vi.fn()
     render(<Button onClick={onClick}>{text}</Button>)
     const button = screen.getByText(text)
     fireEvent.click(button)

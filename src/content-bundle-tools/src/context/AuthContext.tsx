@@ -1,8 +1,8 @@
 import { createContext, useContext, useCallback, useEffect, useState, useMemo } from 'react'
 import type { FC, ReactNode } from 'react'
 import { AuthClient } from '@dfinity/auth-client'
-import cookies from 'utils/cookies'
-import decodeIdentity from 'utils/decodeIdentity'
+import cookies from'~/utils/cookies'
+import decodeIdentity from'~/utils/decodeIdentity'
 import { enqueueSnackbar } from 'notistack'
 
 interface AuthContext {

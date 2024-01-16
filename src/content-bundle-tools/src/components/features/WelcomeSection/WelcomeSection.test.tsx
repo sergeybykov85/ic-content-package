@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
-import WelcomeSection from 'components/features/WelcomeSection/WelcomeSection'
-import content from 'components/features/WelcomeSection/WelcomeSection.content.json'
+import WelcomeSection from '~/components/features/WelcomeSection/WelcomeSection'
+import content from '~/components/features/WelcomeSection/WelcomeSection.content.json'
+import { describe, expect, test } from 'vitest'
 
 describe('WelcomeSection component', () => {
   test('renders title', () => {

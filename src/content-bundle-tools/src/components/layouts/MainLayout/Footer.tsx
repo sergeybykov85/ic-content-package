@@ -1,7 +1,7 @@
-import React, { type FC } from 'react'
-import styles from 'components/layouts/MainLayout/MainLayout.module.scss'
-import ExternalLink from 'components/general/ExternalLink'
-import content from 'components/layouts/MainLayout/MainLayout.content.json'
+import { type FC } from 'react'
+import styles from '~/components/layouts/MainLayout/MainLayout.module.scss'
+import ExternalLink from '~/components/general/ExternalLink'
+import content from '~/components/layouts/MainLayout/MainLayout.content.json'
 import clsx from 'clsx'
 
 const Footer: FC = () => (

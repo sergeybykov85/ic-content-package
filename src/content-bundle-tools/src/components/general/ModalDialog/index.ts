@@ -1,1 +1,1 @@
-export { default } from 'components/general/ModalDialog/ModalDialog'
+export { default } from '~/components/general/ModalDialog/ModalDialog'

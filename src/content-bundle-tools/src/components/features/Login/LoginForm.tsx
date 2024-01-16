@@ -1,8 +1,8 @@
-import React, { type FC, useCallback } from 'react'
-import Button from 'components/general/Button'
-import styles from 'components/features/Login/Login.module.scss'
-import { useAuth } from 'context/AuthContext'
-import FileInput, { type FileInputProps } from 'components/general/FileInput'
+import { type FC, useCallback } from 'react'
+import Button from '~/components/general/Button'
+import styles from '~/components/features/Login/Login.module.scss'
+import { useAuth } from '~/context/AuthContext'
+import FileInput, { type FileInputProps } from '~/components/general/FileInput'
 
 const LoginForm: FC = () => {
   const { login } = useAuth()

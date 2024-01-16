@@ -1,5 +1,5 @@
-import MainLayout from 'components/layouts/MainLayout'
-import WelcomeSection from 'components/features/WelcomeSection'
+import MainLayout from '~/components/layouts/MainLayout'
+import WelcomeSection from '~/components/features/WelcomeSection'
 import type { FC } from 'react'
 
 const RootPage: FC = () => (

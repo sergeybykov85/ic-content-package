@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import MainLayout from './MainLayout'
 import content from './MainLayout.content.json'
+import { describe, expect, test } from 'vitest'
 
 describe('MainLayout component', () => {
   describe('Header', () => {
@@ -19,9 +20,7 @@ describe('MainLayout component', () => {
     })
     test('social links', async () => {
       const { container } = render(<MainLayout>some content</MainLayout>)
-      // eslint-disable-next-line testing-library/no-container,testing-library/no-node-access
       const dcmLink = container.querySelector(`a[href='${content.externalLinks.dcm}']`)
-      // eslint-disable-next-line testing-library/no-container,testing-library/no-node-access
       const web3Link = container.querySelector(`a[href='${content.externalLinks.web3}']`)
       expect(dcmLink).toBeInTheDocument()
       expect(web3Link).toBeInTheDocument()

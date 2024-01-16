@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react'
-import ExternalLink from 'components/general/ExternalLink/ExternalLink'
+import ExternalLink from './ExternalLink'
+import { describe, expect, test } from 'vitest'
+
 describe('ExternalLink component', () => {
   render(<ExternalLink>Link</ExternalLink>)
   test('anchor tag leads to the new tab', () => {
