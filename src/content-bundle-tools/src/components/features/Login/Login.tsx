@@ -4,13 +4,17 @@ import Button from 'components/general/Button'
 import Dialog from 'components/general/ModalDialog'
 import { LoginForm } from 'components/features/Login'
 import { useAuth } from 'context/AuthContext'
+import If from 'components/general/If'
+import clsx from 'clsx'
+import Principal from 'components/features/Login/Principal'
+import styles from './Login.module.scss'
 
 interface LoginButtonProps {
   className?: string
 }
 
-const LoginButton: FC<LoginButtonProps> = ({ className }) => {
-  const { isAuthenticated, logout } = useAuth()
+const Login: FC<LoginButtonProps> = ({ className }) => {
+  const { isAuthenticated, logout, principal = '' } = useAuth()
   const [open, setOpen] = useState(false)
   const onClick = useCallback<MouseEventHandler<HTMLButtonElement>>(
     e => {
@@ -25,15 +29,18 @@ const LoginButton: FC<LoginButtonProps> = ({ className }) => {
   }, [])
 
   return (
-    <>
-      <Button variant={!isAuthenticated ? 'contained' : 'text'} {...{ onClick, className }}>
+    <div className={clsx(styles.container, className)}>
+      <If condition={isAuthenticated}>
+        <Principal {...{ principal }} />
+      </If>
+      <Button variant={!isAuthenticated ? 'contained' : 'text'} {...{ onClick }}>
         {!isAuthenticated ? 'Log in' : 'Log out'}
       </Button>
       <Dialog {...{ open: open && !isAuthenticated, onClose }}>
         <LoginForm />
       </Dialog>
-    </>
+    </div>
   )
 }
 
-export default LoginButton
+export default Login

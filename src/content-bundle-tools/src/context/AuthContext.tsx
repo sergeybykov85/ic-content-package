@@ -3,13 +3,16 @@ import type { FC, ReactNode } from 'react'
 import { AuthClient } from '@dfinity/auth-client'
 import cookies from 'utils/cookies'
 import decodeIdentity from 'utils/decodeIdentity'
+import { enqueueSnackbar } from 'notistack'
 
 interface AuthContext {
+  principal: string | undefined
   isAuthenticated: boolean
   login: (pem?: string) => void
   logout: () => void
 }
 export const authContext = createContext<AuthContext>({
+  principal: undefined,
   isAuthenticated: false,
   login: () => {
     return
@@ -25,7 +28,7 @@ const PRINCIPAL_COOKIE_NAME = 'principal'
 
 export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [authClient, setAuthClient] = useState<AuthClient | null>(null)
-  const [principal, setPrincipal] = useState<string | undefined>(cookies.getCookie(PRINCIPAL_COOKIE_NAME))
+  const [principal, setPrincipal] = useState<AuthContext['principal']>(cookies.getCookie(PRINCIPAL_COOKIE_NAME))
   const isAuthenticated = useMemo(() => Boolean(principal), [principal])
 
   const initAuthClient = useCallback(async () => {
@@ -33,7 +36,7 @@ export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) =
       const newAuthClient = await AuthClient.create()
       setAuthClient(newAuthClient)
     } catch (error) {
-      console.error('AuthClient initiation error ===>', error)
+      enqueueSnackbar(`AuthClient initiation error: ${error}`, { variant: 'error' })
     }
   }, [])
 
@@ -56,8 +59,13 @@ export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) =
 
   const loginWithPem = useCallback(
     (pemFile: string) => {
-      const identity = decodeIdentity(pemFile)
-      loginOnSuccess(identity.getPrincipal().toText())
+      try {
+        const identity = decodeIdentity(pemFile)
+        loginOnSuccess(identity.getPrincipal().toText())
+      } catch (e) {
+        const error = e instanceof Error ? e.message : 'Decode PEM file failed'
+        enqueueSnackbar(`Login error: ${error}`, { variant: 'error', style: { whiteSpace: 'pre-line' } })
+      }
     },
     [loginOnSuccess],
   )
@@ -77,7 +85,7 @@ export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) =
           loginOnSuccess(authClient.getIdentity().getPrincipal().toText())
         },
         onError: error => {
-          console.error('Login error', error)
+          enqueueSnackbar(`Login error: ${error}`, { variant: 'error' })
           logout()
         },
       })
@@ -95,5 +103,5 @@ export const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) =
     [loginWithII, loginWithPem],
   )
 
-  return <Provider value={{ isAuthenticated, login, logout }}>{children}</Provider>
+  return <Provider value={{ isAuthenticated, login, logout, principal }}>{children}</Provider>
 }

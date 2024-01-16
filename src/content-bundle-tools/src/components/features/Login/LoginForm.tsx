@@ -1,6 +1,6 @@
 import React, { type FC, useCallback } from 'react'
 import Button from 'components/general/Button'
-import styles from './LoginForm.module.scss'
+import styles from 'components/features/Login/Login.module.scss'
 import { useAuth } from 'context/AuthContext'
 import FileInput, { type FileInputProps } from 'components/general/FileInput'
 
@@ -16,11 +16,11 @@ const LoginForm: FC = () => {
     [login],
   )
   return (
-    <div className={styles.container}>
+    <div className={styles.form}>
       <Button onClick={onClick}>
         Internet Identity <img src="/images/icp-logo.svg" alt="ICP logo" />
       </Button>
-      <Button variant="text" className={styles.file}>
+      <Button variant="text" className={styles['form__file']}>
         <FileInput accept=".pem" onLoaded={onLoaded} getAs="string">
           Log in with PEM file
         </FileInput>
