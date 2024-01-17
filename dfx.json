@@ -31,10 +31,10 @@
     },
     "content-bundle-tools": {
       "frontend": {
-        "entrypoint": "src/content-bundle-tools/build/index.html"
+        "entrypoint": "src/content-bundle-tools/dist/index.html"
       },
       "source": [
-        "src/content-bundle-tools/build"
+        "src/content-bundle-tools/dist"
       ],
       "type": "assets",
       "build": "npm run build:content-bundle-tools"
