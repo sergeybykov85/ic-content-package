@@ -1,0 +1,5 @@
+{
+    "scripts": {
+        "build:content-bundle-tools": "cd ./src/content-bundle-tools && npm run build"
+    }
+}
