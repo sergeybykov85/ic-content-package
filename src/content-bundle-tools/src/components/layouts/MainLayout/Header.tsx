@@ -1,4 +1,4 @@
-import React, { type FC } from 'react'
+import { type FC } from 'react'
 import styles from '~/components/layouts/MainLayout/MainLayout.module.scss'
 import content from '~/components/layouts/MainLayout/MainLayout.content.json'
 import { LoginButton } from '~/components/features/Login'

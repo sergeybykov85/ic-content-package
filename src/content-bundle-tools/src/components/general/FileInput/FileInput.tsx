@@ -1,5 +1,5 @@
 import type { ChangeEvent, EventHandler, ComponentPropsWithoutRef, FC } from 'react'
-import React, { type ReactNode, useCallback } from 'react'
+import { type ReactNode, useCallback } from 'react'
 import clsx from 'clsx'
 import styles from './FileInput.module.scss'
 
