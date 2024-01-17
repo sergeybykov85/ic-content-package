@@ -1,7 +1,11 @@
 {
-  "name": "vite-cbt",
+  "name": "content-bundle-tool",
   "private": true,
   "version": "0.0.0",
+  "author": {
+    "name": "Serhii Borshchov",
+    "email": "s.borshchov.dev@gmail.com"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
