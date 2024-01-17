@@ -1,6 +1,6 @@
 {
   "canisters": {
-    "package": {
+    "bundle_package": {
       "main": "src/content-bundle/BundlePackage.mo",
       "type": "motoko",
       "dependencies": []
