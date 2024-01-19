@@ -106,6 +106,7 @@ module {
 			get_packages_by_tag : shared query (tag : Text) -> async [Text];
 			get_packages_by_classification : shared query (classification : Text) -> async [Text];
 			get_packages_by_country : shared query (country_code : Text) -> async [Text];
+			get_data_segmentation : shared query () -> async CommonTypes.Segmentation;
 		};
 
 		public type BundlePackageActor = actor {

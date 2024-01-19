@@ -19,6 +19,12 @@ module {
 
 	public type ResourcePath = {url : Text; bucket_id:Text; resource_id: Text; locale:?Text;  name:?Text};
 
+	public type Segmentation = {
+		classifications : [Text];
+		countries : [Text];
+		tags : [Text];
+	};
+
 	public type IdentityType = {
 		#ICP;
 		#EvmChain; 

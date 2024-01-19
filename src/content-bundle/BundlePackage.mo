@@ -854,7 +854,15 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
     public query func get_country_codes() : async [Text] {
         _get_country_codes();
-    };	
+    };
+
+	public query func get_data_segmentation () : async CommonTypes.Segmentation {
+		{
+			classifications = _get_classifications();
+			countries = _get_country_codes();
+			tags = _get_tags();
+		}
+	};	
 
     private func _get_ids_for(get : (classification :Text) -> ?List.List<Text>, key:Text) : [Text] {
 		switch (get(key)) {

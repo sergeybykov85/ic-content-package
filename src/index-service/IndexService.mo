@@ -5,6 +5,7 @@ import Timer "mo:base/Timer";
 import Time "mo:base/Time";
 import Text "mo:base/Text";
 import List "mo:base/List";
+import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
 import Option "mo:base/Option";
 import Result "mo:base/Result";
@@ -98,7 +99,7 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 				for (leaf in List.toIter(package_ids)){
 					if (leaf == package_id) return index;
 				};
-				Trie.put(classification2package, CommonUtils.text_key(value), Text.equal, List.push(package_id, package_ids)).0;       
+				Trie.put(index, CommonUtils.text_key(value), Text.equal, List.push(package_id, package_ids)).0;       
 			};
 			case (null) { Trie.put(index, CommonUtils.text_key(value), Text.equal, List.push(package_id, List.nil())).0; };
 		};
@@ -156,19 +157,13 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 	private func _sync_package (package_id : Text, ref: Types.PackageRef) :  async Result.Result<(), CommonTypes.Errors> {
 		try {
 			let package_actor : Types.Actor.BundlePackageActor = actor (package_id);
-			/*
-			* Right method executes 3 different calls.
-			* But the initial idea could be re-designed later to have different methods or even different times
-			*/
-			let tags = await package_actor.get_tags();
-			let classifications = await package_actor.get_classifications();
-			let countries = await package_actor.get_country_codes();
+			let segment = await package_actor.get_data_segmentation();
 
 			ref.last_scan := Time.now();
 
-			_process_package_tags(package_id, tags);
-			_process_package_classifications(package_id, classifications);
-			_process_package_countries(package_id, countries);
+			_process_package_tags(package_id, segment.tags);
+			_process_package_classifications(package_id, segment.classifications);
+			_process_package_countries(package_id, segment.countries);
 			#ok();
 		}catch (e) {
 			// ignore for now
@@ -202,16 +197,16 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 			case (null) {
 				try {
 					let package_actor : Types.Actor.BundlePackageActor = actor (package_id);
-					let tags = await package_actor.get_tags();
-					let classifications = await package_actor.get_classifications();
+					let segment = await package_actor.get_data_segmentation();
 					all_packages:= List.push(package_id, all_packages);
 					packages := Trie.put(packages, CommonUtils.text_key(package_id), Text.equal, {
 						registered = Time.now();
 						var last_scan = Time.now();
 					}:Types.PackageRef).0;
 					
-					_process_package_tags(package_id, tags);
-					_process_package_classifications(package_id, classifications);
+					_process_package_tags(package_id, segment.tags);
+					_process_package_classifications(package_id, segment.classifications);
+					_process_package_countries(package_id, segment.countries);
 					#ok(package_id);
 				}catch (e) {
 					// ignore for now
@@ -228,14 +223,20 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 			case (?ref) { return await _sync_package (package_id, ref)};
 		};
 	};	
-
-	public shared ({ caller }) func process_package_tags (package_id:Text, tags:[Text]) : async () {
-		_process_package_tags(package_id, tags);
+	/**
+	* This method might be useful due various reasons. Let's have it
+	*/
+	public shared ({ caller }) func reset_index () : async Result.Result<(), CommonTypes.Errors> {
+		if (not (caller == CREATOR or _is_operator(caller))) return #err(#AccessDenied);
+		package2country := Trie.empty();
+    	country2package := Trie.empty();
+    	package2tag := Trie.empty();
+    	tag2package := Trie.empty();
+    	classification2package := Trie.empty();
+    	package2classification := Trie.empty();	
+		#ok();
 	};
 
-	public shared ({ caller }) func process_package_classifications (package_id:Text, classifications:[Text]) : async () {
-		_process_package_classifications(package_id, classifications);
-	};	
 
 	public shared ({ caller }) func apply_scan_period(seconds : Nat) : async Result.Result<(), CommonTypes.Errors> {
 		if (not (caller == CREATOR or _is_operator(caller))) return #err(#AccessDenied);
@@ -331,11 +332,27 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 
 	public query func get_sync_data_sec() : async Nat {
 		return sync_data_sec;
-	};	
+	};
+
+	public query func get_data_segmentation () : async CommonTypes.Segmentation {
+		{
+			classifications = _trie_keys(classification2package);
+			countries = _trie_keys(country2package);
+			tags = _trie_keys(tag2package);
+		}
+	};
 
 	private func _is_operator(id: Principal) : Bool {
     	Option.isSome(Array.find(operators, func (x: Principal) : Bool { x == id }))
     };
+
+	private func _trie_keys (t: Trie.Trie<Text, List.List<Text>> ) : [Text] {
+		let _buff = Buffer.Buffer<Text>(Trie.size(t));
+		for ((key, a) in Trie.iter(t)){
+			_buff.add(key);
+		};
+		Buffer.toArray(_buff);
+	};
 
 	system func preupgrade() {
 		Timer.cancelTimer(timer_data_sync);

@@ -33,6 +33,7 @@ module {
 			get_tags : shared query()  -> async [Text];
 			get_classifications : shared query()  -> async [Text];
 			get_country_codes : shared query()  -> async [Text];
+			get_data_segmentation : shared query () -> async CommonTypes.Segmentation;
 		};
 
 	};
