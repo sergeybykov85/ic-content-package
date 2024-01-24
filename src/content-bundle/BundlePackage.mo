@@ -795,12 +795,26 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
     public query func get_ids_for_country(country:Text) : async [Text] {
 		_get_ids_for(country2bundle_get, country);
+    };
+
+	/**
+	* Returns only valid ids. Method could be used for validation needs
+	*/
+    public query func get_refs_by_ids(ids:[Text]) : async [Text] {
+		let res = Buffer.Buffer<Text>(Array.size(ids));
+		for (id in ids.vals()) {
+			switch (bundle_get(id)) {
+				case (?bundle) { res.add(id) };
+				case (null) {  };
+			};
+		};
+		Buffer.toArray(res);
     };		
 
 	/**
 	* Returns bundles by their ids
 	*/
-    public query func get_bundles(ids:[Text]) : async [Conversion.BundleView] {
+    public query func get_bundle_by_ids(ids:[Text]) : async [Conversion.BundleView] {
 		let res = Buffer.Buffer<Conversion.BundleView>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (bundle_get(id)) {
@@ -812,16 +826,30 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     };
 
 	/**
-	* Returns bundles by portions
+	* Returns bundle details by their ids
 	*/
-    public query func get_bundles_page(start: Nat, limit: Nat): async [Conversion.BundleView] {
-        let res = Buffer.Buffer<Conversion.BundleView>(limit);
+    public query func get_bundle_details_by_ids(ids:[Text]) : async [Conversion.BundleDetailsView] {
+		let res = Buffer.Buffer<Conversion.BundleDetailsView>(Array.size(ids));
+		for (id in ids.vals()) {
+			switch (bundle_get(id)) {
+				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle)); };
+				case (null) {  };
+			};
+		};
+		Buffer.toArray(res);
+    };	
+
+	/**
+	* Returns bundle details by portions
+	*/
+    public query func get_bundle_details_page(start: Nat, limit: Nat): async [Conversion.BundleDetailsView] {
+        let res = Buffer.Buffer<Conversion.BundleDetailsView>(limit);
         var i = start;
 		let all = List.toArray(all_bundles);
         while (i < start + limit and i < all.size()) {
 			let id = all[i];
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_view(bundle)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle)); };
 				case (null) {  };
 			};
             i += 1;
@@ -856,6 +884,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         _get_country_codes();
     };
 
+	/**
+	* Returns data segmentation, aka classification inside the package
+	*/
 	public query func get_data_segmentation () : async CommonTypes.Segmentation {
 		{
 			classifications = _get_classifications();

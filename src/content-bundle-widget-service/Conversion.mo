@@ -10,7 +10,7 @@ import CommonTypes "../shared/CommonTypes";
 module {
 
 	public type CriteriaView = {
-		ids : [Types.EntityRef];
+		entity : ?Types.IdsRef;
 		packages : [Text];
 		tags : [Text];
 		classifications : [Text];
@@ -37,7 +37,7 @@ module {
 		let cr:?CriteriaView = switch (info.criteria) {
 			case (?criteria) {
 				?{
-					ids = criteria.ids;
+					entity = criteria.entity;
 					packages = criteria.packages;
 					tags = criteria.tags;
 					classifications = criteria.classifications;

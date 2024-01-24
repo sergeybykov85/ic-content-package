@@ -116,9 +116,9 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		if (created >= allowance) return #err(#AccessDenied);
 		let cr:?Types.Criteria = switch (args.criteria) {
 			case (?criteria) {
-				// validate ids
-				if (Array.size(criteria.ids) > 0) {
-					let valid_ids = await _validate_entities(criteria.ids);
+				// validate entity
+				if (Option.isSome(criteria.entity)) {
+					let valid_ids = await _validate_entities(CommonUtils.unwrap(criteria.entity));
 					if (not valid_ids) return #err(#InvalidRequest);
 				};
 				// validate packages
@@ -127,7 +127,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 					if (not valid_packs) return #err(#InvalidRequest);
 				};				
 				?{
-					var ids = criteria.ids;
+					var entity = criteria.entity;
 					var packages = criteria.packages;
 					var tags = criteria.tags;
 					var classifications = criteria.classifications;
@@ -169,8 +169,8 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 				if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
 				
 				// validate ids
-				if (Array.size(criteria.ids) > 0) {
-					let valid_ids = await _validate_entities(criteria.ids);
+				if (Option.isSome(criteria.entity)) {
+					let valid_ids = await _validate_entities(CommonUtils.unwrap(criteria.entity));
 					if (not valid_ids) return #err(#InvalidRequest);
 				};
 				// validate packages
@@ -179,7 +179,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 					if (not valid_packs) return #err(#InvalidRequest);
 				};
 				w.criteria:=?{
-					var ids = criteria.ids;
+					var entity = criteria.entity;
 					var packages = criteria.packages;
 					var tags = criteria.tags;
 					var classifications = criteria.classifications;
@@ -217,6 +217,31 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 			case (null) {return #err(#NotFound)}
 		};
 	};
+
+/*	public composite query func query_widget_items (widget_id:Text) : async Result.Result<Text, CommonTypes.Errors> {
+		switch (widget_get(widget_id)) {
+			case (?w) {
+				let identity = _build_identity(caller);
+				if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
+				// remove widget
+				widgets := Trie.remove(widgets, CommonUtils.text_key(widget_id), Text.equal).0; 
+				// remove reference
+				switch (creator2widget_get(identity)) {
+					case (?by_creator) {
+						let fpack = List.mapFilter<Text, Text>(by_creator,
+							func(b:Text) : ?Text {
+								if (b == widget_id) { return null; }
+								else { return ?b; }
+							}
+						);
+						creator2widget := Trie.put(creator2widget, CommonUtils.identity_key(identity), Text.equal, fpack).0; };
+					case (null) {};
+				};				
+				return #ok(widget_id);
+			};
+			case (null) {return #err(#NotFound)}
+		};
+	};	*/
 	
 
 
@@ -288,9 +313,14 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	/**
 	* Validates if packages are registered. It is ok to add more validation rules later like checking if the bundle id is valid etc
 	*/
-	private func _validate_entities (ids : [Types.EntityRef]) : async Bool {
-		let packages = Array.map<Types.EntityRef, Text>(ids, func ref = ref.package_id);
-		await _validate_packages(packages);
+	private func _validate_entities (ids : Types.IdsRef) : async Bool {
+		// validate package id
+		let valid_pacakge = await _validate_packages([ids.package_id]);
+		if (not valid_pacakge) return false;
+		//since the package already validated, then it is a valid one. Lets check the items
+		let package_actor : Types.Actor.BundlePackageActor = actor (ids.package_id);
+		let validated_ids = await package_actor.get_refs_by_ids(ids.ids);
+		Array.size(validated_ids) == Array.size(ids.ids);
 	};
 
 	/**

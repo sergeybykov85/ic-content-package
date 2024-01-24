@@ -334,6 +334,9 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 		return sync_data_sec;
 	};
 
+	/**
+	* Returns data segmentation, aka classification over all packages
+	*/
 	public query func get_data_segmentation () : async CommonTypes.Segmentation {
 		{
 			classifications = _trie_keys(classification2package);

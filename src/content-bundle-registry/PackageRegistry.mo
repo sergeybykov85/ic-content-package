@@ -374,6 +374,9 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		};
 	};
 
+	/**
+	* Returns data segmentation, aka classification over all packages
+	*/
 	public composite  query func get_data_segmentation() : async CommonTypes.Segmentation {
 		let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
 		await index_service_actor.get_data_segmentation();
