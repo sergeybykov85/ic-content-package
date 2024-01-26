@@ -11,9 +11,10 @@ module {
 
 	public type CriteriaView = {
 		entity : ?Types.IdsRef;
-		packages : [Text];
-		tags : [Text];
-		classifications : [Text];
+		package : ?Text;
+		by_country_code : ?Text;
+		by_tag : ?Text;
+		by_classification : ?Text;
 	};
 
 	public type OptionsView = {
@@ -38,9 +39,10 @@ module {
 			case (?criteria) {
 				?{
 					entity = criteria.entity;
-					packages = criteria.packages;
-					tags = criteria.tags;
-					classifications = criteria.classifications;
+					package = criteria.package;
+					by_country_code = criteria.by_country_code;
+					by_tag = criteria.by_tag;
+					by_classification = criteria.by_classification;
 				};
 			};
 			case (null) {null;};

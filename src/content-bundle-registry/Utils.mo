@@ -4,6 +4,7 @@ import Iter "mo:base/Iter";
 import Prim "mo:⛔";
 import Text "mo:base/Text";
 import Trie "mo:base/Trie";
+import List "mo:base/List";
 import TrieSet "mo:base/TrieSet";
 import Option "mo:base/Option";
 
@@ -115,6 +116,16 @@ module {
             }
          };
          TrieSet.toArray(set);
-    }    
+    };
+
+   /* public func build_intersect (ar: [[Text]]) : [Text] {
+         var set = TrieSet.empty<Text>();
+         var intersects  = List.nil();
+         for (array in ar.vals()) {
+            let local_set  = TrieSet.fromArray(array, Text.hash, Text.equal);
+            intersects := List.push(local_set, intersects);
+         };
+         TrieSet.toArray(set);
+    }      */  
 
 };

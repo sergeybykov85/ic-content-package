@@ -751,9 +751,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle information by id. This response contains only a basic info without any details about the data groups.
 	*/
-    public query func get_bundle(id:Text) : async Result.Result<Conversion.BundleView, CommonTypes.Errors> {
+    public query func get_bundle_ref(id:Text) : async Result.Result<Conversion.BundleRefView, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
-			case (?bundle) { #ok(Conversion.convert_bundle_view(bundle)); };
+			case (?bundle) { #ok(Conversion.convert_bundle_ref_view(bundle)); };
 			case (null) { return #err(#NotFound); };
 		};
     };
@@ -761,7 +761,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle information by id. This response contains index details as well
 	*/
-    public query func get_bundle_details(id:Text) : async Result.Result<Conversion.BundleDetailsView, CommonTypes.Errors> {
+    public query func get_bundle(id:Text) : async Result.Result<Conversion.BundleDetailsView, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
 			case (?bundle) { #ok(Conversion.convert_bundle_details_view(bundle)); };
 			case (null) { return #err(#NotFound); };
@@ -814,11 +814,11 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundles by their ids
 	*/
-    public query func get_bundle_by_ids(ids:[Text]) : async [Conversion.BundleView] {
-		let res = Buffer.Buffer<Conversion.BundleView>(Array.size(ids));
+    public query func get_bundle_refs_by_ids(ids:[Text]) : async [Conversion.BundleRefView] {
+		let res = Buffer.Buffer<Conversion.BundleRefView>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_view(bundle)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle)); };
 				case (null) {  };
 			};
 		};
@@ -828,7 +828,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle details by their ids
 	*/
-    public query func get_bundle_details_by_ids(ids:[Text]) : async [Conversion.BundleDetailsView] {
+    public query func get_bundles_by_ids(ids:[Text]) : async [Conversion.BundleDetailsView] {
 		let res = Buffer.Buffer<Conversion.BundleDetailsView>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (bundle_get(id)) {
@@ -842,7 +842,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle details by portions
 	*/
-    public query func get_bundle_details_page(start: Nat, limit: Nat): async [Conversion.BundleDetailsView] {
+    public query func get_bundles_page(start: Nat, limit: Nat): async [Conversion.BundleDetailsView] {
         let res = Buffer.Buffer<Conversion.BundleDetailsView>(limit);
         var i = start;
 		let all = List.toArray(all_bundles);

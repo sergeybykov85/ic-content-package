@@ -56,7 +56,7 @@ module {
 		group : DataGroupView;
 	};	
 
-	public type BundleView = {
+	public type BundleRefView = {
 		data_path : CommonTypes.ResourcePath;
 		name : Text;
 		description : Text;
@@ -78,7 +78,7 @@ module {
 		created : Time.Time;
 	};	
 
-    public func convert_bundle_view (info: Types.Bundle) : BundleView {
+    public func convert_bundle_ref_view (info: Types.Bundle) : BundleRefView {
         return {
 			data_path = info.data_path;
 			name = info.name;

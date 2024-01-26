@@ -23,9 +23,10 @@ module {
 
 	public type CriteriaArgs = {
 		entity : ?IdsRef;
-		tags : [Text];
-		classifications : [Text];
-		packages : [Text];
+		package : ?Text;
+		by_tag : ?Text;
+		by_country_code : ?Text;
+		by_classification : ?Text;
 	};
 
 	public type WidgetCreationRequest = {
@@ -66,9 +67,10 @@ module {
 		// principle is simple : either BY ids or by other criteria
 		// priority : ids, packages, tags, classifications
 		var entity : ?IdsRef;
-		var packages : [Text];
-		var tags : [Text];
-		var classifications : [Text];
+		var package : ?Text;
+		var by_country_code : ?Text;
+		var by_tag : ?Text;
+		var by_classification : ?Text;
 	};
 
 	public type Options = {
@@ -91,6 +93,17 @@ module {
 		Module to inter-canister calls
 	*/
 	public module Actor {
+
+		public type BundlePackageView = {
+			// principal id
+			id : Text;
+			submission : {#Private; #Public; #Shared;};
+			max_supply : ?Nat;
+			name : Text;
+			description : Text;
+			created: Time.Time;
+			registered: Time.Time;
+		};		
 
 		public type DataIndexView = {
 			// only from POI
@@ -129,10 +142,18 @@ module {
 	
 		public type PackageRegistryActor = actor {
 			get_packages: shared query (ids:[Text]) -> async [PackageView];
+			get_packages_by_criteria: shared query (criteria: {
+				country_code : ?Text;
+				tag : ?Text;
+				classification : ?Text;
+			}) -> async [BundlePackageView];
+
 		};
 
 		public type BundlePackageActor = actor {
+			get_bundles_page : shared query (start: Nat, limit: Nat) -> async [BundleDetailsView];
 			get_refs_by_ids : shared query (ids:[Text]) -> async [Text];
+			get_bundles_by_ids : shared query (ids:[Text]) -> async [BundleDetailsView];
 		};				
 
 	};

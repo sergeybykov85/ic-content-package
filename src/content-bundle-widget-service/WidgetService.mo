@@ -122,15 +122,16 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 					if (not valid_ids) return #err(#InvalidRequest);
 				};
 				// validate packages
-				if (Array.size(criteria.packages) > 0) {
-					let valid_packs = await _validate_packages(criteria.packages);
+				if (Option.isSome(criteria.package)) {
+					let valid_packs = await _validate_packages([CommonUtils.unwrap(criteria.package)]);
 					if (not valid_packs) return #err(#InvalidRequest);
 				};				
 				?{
 					var entity = criteria.entity;
-					var packages = criteria.packages;
-					var tags = criteria.tags;
-					var classifications = criteria.classifications;
+					var package = criteria.package;
+					var by_country_code = criteria.by_country_code;
+					var by_tag = criteria.by_tag;
+					var by_classification = criteria.by_classification;
 				};
 			};
 			case (null) {null};
@@ -174,15 +175,16 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 					if (not valid_ids) return #err(#InvalidRequest);
 				};
 				// validate packages
-				if (Array.size(criteria.packages) > 0) {
-					let valid_packs = await _validate_packages(criteria.packages);
+				if (Option.isSome(criteria.package)) {
+					let valid_packs = await _validate_packages([CommonUtils.unwrap(criteria.package)]);
 					if (not valid_packs) return #err(#InvalidRequest);
 				};
 				w.criteria:=?{
 					var entity = criteria.entity;
-					var packages = criteria.packages;
-					var tags = criteria.tags;
-					var classifications = criteria.classifications;
+					var package = criteria.package;
+					var by_country_code = criteria.by_country_code;
+					var by_tag = criteria.by_tag;
+					var by_classification = criteria.by_classification;
 				};
 				return #ok(widget_id);
 			};
@@ -218,30 +220,61 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		};
 	};
 
-/*	public composite query func query_widget_items (widget_id:Text) : async Result.Result<Text, CommonTypes.Errors> {
+	public composite query func query_widget_items (widget_id:Text) : async Result.Result<[Types.Actor.BundleDetailsView], CommonTypes.Errors> {
 		switch (widget_get(widget_id)) {
 			case (?w) {
-				let identity = _build_identity(caller);
-				if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
-				// remove widget
-				widgets := Trie.remove(widgets, CommonUtils.text_key(widget_id), Text.equal).0; 
-				// remove reference
-				switch (creator2widget_get(identity)) {
-					case (?by_creator) {
-						let fpack = List.mapFilter<Text, Text>(by_creator,
-							func(b:Text) : ?Text {
-								if (b == widget_id) { return null; }
-								else { return ?b; }
-							}
-						);
-						creator2widget := Trie.put(creator2widget, CommonUtils.identity_key(identity), Text.equal, fpack).0; };
-					case (null) {};
-				};				
-				return #ok(widget_id);
+				let items = switch (w.criteria) {
+					case (?criteria) {
+						// load all needed items
+						// logic based on the criteria : entity has higher priority 
+						switch (criteria.entity) {
+							// load by entity
+							case (?entity) {
+								let package_actor : Types.Actor.BundlePackageActor = actor (entity.package_id);
+								await package_actor.get_bundles_by_ids(entity.ids);								
+							};
+							case (null) {
+								// scan by certain package	
+								switch (criteria.package) {
+									case (?package) {
+										let package_actor : Types.Actor.BundlePackageActor = actor (package);
+										await package_actor.get_bundles_page(0, 1000);
+									};
+									case (null) {
+										let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
+		
+										let packages = await registry_actor.get_packages_by_criteria({
+											country_code = criteria.by_country_code;
+											tag = criteria.by_tag;
+											classification = criteria.by_classification;
+										});
+										let p_ids = Array.map<Types.Actor.BundlePackageView, Text> (packages, func x = x.id);
+										let res = Buffer.Buffer<Types.Actor.BundleDetailsView>(Array.size(p_ids));
+										for (id in p_ids.vals()) {
+											let package_actor : Types.Actor.BundlePackageActor = actor (id);
+											// todo : in fact we have to filter bundles by tag/country/classification
+											let bundles = await package_actor.get_bundles_page(0, 1000);
+											for (bundle in bundles.vals()) {
+												res.add(bundle);
+											};
+										};
+										Buffer.toArray(res);										
+									};
+
+								};
+
+							};
+						};
+					};
+					// no criteria, no items
+					case (null) {[]};
+				};
+
+				return #ok(items);
 			};
 			case (null) {return #err(#NotFound)}
 		};
-	};	*/
+	};
 	
 
 
