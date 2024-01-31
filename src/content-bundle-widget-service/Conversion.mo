@@ -10,10 +10,11 @@ import CommonTypes "../shared/CommonTypes";
 module {
 
 	public type CriteriaView = {
-		ids : [Types.EntityRef];
-		packages : [Text];
-		tags : [Text];
-		classifications : [Text];
+		entity : ?Types.IdsRef;
+		package : ?Text;
+		by_country_code : ?Text;
+		by_tag : ?Text;
+		by_classification : ?Text;
 	};
 
 	public type OptionsView = {
@@ -37,10 +38,11 @@ module {
 		let cr:?CriteriaView = switch (info.criteria) {
 			case (?criteria) {
 				?{
-					ids = criteria.ids;
-					packages = criteria.packages;
-					tags = criteria.tags;
-					classifications = criteria.classifications;
+					entity = criteria.entity;
+					package = criteria.package;
+					by_country_code = criteria.by_country_code;
+					by_tag = criteria.by_tag;
+					by_classification = criteria.by_classification;
 				};
 			};
 			case (null) {null;};

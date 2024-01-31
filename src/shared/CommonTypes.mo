@@ -7,7 +7,7 @@ module {
 
 	public type NameValue = {name : Text; value : Text; };
 
-	public type Location = {country_code2:Text; country:?Text; region:?Text; city:?Text; coordinates:Coordinates};
+	public type Location = {country_code2:Text; region:?Text; city:?Text; coordinates:Coordinates};
 
 	public type AboutData = { name : Text; description : Text; locale : Text; attributes : [NameValue];};
 
@@ -18,6 +18,12 @@ module {
 	public type Coordinates = {latitude : Float; longitude : Float};
 
 	public type ResourcePath = {url : Text; bucket_id:Text; resource_id: Text; locale:?Text;  name:?Text};
+
+	public type Segmentation = {
+		classifications : [Text];
+		countries : [Text];
+		tags : [Text];
+	};
 
 	public type IdentityType = {
 		#ICP;
@@ -55,7 +61,6 @@ module {
 	};
 
 	public type Errors = {
-		// data store is not initialized
 		#DataStoreNotInitialized;
 		// no resource or no chunk
 		#NotFound;

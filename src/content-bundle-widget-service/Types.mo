@@ -21,16 +21,19 @@ module {
 		// more types possible laterrr
 	};
 
+	public type CriteriaArgs = {
+		entity : ?IdsRef;
+		package : ?Text;
+		by_tag : ?Text;
+		by_country_code : ?Text;
+		by_classification : ?Text;
+	};
+
 	public type WidgetCreationRequest = {
 		name : Text;
 		description : Text;
 		type_id : WidgetType;
-		criteria : ?{
-			ids : [EntityRef];
-			tags : [Text];
-			classifications : [Text];
-			packages : [Text];
-		};
+		criteria : ?CriteriaArgs;
 	};
 
 	public type WidgetServiceArgs = {
@@ -54,19 +57,20 @@ module {
 		allowance : Nat;
 	};
 
-	public type EntityRef = {
+	public type IdsRef = {
 		package_id : Text;
-		id : Text;
+		ids : [Text];
 	};
 
 	public type Criteria = {
-		// if ids, then other parametrs are ignored
+		// if entity, then other parametrs are ignored
 		// principle is simple : either BY ids or by other criteria
 		// priority : ids, packages, tags, classifications
-		var ids : [EntityRef];
-		var packages : [Text];
-		var tags : [Text];
-		var classifications : [Text];
+		var entity : ?IdsRef;
+		var package : ?Text;
+		var by_country_code : ?Text;
+		var by_tag : ?Text;
+		var by_classification : ?Text;
 	};
 
 	public type Options = {
@@ -90,6 +94,37 @@ module {
 	*/
 	public module Actor {
 
+		public type BundlePackageView = {
+			// principal id
+			id : Text;
+			submission : {#Private; #Public; #Shared;};
+			max_supply : ?Nat;
+			name : Text;
+			description : Text;
+			created: Time.Time;
+			registered: Time.Time;
+		};		
+
+		public type DataIndexView = {
+			// only from POI
+			location : ?CommonTypes.Location;
+			// only from POI
+			about : ?CommonTypes.AboutData;
+			tags : [Text];
+			classification : Text;
+		};
+
+		public type BundleDetailsView = {
+			data_path : CommonTypes.ResourcePath;
+			name : Text;
+			description : Text;
+			logo : ?CommonTypes.ResourcePath;
+			index : DataIndexView;
+			creator : CommonTypes.Identity;
+			owner : CommonTypes.Identity;
+			created : Time.Time;
+		};			
+
 		public type PackageView = {
 			// principal id
 			id : Text;
@@ -106,8 +141,20 @@ module {
 		};
 	
 		public type PackageRegistryActor = actor {
-			get_packages: shared (ids:[Text]) -> async [PackageView];
-		};		
+			get_packages: shared query (ids:[Text]) -> async [PackageView];
+			get_packages_by_criteria: shared query (criteria: {
+				country_code : ?Text;
+				tag : ?Text;
+				classification : ?Text;
+			}) -> async [BundlePackageView];
+
+		};
+
+		public type BundlePackageActor = actor {
+			get_bundles_page : shared query (start: Nat, limit: Nat) -> async [BundleDetailsView];
+			get_refs_by_ids : shared query (ids:[Text]) -> async [Text];
+			get_bundles_by_ids : shared query (ids:[Text]) -> async [BundleDetailsView];
+		};				
 
 	};
 };

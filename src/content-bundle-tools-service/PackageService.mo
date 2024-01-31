@@ -239,6 +239,8 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		// apply controller for the new package
 		switch (owner.identity_type) {
 			case (#ICP) {
+				// right now the user becomes the controller of the canisterr and the service canister as well.
+				// but it is ok to remove the service canister from the controller list LATER.
 				ignore IC.update_settings({
 					canister_id =  Principal.fromActor(bundle_package_actor);
 					settings = { controllers = ? [ Principal.fromText(owner.identity_id), Principal.fromActor(this)]};

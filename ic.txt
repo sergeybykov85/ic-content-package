@@ -1,0 +1,59 @@
+dfx deploy package_registry --argument="(record {network = variant {Local = \"localhost:4943\"}; owner = null; index_service = null;} )";
+
+// tag serice
+dfx deploy index_service --argument="(record {network = variant {Local = \"localhost:4943\"}; operators = vec {principal \"bkyz2-fmaaa-aaaaa-qaaaq-cai\"} })";
+
+// apply tag service
+dfx canister call package_registry apply_index_service "(principal \"be2us-64aaa-aaaaa-qaabq-cai\")";
+
+
+// package_registry is a canister id from the prev step
+dfx deploy package_service --argument="(record {network = variant {Local = \"localhost:4943\"}; owner = null; package_registry = opt \"bkyz2-fmaaa-aaaaa-qaaaq-cai\"})";
+
+// identity_id is a canister id from the previous step 
+dfx canister call package_registry register_submitter "(record {identity = record {identity_type = variant {ICP}; identity_id = \"br5f7-7uaaa-aaaaa-qaaca-cai\"}; name = \"Package management tools\"; description = \"Service to deploy new packages\"; urls = vec {}})";
+
+// register allowance for the package service
+dfx canister call package_service register_allowance "(record {identity = record {identity_type = variant {ICP}; identity_id = \"nko75-gurhe-pmt5b-mhzyt-42njv-cdchk-fnwyz-ye6k6-melkn-btfz2-tae\"}; allowed_packages = 20})";
+
+// register allowance for the package service
+dfx canister call package_service remove_allowance "(record {identity_type = variant {ICP}; identity_id = \"nko75-gurhe-pmt5b-mhzyt-42njv-cdchk-fnwyz-ye6k6-melkn-btfz2-tae\"})";
+
+dfx deploy widget_service --argument="(record {network = variant {Local = \"localhost:4943\"}; owner = null; package_registry = opt \"bkyz2-fmaaa-aaaaa-qaaaq-cai\"})";
+
+be2us-64aaa-aaaaa-qaabq-cai
+dfx canister deposit-cycles 9000000000000 br5f7-7uaaa-aaaaa-qaaca-cai
+
+
+
+//////////////////////////////////
+
+dfx deploy bundle_package --argument="(record {network = variant {Local = \"localhost:4943\"}; owner = null;} )";
+
+dfx deploy bundle_package --argument="(record {network = variant {Local = \"localhost:4943\"}; owner = null; mode = opt record { submission = variant {Public}; identifier = variant {Ordinal}}})";
+
+dfx deploy package_service --argument="(record {network = variant {Local = \"localhost:4943\"}; owner = null; package_registry = opt principal \"br5f7-7uaaa-aaaaa-qaaca-cai\"})";
+
+dfx deploy package_service --argument="(record {network = variant {Local = \"localhost:4943\"}; owner = null; package_registry = opt \"br5f7-7uaaa-aaaaa-qaaca-cai\"})";
+dfx canister call package_registry register_submitter "(record {identity = record {identity_type = variant {ICP}; identity_id = \"bkyz2-fmaaa-aaaaa-qaaaq-cai\"}; name = \"Package manager service\"; description = \"Service to deploy new packages\"; urls = vec {}})";
+
+dfx canister call package_service register_allowance "(record {identity = record {identity_type = variant {ICP}; identity_id = \"nko75-gurhe-pmt5b-mhzyt-42njv-cdchk-fnwyz-ye6k6-melkn-btfz2-tae\"}; allowed_packages =5})";
+
+
+dfx canister call bundle_package init_data_store "(opt 1000000000000)";
+
+		identity : CommonTypes.Identity;
+		name : Text;
+		description : Text;
+		urls : [CommonTypes.NameValue];
+
+        		identity_type : IdentityType;
+		identity_id : Text;
+
+dfx canister call package_registry register_submitter "(record {identity = record {identity_type = variant {ICP}; identity_id = \"dzpde-pbio7-3xif6-d3mee-rxtrv-53tgb-rb4g5-gbgmu-22zdg-66fqz-vae\"}; name = \"Dev env\"; description = \"Sergey B\"; urls = vec {}})";
+
+dfx canister call package_registry register_submitter "(record {identity = record {identity_type = variant {ICP}; identity_id = \"bkyz2-fmaaa-aaaaa-qaaaq-cai\"}; name = \"Package manager service\"; description = \"Service to deploy new packages\"; urls = vec {}})";
+
+
+
+register_allowance

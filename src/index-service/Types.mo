@@ -21,6 +21,7 @@ module {
 		last_scan : Time.Time;
 		tags : [Text];
 		classifications : [Text];
+		countries : [Text];
 	};	
 
 	/**
@@ -29,8 +30,10 @@ module {
 	public module Actor {
 
 		public type BundlePackageActor = actor {
-			get_tags : shared ()  -> async [Text];
-			get_classifications : shared ()  -> async [Text];
+			get_tags : shared query()  -> async [Text];
+			get_classifications : shared query()  -> async [Text];
+			get_country_codes : shared query()  -> async [Text];
+			get_data_segmentation : shared query () -> async CommonTypes.Segmentation;
 		};
 
 	};

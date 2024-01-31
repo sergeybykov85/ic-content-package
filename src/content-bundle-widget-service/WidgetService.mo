@@ -116,11 +116,22 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		if (created >= allowance) return #err(#AccessDenied);
 		let cr:?Types.Criteria = switch (args.criteria) {
 			case (?criteria) {
+				// validate entity
+				if (Option.isSome(criteria.entity)) {
+					let valid_ids = await _validate_entities(CommonUtils.unwrap(criteria.entity));
+					if (not valid_ids) return #err(#InvalidRequest);
+				};
+				// validate packages
+				if (Option.isSome(criteria.package)) {
+					let valid_packs = await _validate_packages([CommonUtils.unwrap(criteria.package)]);
+					if (not valid_packs) return #err(#InvalidRequest);
+				};				
 				?{
-					var ids = criteria.ids;
-					var packages = criteria.packages;
-					var tags = criteria.tags;
-					var classifications = criteria.classifications;
+					var entity = criteria.entity;
+					var package = criteria.package;
+					var by_country_code = criteria.by_country_code;
+					var by_tag = criteria.by_tag;
+					var by_classification = criteria.by_classification;
 				};
 			};
 			case (null) {null};
@@ -152,6 +163,35 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		#ok(widget_id);
 	};
 
+	public shared ({ caller }) func update_widget_criteria (widget_id:Text, criteria: Types.CriteriaArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		switch (widget_get(widget_id)) {
+			case (?w) {
+				let identity = _build_identity(caller);
+				if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
+				
+				// validate ids
+				if (Option.isSome(criteria.entity)) {
+					let valid_ids = await _validate_entities(CommonUtils.unwrap(criteria.entity));
+					if (not valid_ids) return #err(#InvalidRequest);
+				};
+				// validate packages
+				if (Option.isSome(criteria.package)) {
+					let valid_packs = await _validate_packages([CommonUtils.unwrap(criteria.package)]);
+					if (not valid_packs) return #err(#InvalidRequest);
+				};
+				w.criteria:=?{
+					var entity = criteria.entity;
+					var package = criteria.package;
+					var by_country_code = criteria.by_country_code;
+					var by_tag = criteria.by_tag;
+					var by_classification = criteria.by_classification;
+				};
+				return #ok(widget_id);
+			};
+			case (null) {return #err(#NotFound)}
+		};
+	};	
+
 	/**
 	* Removes an existing widget object
 	*/
@@ -159,7 +199,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		switch (widget_get(widget_id)) {
 			case (?w) {
 				let identity = _build_identity(caller);
-			//	if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
+				if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
 				// remove widget
 				widgets := Trie.remove(widgets, CommonUtils.text_key(widget_id), Text.equal).0; 
 				// remove reference
@@ -179,6 +219,63 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 			case (null) {return #err(#NotFound)}
 		};
 	};
+
+	public composite query func query_widget_items (widget_id:Text) : async Result.Result<[Types.Actor.BundleDetailsView], CommonTypes.Errors> {
+		switch (widget_get(widget_id)) {
+			case (?w) {
+				let items = switch (w.criteria) {
+					case (?criteria) {
+						// load all needed items
+						// logic based on the criteria : entity has higher priority 
+						switch (criteria.entity) {
+							// load by entity
+							case (?entity) {
+								let package_actor : Types.Actor.BundlePackageActor = actor (entity.package_id);
+								await package_actor.get_bundles_by_ids(entity.ids);								
+							};
+							case (null) {
+								// scan by certain package	
+								switch (criteria.package) {
+									case (?package) {
+										let package_actor : Types.Actor.BundlePackageActor = actor (package);
+										await package_actor.get_bundles_page(0, 1000);
+									};
+									case (null) {
+										let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
+		
+										let packages = await registry_actor.get_packages_by_criteria({
+											country_code = criteria.by_country_code;
+											tag = criteria.by_tag;
+											classification = criteria.by_classification;
+										});
+										let p_ids = Array.map<Types.Actor.BundlePackageView, Text> (packages, func x = x.id);
+										let res = Buffer.Buffer<Types.Actor.BundleDetailsView>(Array.size(p_ids));
+										for (id in p_ids.vals()) {
+											let package_actor : Types.Actor.BundlePackageActor = actor (id);
+											// todo : in fact we have to filter bundles by tag/country/classification
+											let bundles = await package_actor.get_bundles_page(0, 1000);
+											for (bundle in bundles.vals()) {
+												res.add(bundle);
+											};
+										};
+										Buffer.toArray(res);										
+									};
+
+								};
+
+							};
+						};
+					};
+					// no criteria, no items
+					case (null) {[]};
+				};
+
+				return #ok(items);
+			};
+			case (null) {return #err(#NotFound)}
+		};
+	};
+	
 
 
 	public shared func wallet_receive() {
@@ -249,9 +346,14 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	/**
 	* Validates if packages are registered. It is ok to add more validation rules later like checking if the bundle id is valid etc
 	*/
-	private func _validate_entities (ids : [Types.EntityRef]) : async Bool {
-		let packages = Array.map<Types.EntityRef, Text>(ids, func ref = ref.package_id);
-		await _validate_packages(packages);
+	private func _validate_entities (ids : Types.IdsRef) : async Bool {
+		// validate package id
+		let valid_pacakge = await _validate_packages([ids.package_id]);
+		if (not valid_pacakge) return false;
+		//since the package already validated, then it is a valid one. Lets check the items
+		let package_actor : Types.Actor.BundlePackageActor = actor (ids.package_id);
+		let validated_ids = await package_actor.get_refs_by_ids(ids.ids);
+		Array.size(validated_ids) == Array.size(ids.ids);
 	};
 
 	/**
