@@ -37,7 +37,8 @@
         "src/content-bundle-tools/dist"
       ],
       "type": "assets",
-      "build": "npm run build:content-bundle-tools"
+      "build": "npm run build:content-bundle-tools",
+      "dependencies": ["package", "package_registry", "package_service"]
     }
    
   },
