@@ -12,11 +12,12 @@ import Time "mo:base/Time";
 import Trie "mo:base/Trie";
 import List "mo:base/List";
 
+import Types "./Types";
+import BundlePackage "../content-bundle/BundlePackage";
+
 import CommonTypes "../shared/CommonTypes";
 import CommonUtils "../shared/CommonUtils";
 
-import Types "./Types";
-import BundlePackage "../content-bundle/BundlePackage";
 
 shared (installation) actor class PackageService(initArgs : Types.PackageServiceArgs) = this {
 

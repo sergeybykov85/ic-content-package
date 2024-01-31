@@ -12,9 +12,6 @@ import Trie "mo:base/Trie";
 import List "mo:base/List";
 import Buffer "mo:base/Buffer";
 
-import Debug "mo:base/Debug";
-
-import Http "../shared/Http";
 import CommonTypes "../shared/CommonTypes";
 import CommonUtils "../shared/CommonUtils";
 
@@ -22,6 +19,9 @@ import Utils "./Utils";
 import Types "./Types";
 import Conversion "./Conversion";
 import EmbededUI "./EmbededUI";
+
+// -- ICS2 core --
+import ICS2Http "mo:ics2-core/Http";
 
 shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegistryArgs) = this {
 
@@ -236,7 +236,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		};
 	};
 
-	public shared query ({ caller }) func http_request(request : Http.Request) : async Http.Response {
+	public shared query ({ caller }) func http_request(request : ICS2Http.Request) : async ICS2Http.Response {
 		switch (Utils.get_resource_id(request.url)) {
 			case (?r) {
 				//view_mode is ignore for now
@@ -264,11 +264,11 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							};						
 						};
 					};
-					return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
+					return ICS2Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
 				};
 				EmbededUI.page_response( Principal.toText(Principal.fromActor(this)), initArgs.network, r.id, package_get(r.id));				
 			};
-			case null { return Http.not_found();};
+			case null { return ICS2Http.not_found();};
 		};
 	};	
 
