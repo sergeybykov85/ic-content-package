@@ -17,6 +17,7 @@ module {
 		max_supply : ?Nat;
 		name : Text;
 		description : Text;
+		logo_url : ?Text;
 		created: Time.Time;
 		registered: Time.Time;
 	};
@@ -37,6 +38,7 @@ module {
 			max_supply = info.max_supply;
 			name = info.name;
 			description = info.description;
+			logo_url = info.logo_url;
 			created = info.created;
 			registered = info.registered;
         };

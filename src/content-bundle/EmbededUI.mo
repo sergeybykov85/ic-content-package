@@ -9,12 +9,15 @@ import List "mo:base/List";
 import Option "mo:base/Option";
 import Principal "mo:base/Principal";
 
-import Http "../shared/Http";
+// shared modules between registry, bundle, tools, et
 import CommonUtils "../shared/CommonUtils";
 import CommonTypes "../shared/CommonTypes";
 
 import Types "./Types";
 import Utils "./Utils";
+
+// -- ICS2 core --
+import ICS2Http "mo:ics2-core/Http";
 
 
 module {
@@ -43,9 +46,9 @@ module {
         out_html;
     };
 
-    public func bundle_page_response(canister_id:Text, network:CommonTypes.Network, key : Text, target_bundle:?Types.Bundle) : Http.Response {
+    public func bundle_page_response(canister_id:Text, network:CommonTypes.Network, key : Text, target_bundle:?Types.Bundle) : ICS2Http.Response {
 		switch (target_bundle) {
-            case (null) { Http.not_found() };
+            case (null) { ICS2Http.not_found() };
             case (? v)  {
 				///
 				let root_url = Utils.build_resource_url({resource_id = ""; canister_id = canister_id; network = network; view_mode = #Index; route = null;});
@@ -53,7 +56,7 @@ module {
 				
 				directory_html:=directory_html # render_bundle_details(canister_id, network, key, v);
 				// extra details possible here
-				return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(directory_html #FORMAT_DATES_SCRIPT#"</body></html>"));
+				return ICS2Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(directory_html #FORMAT_DATES_SCRIPT#"</body></html>"));
 			};
         };
     };
