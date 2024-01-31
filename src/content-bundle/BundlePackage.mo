@@ -14,17 +14,24 @@ import Trie "mo:base/Trie";
 import List "mo:base/List";
 import Nat64 "mo:base/Nat64";
 
-import DataBucket "mo:ics2/DataBucket";
-import { JSON; Candid } "mo:serde";
-
-import Http "../shared/Http";
+// shared modules between registry, bundle, tools, et
 import CommonTypes "../shared/CommonTypes";
 import CommonUtils "../shared/CommonUtils";
 
+// -- modules related to "bundle/package" modules 
 import Conversion "./Conversion";
 import Types "./Types";
 import Utils "./Utils";
 import EmbededUI "./EmbededUI";
+
+// -- ICS2 core --
+import ICS2DataBucket "mo:ics2-core/DataBucket";
+import ICS2Utils "mo:ics2-core/Utils";
+import ICS2Http "mo:ics2-core/Http";
+
+// -- serde --
+import { JSON; Candid } "mo:serde";
+
 
 shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageArgs) = this {
 
@@ -597,7 +604,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		return #ok(bucket);
 	}; 	
 
-	public shared query ({ caller }) func http_request(request : Http.Request) : async Http.Response {
+	public shared query ({ caller }) func http_request(request : ICS2Http.Request) : async ICS2Http.Response {
 		switch (Utils.get_resource_id(request.url)) {
 			case (?r) {
 				switch (r.view_mode) {
@@ -606,11 +613,11 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (#Open) {return bundle_data_handler(r.id, r.route);};
 				};
 			};
-			case null { return Http.not_found();};
+			case null { return ICS2Http.not_found();};
 		};
 	};
 
-    private func bundle_data_handler(key : Text, route : Types.Route) : Http.Response {
+    private func bundle_data_handler(key : Text, route : Types.Route) : ICS2Http.Response {
 		switch (route) {
             case (#Asset) {
 				if (key == Utils.LOGO) {
@@ -620,13 +627,13 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 								case (?cp) {[("Content-Type", cp)]};
 								case (null) {[("Content-Type", "application/octet-stream")]};
 							};
-							Http.success(headers, logo.value)};
-						case (null) {Http.not_found() };
+							ICS2Http.success(headers, logo.value)};
+						case (null) {ICS2Http.not_found() };
 					}
 				};
-				return Http.not_found();
+				return ICS2Http.not_found();
 			};
-			case (_) { Http.not_found() };
+			case (_) { ICS2Http.not_found() };
         };
     };		
 
@@ -926,7 +933,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		Buffer.toArray(buff);
 	};		    
 
-   	private func bundle_http_response(key : Text, tag: ?Text) : Http.Response {
+   	private func bundle_http_response(key : Text, tag: ?Text) : ICS2Http.Response {
 		if (key == Utils.ROOT) {
 			let canister_id = Principal.toText(Principal.fromActor(this));
 			// tag header : one header or all headers
@@ -961,7 +968,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					};						
 				};
 			};
-			return Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #"</div>" #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
+			return ICS2Http.success([("content-type", "text/html; charset=UTF-8")], Text.encodeUtf8(out_html #"</div>" #EmbededUI.FORMAT_DATES_SCRIPT#"</body></html>"));
 		};
 		EmbededUI.bundle_page_response( Principal.toText(Principal.fromActor(this)), initArgs.network, key, bundle_get(key));
     };
@@ -1033,7 +1040,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         let canister_id = Principal.toText(Principal.fromActor(this));
         let bundle_id = switch (MODE.identifier) {
             case (#Ordinal) {Nat.toText(_bundle_counter)};
-            case (#Hash) { Utils.hash_time_based(canister_id, _bundle_counter)};
+            case (#Hash) { ICS2Utils.hash_time_based(canister_id, _bundle_counter)};
         };
 		// init directory
 		let bucket_id:Text = CommonUtils.unwrap(data_store.active_bucket);
@@ -1311,7 +1318,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				switch (target_section.active_upload) {
 					case (?attempt) {ignore await bucket_actor.store_chunk(args.payload.value, ?attempt.binding_key);};
 					case (null) {
-						let binding_key = Utils.hash_time_based(bundle.data_path.resource_id, Int.abs(Time.now()));
+						let binding_key = ICS2Utils.hash_time_based(bundle.data_path.resource_id, Int.abs(Time.now()));
 						target_section.active_upload:= ?{
 							binding_key=binding_key;
 							locale  = null;
@@ -1478,7 +1485,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 	private func _register_bucket(name:Text, operators : [Principal], cycles : Nat): async Text {
 		Cycles.add(cycles);
-		let bucket_actor = await DataBucket.DataBucket({
+		let bucket_actor = await ICS2DataBucket.DataBucket({
 			// apply the user account as operator of the bucket
 			name = name;
 			operators = operators;

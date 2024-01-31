@@ -17,8 +17,6 @@ import Buffer "mo:base/Buffer";
 import List "mo:base/List";
 import Option "mo:base/Option";
 
-import SHA256 "mo:motoko-sha/SHA256";
-
 import CommonTypes "../shared/CommonTypes";
 import Types "./Types";
 
@@ -28,12 +26,7 @@ module {
     public let ROOT = "/";
     public let LOGO:Text = "logo";
 
-    let HEX_SYMBOLS =  [
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
-    ]; 
     let NOT_ALLOWED_FOR_TAG = ['\u{22}',' ', '/',',','#', '@', '?', '+',';',':','$','=','[',']','~','^','|','<','>','{','}'];
-
 
     let INDEX_ROUTE = "/i/";  
     let RESOURCE_ROUTE = "/r/";  
@@ -47,50 +40,10 @@ module {
         route : ?Types.Route;
     };
 
-    // 1MB
-    let MB_IN_BYTES:Int = 1_048_576; 
-
-    /**
-    * Generates hash based on a prefix, current time and suffix (counter).
-    * It is used to generate ids.
-    * Since the time it is a part pf the hash, then it is difficult to preditc the next id
-    */
-    public func hash_time_based (prefix : Text, suffix : Nat) : Text {
-        let message = SHA256.sha256(Blob.toArray(Text.encodeUtf8(prefix # Int.toText(Time.now()) # Nat.toText(suffix))));
-        return to_hex(message);
-    };
-    /**
-    * Generates hash based on a prefix and array of strings
-    */
-    public func hash (prefix : Text, items : [Text]) : Text {
-        let message = SHA256.sha256(Blob.toArray(Text.encodeUtf8(prefix # Text.join("", items.vals()))));
-        return to_hex(message);
-    };    
-
-    public func get_memory_in_mb() : Int {
-        return _metric_to_mb(Prim.rts_memory_size());
-    };
-
-    public func get_heap_in_mb() : Int {
-        return _metric_to_mb(Prim.rts_heap_size());
-    };
-
     public func get_cycles_balance() : Int {
         return Cycles.balance();
     };
-
     
-    /**
-    * Generates a hex string based on array of Nat8
-    */
-    public func to_hex(arr: [Nat8]): Text {
-        Text.join("", Iter.map<Nat8, Text>(Iter.fromArray(arr), func (x: Nat8) : Text {
-            let c1 = HEX_SYMBOLS[Nat8.toNat(x / 16)];
-            let c2 = HEX_SYMBOLS[Nat8.toNat(x % 16)];
-            Char.toText(c1) # Char.toText(c2);
-        }))
-    };
-
     public func normalize_tag (token : Text) : Text {
         let x = Text.map(token , Prim.charToLower);
     };
@@ -188,11 +141,6 @@ module {
             return t;
         } else return null;
     };         
-
-    private func _metric_to_mb(v: Nat) : Int {
-        let v_in_mb = Float.toInt(Float.abs(Float.fromInt(v) / Float.fromInt(MB_IN_BYTES)));
-        return v_in_mb;
-    };
 
     public func join<T>(a: [T], b:[T]) : [T] {
 		// Array.append is deprecated and it gives a warning

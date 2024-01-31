@@ -12,13 +12,14 @@ import Time "mo:base/Time";
 import Trie "mo:base/Trie";
 import List "mo:base/List";
 import Buffer "mo:base/Buffer";
-
+import Types "./Types";
 import Conversion "./Conversion";
+
 import CommonTypes "../shared/CommonTypes";
 import CommonUtils "../shared/CommonUtils";
 
-import Utils "./Utils";
-import Types "./Types";
+import ICS2Utils "mo:ics2-core/Utils";
+
 
 shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceArgs) = this {
 
@@ -140,7 +141,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		// increment counter
 		_counter  := _counter + 1;
         let canister_id = Principal.toText(Principal.fromActor(this));
-        let widget_id = Utils.hash_time_based(canister_id, _counter);
+        let widget_id = ICS2Utils.hash_time_based(canister_id, _counter);
 
 		widgets := Trie.put(widgets, CommonUtils.text_key(widget_id), Text.equal, {
 			var name = args.name;
