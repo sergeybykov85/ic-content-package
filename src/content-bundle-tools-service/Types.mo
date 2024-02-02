@@ -110,7 +110,7 @@ module {
 	
 		public type PackageRegistryActor = actor {
 			is_submitter : shared(identity:CommonTypes.Identity)  -> async Bool;
-			register_package : shared(package : Principal)  -> async Result.Result<Text, CommonTypes.Errors>;
+			register_package : shared(package : Principal, assign_creator : ?CommonTypes.Identity)  -> async Result.Result<Text, CommonTypes.Errors>;
 		};		
 
 		public type BundlePackageActor = actor {

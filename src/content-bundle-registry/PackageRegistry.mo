@@ -152,9 +152,10 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	};
 
 	/**
-	* Registerrs a new package provider (who is authorized to add new packages)
+	* Registerrs a new package provider (who is authorized to add new packages).
+	* If creator is not specified, then creator is taken fron the package
 	*/
-	public shared ({ caller }) func register_package (package : Principal) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func register_package (package : Principal, assign_creator : ?CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
 		let submitter_identity = _build_identity(caller);
 		switch (submitter_get(submitter_identity)) {
 			case (?submitter) {
@@ -166,6 +167,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 						let package_actor : Types.Actor.BundlePackageActor = actor (package_id);
 						let package_details = await package_actor.get_details();
 
+						let creator = Option.get(assign_creator, package_details.creator);
 						packages := Trie.put(packages, CommonUtils.text_key(package_id), Text.equal, {
 							submission = package_details.submission;
 							var name = package_details.name;
@@ -173,7 +175,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							var logo_url = package_details.logo_url;
 							var references = List.nil();
 							max_supply = package_details.max_supply;
-							creator = package_details.creator;
+							creator = creator;
 							submitter = submitter_identity;
 							created = package_details.created;
 							registered = Time.now();
@@ -188,9 +190,9 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							case (null) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(submitter_identity), Text.equal, List.push(package_id, List.nil())).0;}
 						};
 						// index for creator
-						switch (creator2package_get(package_details.creator)) {
-							case (?by_creator) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(package_details.creator), Text.equal, List.push(package_id, by_creator)).0; };
-							case (null) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(package_details.creator), Text.equal, List.push(package_id, List.nil())).0;}
+						switch (creator2package_get(creator)) {
+							case (?by_creator) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(creator), Text.equal, List.push(package_id, by_creator)).0; };
+							case (null) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(creator), Text.equal, List.push(package_id, List.nil())).0;}
 						};
 
 						// index by kind

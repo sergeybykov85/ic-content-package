@@ -5,7 +5,6 @@ import Int "mo:base/Int";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
 import Option "mo:base/Option";
-import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
@@ -251,7 +250,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		};
 
 		// register package
-		let registration_response = await registry_actor.register_package(package_principal);
+		let registration_response = await registry_actor.register_package(package_principal, ?args.owner);
 		switch (registration_response) {
 			case (#ok(package_id)) {
 				total:=total + 1;
