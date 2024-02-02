@@ -339,6 +339,7 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 	*/
 	public query func get_data_segmentation () : async CommonTypes.Segmentation {
 		{
+			total_supply = List.size(all_packages);
 			classifications = _trie_keys(classification2package);
 			countries = _trie_keys(country2package);
 			tags = _trie_keys(tag2package);

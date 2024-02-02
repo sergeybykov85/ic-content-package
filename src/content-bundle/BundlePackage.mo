@@ -894,8 +894,9 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns data segmentation, aka classification inside the package
 	*/
-	public query func get_data_segmentation () : async CommonTypes.Segmentation {
+	public query func  get_data_segmentation () : async CommonTypes.Segmentation {
 		{
+			total_supply = Trie.size(bundles);
 			classifications = _get_classifications();
 			countries = _get_country_codes();
 			tags = _get_tags();

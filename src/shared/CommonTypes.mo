@@ -20,6 +20,7 @@ module {
 	public type ResourcePath = {url : Text; bucket_id:Text; resource_id: Text; locale:?Text;  name:?Text};
 
 	public type Segmentation = {
+		total_supply : Nat;
 		classifications : [Text];
 		countries : [Text];
 		tags : [Text];
