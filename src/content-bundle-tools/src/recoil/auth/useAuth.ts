@@ -1,43 +1,48 @@
-import { useCallback, useEffect, useState, useMemo } from 'react'
-import type { FC, ReactNode } from 'react'
+import { useCallback, useEffect } from 'react'
+import cookies from '~/utils/cookies.ts'
+import { authClientState, isAuthenticatedState, PRINCIPAL_COOKIE_NAME, principalState } from './authStore.ts'
+import { useRecoilState, useRecoilValue } from 'recoil'
 import { AuthClient } from '@dfinity/auth-client'
-import cookies from '~/utils/cookies'
-import decodeIdentity from '~/utils/decodeIdentity'
 import { enqueueSnackbar } from 'notistack'
-import { AuthContext } from './'
+import decodeIdentity from '~/utils/decodeIdentity.ts'
 
-const PRINCIPAL_COOKIE_NAME = 'principal'
+type UseAuth = () => {
+  principal: string | undefined
+  isAuthenticated: boolean
+  login: (pem?: string) => void
+  logout: () => void
+}
 
-const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [authClient, setAuthClient] = useState<AuthClient | null>(null)
-  const [principal, setPrincipal] = useState<AuthContext['principal']>(cookies.getCookie(PRINCIPAL_COOKIE_NAME))
-  const isAuthenticated = useMemo(() => Boolean(principal), [principal])
-
-  const initAuthClient = useCallback(async () => {
-    try {
-      const newAuthClient = await AuthClient.create()
-      setAuthClient(newAuthClient)
-    } catch (error) {
-      enqueueSnackbar(`AuthClient initiation error: ${error}`, { variant: 'error' })
-    }
-  }, [])
+const useAuth: UseAuth = () => {
+  const isAuthenticated = useRecoilValue(isAuthenticatedState)
+  const [authClient, setAuthClient] = useRecoilState(authClientState)
+  const [principal, setPrincipal] = useRecoilState(principalState)
 
   useEffect(() => {
     if (!authClient) {
-      void initAuthClient()
+      AuthClient.create()
+        .then(newAuthClient => {
+          setAuthClient(newAuthClient)
+        })
+        .catch(error => {
+          enqueueSnackbar(`AuthClient initiation error: ${error}`, { variant: 'error' })
+        })
     }
-  }, [authClient, initAuthClient])
+  }, [authClient, setAuthClient])
 
   const logout = useCallback(() => {
     setPrincipal(undefined)
     cookies.deleteCookie(PRINCIPAL_COOKIE_NAME)
     authClient?.logout()
-  }, [authClient])
+  }, [authClient, setPrincipal])
 
-  const loginOnSuccess = useCallback((newPrincipal: string) => {
-    cookies.setCookie(PRINCIPAL_COOKIE_NAME, newPrincipal, 60 * 60 * 24) // 24h
-    setPrincipal(newPrincipal)
-  }, [])
+  const loginOnSuccess = useCallback(
+    (newPrincipal: string) => {
+      cookies.setCookie(PRINCIPAL_COOKIE_NAME, newPrincipal, 60 * 60 * 24) // 24h
+      setPrincipal(newPrincipal)
+    },
+    [setPrincipal],
+  )
 
   const loginWithPem = useCallback(
     (pemFile: string) => {
@@ -85,7 +90,7 @@ const AuthContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
     [loginWithII, loginWithPem],
   )
 
-  return <AuthContext.Provider value={{ isAuthenticated, login, logout, principal }}>{children}</AuthContext.Provider>
+  return { login, logout, principal, isAuthenticated }
 }
 
-export default AuthContextProvider
+export default useAuth

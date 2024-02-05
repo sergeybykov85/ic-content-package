@@ -1,11 +1,11 @@
 import { type FC } from 'react'
 import MainLayout from '~/components/layouts/MainLayout'
-import PublicPackages from '~/components/features/PublicPackages'
+import Packages from '~/components/features/Packages'
 
 const PublicPackagesPage: FC = () => {
   return (
     <MainLayout>
-      <PublicPackages />
+      <Packages type="public" />
     </MainLayout>
   )
 }

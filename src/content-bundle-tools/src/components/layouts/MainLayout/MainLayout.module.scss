@@ -14,8 +14,11 @@ $footer-height: 100px;
   max-width: $max-content-width;
   margin: 0 auto;
   display: flex;
-  align-items: center;
   height: 100%;
+
+  &--header, &--footer {
+    align-items: center;
+  }
 
   &--footer {
     gap: 32px;

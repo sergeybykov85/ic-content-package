@@ -1,4 +1,4 @@
-import { idlFactory as idl } from '~/../declarations/package_registry'
+import { idlFactory as idl } from '~/../../declarations/package_registry'
 import createActor from '~/utils/createActor.ts'
 
 export const PACKAGE_REGISTRY_CANISTER_ID = 'bkyz2-fmaaa-aaaaa-qaaaq-cai'
@@ -16,7 +16,9 @@ export interface Package {
   logo_url?: string[]
 }
 
-export const getPackageByType = (type: 'public' | 'private' | 'shared'): Promise<Package[]> => {
+export type PackageType = 'public' | 'private' | 'shared'
+
+export const getPackageByType = (type: PackageType): Promise<Package[]> => {
   const args = {
     public: { Public: null },
     private: { Private: null },
@@ -24,3 +26,5 @@ export const getPackageByType = (type: 'public' | 'private' | 'shared'): Promise
   } as const
   return packageRegistry.get_packages_by_type(args[type]) as Promise<Package[]>
 }
+
+// export const getMyPackages = ():

@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { useAuth } from '~/context/AuthContext'
+import { useAuth } from '~/recoil/auth'
 import { Navigate, Outlet } from 'react-router-dom'
 
 const ProtectedRoute: FC = () => {

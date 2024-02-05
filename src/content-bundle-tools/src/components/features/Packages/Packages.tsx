@@ -1,12 +1,16 @@
 import { useEffect, useState, type FC } from 'react'
-import { getPackageByType, type Package } from '~/services/packageRegistry.ts'
+import { getPackageByType, type Package, type PackageType } from '~/services/packageRegistry.ts'
 import PackageCard from './PackageCard.tsx'
-import styles from './PublicPackages.module.scss'
+import styles from './Packages.module.scss'
 
-const PublicPackages: FC = () => {
+interface PackagesProps {
+  type: PackageType
+}
+
+const Packages: FC<PackagesProps> = ({ type }) => {
   const [packages, setPackages] = useState<Package[]>([])
   useEffect(() => {
-    getPackageByType('public').then(res => {
+    getPackageByType(type).then(res => {
       setPackages(res)
     })
   }, [])
@@ -24,4 +28,4 @@ const PublicPackages: FC = () => {
   )
 }
 
-export default PublicPackages
+export default Packages
