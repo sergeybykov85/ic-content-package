@@ -1,15 +1,26 @@
-import { createBrowserRouter } from 'react-router-dom'
-import RootPage from './pages/RootPage'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
+import WelcomePage from '~/router/pages/WelcomePage.tsx'
 import PublicPackagesPage from './pages/PublicPackagesPage.tsx'
+import ProtectedRoute from '~/router/pages/ProtectedRoute.tsx'
 
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <RootPage />,
+    path: '/welcome',
+    element: <WelcomePage />,
   },
   {
-    path: '/public-packages',
-    element: <PublicPackagesPage />,
+    path: '/',
+    element: <ProtectedRoute />,
+    children: [
+      {
+        path: '',
+        element: <Navigate to="public-packages" />,
+      },
+      {
+        path: 'public-packages',
+        element: <PublicPackagesPage />,
+      },
+    ],
   },
 ])
 
