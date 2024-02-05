@@ -1,0 +1,47 @@
+@import "src/styles/variables";
+
+.card {
+  position: relative;
+  max-width: 600px;
+  border: 1px solid #E6E6E6;
+  border-radius: $border-radius;
+  padding: 16px 16px 32px 16px;
+  &:hover {
+    box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transform: scale(1.05);
+    transition: $transition-time;
+  }
+
+  img {
+    height: 150px;
+    border-radius: $border-radius;
+    width: 100%;
+    object-fit: cover;
+  }
+}
+.name {
+  font-weight: 500;
+  margin: 16px 0;
+}
+.description {
+  font-size: 14px;
+  margin: 16px 0;
+  max-height: 50px;
+  overflow: hidden;
+}
+.created {
+  width: 100%;
+  font-size: 14px;
+  margin-top: auto;
+  color: #727272;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 16px;
+  display: flex;
+  span {
+    display: block;
+    margin-left: auto;
+  }
+}
