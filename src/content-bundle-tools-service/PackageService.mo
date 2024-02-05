@@ -19,8 +19,12 @@ import CommonUtils "../shared/CommonUtils";
 
 
 shared (installation) actor class PackageService(initArgs : Types.PackageServiceArgs) = this {
-
-	let DEF_PACKAGE_CYCLES:Nat = 1_500_000_000_000;
+	// def cycles for the package canister creation
+	let DEF_PACKAGE_CYCLES:Nat = 1_000_000_000_000;
+	// def cycles for  the databucket crreation when a new package is deployed
+	let DEF_DATASTORE_CYCLES:Nat = 600_000_000_000;
+	let DEF_MINIMUM_REMAINING_CYCLES:Nat = 5_000_000_000_000;
+	
 	// management actor
 	let IC : Types.Actor.ICActor = actor "aaaaa-aa";
 
@@ -40,6 +44,9 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	});
 
 	stable let NETWORK = initArgs.network;
+
+	// trial allowance -- minimum number of packages to deploy even if allowances is not set. This is controlled by access_list.
+	stable var trial_allowance : Nat = 0;
 
 	// who can manage service, register new allowance or remove it
 	stable var access_list : List.List<CommonTypes.Identity> = List.nil();
@@ -100,6 +107,15 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 			}
 		};
 	};
+
+	/**
+	* Applies the trial allowance
+	*/
+	public shared ({ caller }) func apply_trial_allowance (v : Nat) : async Result.Result<(), CommonTypes.Errors> {
+		if (not can_manage(caller)) return #err(#AccessDenied);
+		trial_allowance := v;
+		#ok();
+	};	
 	/**
 	* Removes an existing allowance
 	*/
@@ -145,7 +161,8 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 			owner = identity;
 			metadata = ?metadata;
 			contributors = null;
-			cycles = ?DEF_PACKAGE_CYCLES;
+			cycles_package = null;
+			cycles_datastore = null;
 		});
 	};
 
@@ -177,7 +194,8 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 			owner = identity;
 			metadata = ?metadata;
 			contributors = null;
-			cycles = ?DEF_PACKAGE_CYCLES;
+			cycles_package = null;
+			cycles_datastore = null;
 		});
 	};
 
@@ -209,7 +227,8 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 			owner = identity;
 			metadata = ?metadata;
 			contributors = ?contributors;
-			cycles = ?DEF_PACKAGE_CYCLES;
+			cycles_package = null;
+			cycles_datastore = null;
 		});
 	};	
 
@@ -217,7 +236,14 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
 		// if the caller is able to register any package
 		if  (not (await registry_actor.is_submitter({identity_type=#ICP; identity_id=Principal.toText(Principal.fromActor(this)) }))) { return #err(#AccessDenied); };
-		Cycles.add(Option.get(args.cycles, DEF_PACKAGE_CYCLES));
+		let cycles_p = Option.get(args.cycles_package, DEF_PACKAGE_CYCLES);
+		let cycles_store = Option.get(args.cycles_datastore, DEF_DATASTORE_CYCLES);
+		// cycles to allocate a datastore is taken from the package. cycles_p must be > than cycles_store
+		if (cycles_store > cycles_p)  return #err(#InvalidRequest);
+		// reject request if fuel is not enough
+		if ((cycles_p + DEF_MINIMUM_REMAINING_CYCLES)  >  Cycles.balance()) return #err(#FuelNotEnough); 
+
+		Cycles.add(cycles_p);
 		// deploy package
 		let bundle_package_actor = await BundlePackage.BundlePackage({
 			// apply the user account as operator of the bucket
@@ -230,7 +256,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 
 		// init data store
 		let package_principal = Principal.fromActor(bundle_package_actor);
-		switch (await bundle_package_actor.init_data_store(null)) {
+		switch (await bundle_package_actor.init_data_store(?cycles_store)) {
 			// ignore in case of success
 			case (#ok(_)) {};
 			case (#err(e)) { return #err(#ActionFailed)};
@@ -276,6 +302,10 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		return Cycles.balance();
   	};
 
+	public query func get_trial_allowance() : async Nat {
+		return trial_allowance;
+  	};
+
 	public query func total_supply() : async Nat {
 		return total;
 	};
@@ -301,7 +331,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	public query func allowance_by(identity:CommonTypes.Identity) : async Nat {
 		switch (allowance_get(identity)) {
 			case (?c) {c.allowed_packages};
-			case (null) {0};
+			case (null) {trial_allowance};
 		};
 	};
 
@@ -312,7 +342,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	private func _activity_by(identity:CommonTypes.Identity) : Types.Activity {
 		let allowance = switch (allowance_get(identity)) {
 			case (?c) {c.allowed_packages};
-			case (null) {0};
+			case (null) {trial_allowance};
 		};
 		{ deployed_packages = switch (creator2package_get(identity)) {
 			case (?c) {List.toArray(c)};

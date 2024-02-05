@@ -48,7 +48,8 @@ module {
 		owner : CommonTypes.Identity;
 		metadata : ?MetadataArgs;
 		contributors : ?[CommonTypes.Identity];
-		cycles : ?Nat;
+		cycles_package : ?Nat;
+		cycles_datastore : ?Nat;
 	};
 
 	public type MetadataArgs = {

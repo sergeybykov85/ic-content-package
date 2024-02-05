@@ -62,6 +62,9 @@ module {
 	};
 
 	public type Errors = {
+		// not enough cycles
+		#FuelNotEnough;
+		// data store is not ready for the package
 		#DataStoreNotInitialized;
 		// no resource or no chunk
 		#NotFound;

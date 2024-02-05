@@ -282,10 +282,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	};
 
 	/**
-	* Removes an existing bundle, if no data group present
+	* Removes an existing empty bundle, if no data group present
 	* Allowed only to the owner of the bundle.
 	*/
-	public shared ({ caller }) func remove_bundle (bundle_id: Text) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func remove_empty_bundle (bundle_id: Text) : async Result.Result<Text, CommonTypes.Errors> {
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
@@ -503,6 +503,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				// save into databucket
 				switch (await _apply_bundle_section(bundle, {
 					name = args.name;
+					resource_id = args.resource_id;
 					group = args.group;
 					nested_path = args.nested_path;
 					category = args.category;
@@ -670,8 +671,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	public query func get_data_store() : async Conversion.DataStoreView {
 		return Conversion.convert_datastore_view(data_store);
 	};
-
-	public query func get_data_group (bundle_id: Text, group_id:CommonTypes.DataGroupId) : async Result.Result<Conversion.DataGroupView, CommonTypes.Errors> {
+	/**
+	* returns data details for the specified group
+	*/
+	public query func get_bundle_data (bundle_id: Text, group_id:CommonTypes.DataGroupId) : async Result.Result<Conversion.DataGroupView, CommonTypes.Errors> {
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
 				let group_opt = switch (group_id) {
@@ -686,6 +689,48 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (null) { return #err(#NotFound); };
 		};
 	};
+
+	/**
+	* returns already registered data groups for the specified bundle
+	*/
+	public query func get_bundle_data_groups (bundle_id: Text) : async Result.Result<[CommonTypes.DataGroupId], CommonTypes.Errors> {
+		switch (bundle_get(bundle_id)) {
+			case (?bundle) {
+				let res = Buffer.Buffer<CommonTypes.DataGroupId>(2);
+				if (Option.isSome(bundle.payload.poi_group)) {
+					res.add(#POI);
+				};
+				if (Option.isSome(bundle.payload.additions_group)) {
+					res.add(#Additions);
+				};				
+				return #ok(Buffer.toArray(res));
+			};
+			case (null) { return #err(#NotFound); };
+		};
+	};	
+	/**
+	* Check a contribute opportunity on the package level for the identity
+	*/
+	public query func contribute_opportunity_for (to:Principal) : async Bool {
+        switch (MODE.submission) {
+            case (#Private) { CommonUtils.identity_equals(_build_identity(to), owner)};
+            case (#Public) { true };
+            case (#Shared) {
+				let identity = _build_identity(to);
+				CommonUtils.identity_equals(identity, owner)
+					or  Option.isSome(List.find(contributors , CommonUtils.find_identity(identity))) ;
+            };			
+        };
+    };	
+	/**
+	* Check a contribute opportunity on the bundle level for the identity
+	*/
+	public query func bundle_contribute_opportunity_for (bundle_id: Text, to:Principal) : async Bool {
+		switch (bundle_get(bundle_id)) {
+			case (?bundle) {_access_allowed (bundle, _build_identity(to), null)};
+			case (null) {false};
+		};
+	};	
 
 	public query func get_supported_categories (group_id:CommonTypes.DataGroupId) : async [CommonTypes.CategoryId] {
 		switch (group_id) {
@@ -1301,7 +1346,17 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				};
 				let replace_path:?CommonTypes.ResourcePath = switch (args.nested_path) {
 					// replace opportunity is just an "extra feature, sugar" to quickly update simple resources
-					case (null) { List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool {   Option.get(k.name, "") == resource_name and Option.get(k.locale, "") == Option.get(args.locale, "")}) };
+					case (null) {
+						let target_locale = Option.get(args.locale, "");
+						switch (args.resource_id) {
+							case (?target_resource) {List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool { target_resource == k.resource_id;})};
+							case (null) { 
+								List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool { 
+									Option.get(k.name, "") == resource_name and Option.get(k.locale, "") == target_locale
+								})
+							};
+						};
+					};
 					// replace is not supported in case of nested path
 					case (?path) {null};
 				};
