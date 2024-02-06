@@ -1,7 +1,7 @@
 import { idlFactory as idl } from '~/../../declarations/package_registry'
 import createActor from '~/utils/createActor.ts'
 
-export const PACKAGE_REGISTRY_CANISTER_ID = 'bkyz2-fmaaa-aaaaa-qaaaq-cai'
+export const PACKAGE_REGISTRY_CANISTER_ID = import.meta.env.VITE_PACKAGE_REGISTRY_CANISTER_ID
 
 const packageRegistry = createActor(idl, PACKAGE_REGISTRY_CANISTER_ID)
 

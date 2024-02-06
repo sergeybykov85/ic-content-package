@@ -15,7 +15,7 @@ const PrincipalBtn: FC<PrincipalBtnProps> = ({ principal }) => {
   }, [principal])
 
   const handleCLick = useCallback((): void => {
-    copyToClipboard(shortPrincipal, () => {
+    copyToClipboard(principal, () => {
       setCopied(true)
     })
   }, [shortPrincipal])

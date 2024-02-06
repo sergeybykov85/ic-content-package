@@ -3,7 +3,11 @@ import { useAuth } from '~/recoil/auth'
 import { Navigate, Outlet } from 'react-router-dom'
 
 const ProtectedRoute: FC = () => {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, authReady } = useAuth()
+  console.log(isAuthenticated)
+  if (!authReady) {
+    return null // TODO: Loading...
+  }
   return isAuthenticated ? <Outlet /> : <Navigate to="/welcome" replace />
 }
 

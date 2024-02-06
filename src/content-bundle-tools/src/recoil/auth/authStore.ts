@@ -15,7 +15,7 @@ export const authTypeState = atom<AUTH_TYPE | undefined>({
   default: undefined,
 })
 
-export const identityStore = atom<Identity | Secp256k1KeyIdentity | null>({
+export const identityState = atom<Identity | Secp256k1KeyIdentity | null>({
   key: 'identityStore',
   default: null,
   dangerouslyAllowMutability: true,
@@ -23,12 +23,12 @@ export const identityStore = atom<Identity | Secp256k1KeyIdentity | null>({
 
 export const principalState = selector({
   key: 'principalState',
-  get: ({ get }) => get(identityStore)?.getPrincipal().toString(),
+  get: ({ get }) => get(identityState)?.getPrincipal().toString(),
 })
 
 export const isAuthenticatedState = selector({
   key: 'isAuthenticatedState',
   get: ({ get }) => {
-    return Boolean(get(identityStore))
+    return Boolean(get(identityState))
   },
 })

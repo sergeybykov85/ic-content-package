@@ -1,6 +1,6 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import cookies from '~/utils/cookies.ts'
-import { authClientState, authTypeState, identityStore, isAuthenticatedState, principalState } from './authStore.ts'
+import { authClientState, authTypeState, identityState, isAuthenticatedState, principalState } from './authStore.ts'
 import { useRecoilState, useRecoilValue } from 'recoil'
 import { AuthClient } from '@dfinity/auth-client'
 import { enqueueSnackbar } from 'notistack'
@@ -21,14 +21,16 @@ type UseAuth = () => {
   isAuthenticated: boolean
   login: (pem?: string) => void
   logout: () => void
+  authReady: boolean
 }
 
 const useAuth: UseAuth = () => {
   const [authClient, setAuthClient] = useRecoilState(authClientState)
-  const [identity, setIdentity] = useRecoilState(identityStore)
+  const [identity, setIdentity] = useRecoilState(identityState)
   const [authType, setAuthType] = useRecoilState(authTypeState)
   const isAuthenticated = useRecoilValue(isAuthenticatedState)
   const principal = useRecoilValue(principalState)
+  const [authReady, setAuthReady] = useState(false)
 
   useEffect(() => {
     if (!authClient) {
@@ -43,24 +45,30 @@ const useAuth: UseAuth = () => {
   }, [authClient, setAuthClient])
 
   useEffect(() => {
-    const authTypeFromCookie = cookies.getCookie(COOKIE_AUTH_TYPE_NAME) as AUTH_TYPE
-    if (Object.values(AUTH_TYPE).includes(authTypeFromCookie)) {
-      setAuthType(authTypeFromCookie)
+    if (!authType) {
+      const authTypeFromCookie = cookies.getCookie(COOKIE_AUTH_TYPE_NAME) as AUTH_TYPE
+      if (Object.values(AUTH_TYPE).includes(authTypeFromCookie)) {
+        setAuthType(authTypeFromCookie)
+      }
     }
   }, [authClient, setAuthType])
 
   const checkIIAuth = useCallback(() => {
-    authClient?.isAuthenticated().then(res => {
-      if (res) {
-        setIdentity(authClient.getIdentity())
-      }
-    })
+    authClient
+      ?.isAuthenticated()
+      .then(res => {
+        if (res) {
+          setIdentity(authClient.getIdentity())
+        }
+      })
+      .finally(() => setAuthReady(true))
   }, [authClient, setIdentity])
 
   const checkPEMAuth = useCallback(() => {
     const identityFromCookie = cookies.getCookie(COOKIE_IDENTITY_NAME)
     const restoredIdentity = identityJsonHelper.fromJSON(identityFromCookie)
     setIdentity(restoredIdentity || null)
+    setAuthReady(true)
   }, [setIdentity])
 
   useEffect(() => {
@@ -136,7 +144,7 @@ const useAuth: UseAuth = () => {
     [loginWithII, loginWithPem],
   )
 
-  return { login, logout, principal, identity, isAuthenticated }
+  return { login, logout, principal, identity, isAuthenticated, authReady }
 }
 
 export default useAuth
