@@ -1,6 +1,6 @@
-import createActor, { ActorInstance } from '~/utils/createActor.ts'
+import createActor, { type ActorInstance } from '~/utils/createActor.ts'
 import { idlFactory as idl } from '~/../../declarations/package_registry'
-import { Package } from '~/types/packagesTypes.ts'
+import type { Package } from '~/types/packagesTypes.ts'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 

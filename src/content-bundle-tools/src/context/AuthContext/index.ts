@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import { IdentityInstance } from '~/types/authTypes.ts'
+import type { IdentityInstance } from '~/types/authTypes.ts'
 
 export interface AuthContext {
   principal: string | undefined
