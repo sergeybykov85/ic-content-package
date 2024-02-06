@@ -1,36 +1,29 @@
-import { useCallback, useEffect, useState } from 'react'
-import cookies from '~/utils/cookies.ts'
-import { authClientState, authTypeState, identityState, isAuthenticatedState, principalState } from './authStore.ts'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { AuthClient } from '@dfinity/auth-client'
 import { enqueueSnackbar } from 'notistack'
+import cookies from '~/utils/cookies.ts'
+import identityJsonHelper from '~/utils/identityJsonHelper.ts'
 import decodeIdentity from '~/utils/decodeIdentity.ts'
 import {
   AUTH_EXPIRATION_TIME,
   AUTH_TYPE,
   COOKIE_AUTH_TYPE_NAME,
   COOKIE_IDENTITY_NAME,
-} from '~/recoil/auth/authTypes.ts'
-import identityJsonHelper from '~/utils/identityJsonHelper.ts'
-import type { Identity } from '@dfinity/agent'
-import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
+  IdentityInstance,
+} from '~/types/authTypes.ts'
+import { AuthContext } from './index.ts'
 
-type UseAuth = () => {
-  principal: string | undefined
-  identity: Identity | Secp256k1KeyIdentity | null
-  isAuthenticated: boolean
-  login: (pem?: string) => void
-  logout: () => void
-  authReady: boolean
-}
-
-const useAuth: UseAuth = () => {
-  const [authClient, setAuthClient] = useRecoilState(authClientState)
-  const [identity, setIdentity] = useRecoilState(identityState)
-  const [authType, setAuthType] = useRecoilState(authTypeState)
-  const isAuthenticated = useRecoilValue(isAuthenticatedState)
-  const principal = useRecoilValue(principalState)
+const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [authClient, setAuthClient] = useState<AuthClient | null>(null)
+  const [identity, setIdentity] = useState<IdentityInstance | null>(null)
+  const [authType, setAuthType] = useState<AUTH_TYPE | null>(null)
   const [authReady, setAuthReady] = useState(false)
+
+  const isAuthenticated = useMemo(() => Boolean(identity), [identity])
+
+  const principal = useMemo(() => {
+    return identity?.getPrincipal().toString()
+  }, [identity])
 
   useEffect(() => {
     if (!authClient) {
@@ -86,7 +79,7 @@ const useAuth: UseAuth = () => {
 
   const logout = useCallback(() => {
     setIdentity(null)
-    setAuthType(undefined)
+    setAuthType(null)
     cookies.deleteCookie(COOKIE_IDENTITY_NAME)
     cookies.deleteCookie(COOKIE_AUTH_TYPE_NAME)
     authClient?.logout()
@@ -144,7 +137,11 @@ const useAuth: UseAuth = () => {
     [loginWithII, loginWithPem],
   )
 
-  return { login, logout, principal, identity, isAuthenticated, authReady }
+  return (
+    <AuthContext.Provider value={{ login, logout, principal, identity, isAuthenticated, authReady }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export default useAuth
+export default AuthProvider

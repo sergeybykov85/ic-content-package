@@ -1,5 +1,5 @@
 import { type FC, useMemo } from 'react'
-import { type Package } from '~/services/packageRegistry.ts'
+import { type Package } from '~/recoil/packages'
 import styles from './PackageCard.module.scss'
 interface PackageCardProps {
   data: Package

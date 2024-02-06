@@ -3,11 +3,13 @@ import type { ActorMethod, ActorSubclass, Identity } from '@dfinity/agent'
 import { Actor, HttpAgent } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 
+export type ActorInstance = ActorSubclass<Record<string, ActorMethod<unknown[], unknown>>>
+
 const createActor = (
   idl: IDL.InterfaceFactory,
   canisterId: string,
   identity?: Identity | Secp256k1KeyIdentity,
-): ActorSubclass<Record<string, ActorMethod<unknown[], unknown>>> => {
+): ActorInstance => {
   const isLocal = import.meta.env.VITE_DFX_NETWORK !== 'ic'
   const host = isLocal ? import.meta.env.VITE_HOST : undefined
   const agent = new HttpAgent({ host, identity })

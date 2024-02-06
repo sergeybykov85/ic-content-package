@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react'
 import Button from '~/components/general/Button'
 import Dialog from '~/components/general/ModalDialog'
 import { LoginForm } from '~/components/features/Login'
-import { useAuth } from '~/recoil/auth'
+import { useAuth } from '~/context/AuthContext'
 import If from '~/components/general/If'
 import clsx from 'clsx'
 import PrincipalBtn from '~/components/features/Login/PrincipalBtn.tsx'
@@ -30,7 +30,7 @@ const Login: FC<LoginButtonProps> = ({ className }) => {
 
   return (
     <div className={clsx(styles.container, className)}>
-      <If condition={isAuthenticated}>
+      <If condition={isAuthenticated && Boolean(principal)}>
         <PrincipalBtn {...{ principal }} />
       </If>
       <Button variant={!isAuthenticated ? 'contained' : 'text'} {...{ onClick }}>
