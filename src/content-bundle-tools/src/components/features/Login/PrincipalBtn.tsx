@@ -3,11 +3,11 @@ import copyToClipboard from '~/utils/copyToClipboard'
 import styles from './Login.module.scss'
 import Button from '~/components/general/Button'
 
-interface PrincipalProps {
+interface PrincipalBtnProps {
   principal: string
 }
 
-const Principal: FC<PrincipalProps> = ({ principal }) => {
+const PrincipalBtn: FC<PrincipalBtnProps> = ({ principal }) => {
   const [copied, setCopied] = useState(false)
 
   const shortPrincipal = useMemo(() => {
@@ -40,4 +40,4 @@ const Principal: FC<PrincipalProps> = ({ principal }) => {
   )
 }
 
-export default Principal
+export default PrincipalBtn

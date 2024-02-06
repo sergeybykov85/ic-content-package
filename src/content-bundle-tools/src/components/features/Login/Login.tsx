@@ -6,7 +6,7 @@ import { LoginForm } from '~/components/features/Login'
 import { useAuth } from '~/recoil/auth'
 import If from '~/components/general/If'
 import clsx from 'clsx'
-import Principal from '~/components/features/Login/Principal'
+import PrincipalBtn from '~/components/features/Login/PrincipalBtn.tsx'
 import styles from './Login.module.scss'
 
 interface LoginButtonProps {
@@ -31,7 +31,7 @@ const Login: FC<LoginButtonProps> = ({ className }) => {
   return (
     <div className={clsx(styles.container, className)}>
       <If condition={isAuthenticated}>
-        <Principal {...{ principal }} />
+        <PrincipalBtn {...{ principal }} />
       </If>
       <Button variant={!isAuthenticated ? 'contained' : 'text'} {...{ onClick }}>
         {!isAuthenticated ? 'Log in' : 'Log out'}
