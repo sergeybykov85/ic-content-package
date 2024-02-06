@@ -20,6 +20,7 @@ module {
 	public type ResourcePath = {url : Text; bucket_id:Text; resource_id: Text; locale:?Text;  name:?Text};
 
 	public type Segmentation = {
+		total_supply : Nat;
 		classifications : [Text];
 		countries : [Text];
 		tags : [Text];
@@ -61,6 +62,9 @@ module {
 	};
 
 	public type Errors = {
+		// not enough cycles
+		#FuelNotEnough;
+		// data store is not ready for the package
 		#DataStoreNotInitialized;
 		// no resource or no chunk
 		#NotFound;

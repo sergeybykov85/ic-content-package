@@ -48,7 +48,8 @@ module {
 		owner : CommonTypes.Identity;
 		metadata : ?MetadataArgs;
 		contributors : ?[CommonTypes.Identity];
-		cycles : ?Nat;
+		cycles_package : ?Nat;
+		cycles_datastore : ?Nat;
 	};
 
 	public type MetadataArgs = {
@@ -110,7 +111,7 @@ module {
 	
 		public type PackageRegistryActor = actor {
 			is_submitter : shared(identity:CommonTypes.Identity)  -> async Bool;
-			register_package : shared(package : Principal)  -> async Result.Result<Text, CommonTypes.Errors>;
+			register_package : shared(package : Principal, assign_creator : ?CommonTypes.Identity)  -> async Result.Result<Text, CommonTypes.Errors>;
 		};		
 
 		public type BundlePackageActor = actor {

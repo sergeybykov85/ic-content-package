@@ -248,6 +248,8 @@ module {
 		nested_path : ?Text;
 		name : ?Text;
 		locale : ?Text;
+		// used for the replacement
+		resource_id : ?Text;
 		payload : T;
 		action : DataPackageAction;
 	};
