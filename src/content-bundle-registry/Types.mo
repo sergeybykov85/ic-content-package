@@ -32,12 +32,6 @@ module {
 		#Index;     // index, names could be used as a part of browser url
 	};
 
-	public type SearchCriteriaArgs = {
-		country_code : ?Text;
-		tag : ?Text;
-		classification : ?Text;
-	};
-
 	public type PackageRegistryArgs = {
 		network : CommonTypes.Network;
 		index_service : ?Text;

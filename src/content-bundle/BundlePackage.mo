@@ -827,7 +827,17 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (?bundle_ids) { List.toArray(bundle_ids) };
 			case (null) { [] };
 		};
-    };	
+    };
+
+	/**
+	* Returns bundle ids for the ownerr
+	*/
+    public query func get_ids_for_owner(identity:CommonTypes.Identity) : async [Text] {
+		switch (owner2bundle_get(identity)) {
+			case (?bundle_ids) { List.toArray(bundle_ids) };
+			case (null) { [] };
+		};
+    };		
 	/**
 	* Returns bundle ids for the tag
 	*/
@@ -848,6 +858,12 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     public query func get_ids_for_country(country:Text) : async [Text] {
 		_get_ids_for(country2bundle_get, country);
     };
+	/**
+	* Returns bundle ids for the criteria
+	*/
+	public query func get_ids_for_criteria(criteria:CommonTypes.SearchCriteriaArgs) : async  [Text] {
+		_get_ids_for_criteria(criteria);
+	};	
 
 	/**
 	* Returns only valid ids. Method could be used for validation needs
@@ -878,17 +894,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     };
 
 	/**
+	* Returns bundle details by the search criteria
+	*/
+	public query func get_bundles_by_criteria (criteria:CommonTypes.SearchCriteriaArgs) : async  [Conversion.BundleDetailsView] {
+		let ids = _get_ids_for_criteria(criteria);
+		_get_bundles_by_ids(ids);
+	};
+
+	/**
 	* Returns bundle details by their ids
 	*/
     public query func get_bundles_by_ids(ids:[Text]) : async [Conversion.BundleDetailsView] {
-		let res = Buffer.Buffer<Conversion.BundleDetailsView>(Array.size(ids));
-		for (id in ids.vals()) {
-			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle)); };
-				case (null) {  };
-			};
-		};
-		Buffer.toArray(res);
+		_get_bundles_by_ids(ids);
     };	
 
 	/**
@@ -953,7 +970,44 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (?bundle_ids) {List.toArray(bundle_ids)};
 			case (null) {[]};
 		};
-    };			
+    };	
+
+	private func _get_ids_for_criteria(criteria:CommonTypes.SearchCriteriaArgs) :  [Text] {
+		let by_creator = switch (criteria.creator) {
+			case (?identity) {
+				switch (creator2bundle_get(identity)) {
+					case (?bundle_ids) { List.toArray(bundle_ids) };
+					case (null) { [] };
+				};
+			};
+			case (null) {[]};
+		};		
+		let by_country = switch (criteria.country_code) {
+			case (?country_code) { _get_ids_for(country2bundle_get, country_code)};
+			case (null) {[]};
+		};		
+		let by_tag = switch (criteria.tag) {
+			case (?tag) { _get_ids_for(tag2bundle_get, tag)};
+			case (null) {[]};
+		};
+		let by_class = switch (criteria.classification) {
+			case (?classification) {_get_ids_for(classification2bundle_get, classification)};
+			case (null) {[]};
+		};
+		if (criteria.intersect) {CommonUtils.build_intersect([by_creator, by_country, by_tag, by_class]);}
+		else {CommonUtils.build_uniq([by_creator, by_country, by_tag, by_class]);}
+	};
+
+    private func _get_bundles_by_ids(ids:[Text]) : [Conversion.BundleDetailsView] {
+		let res = Buffer.Buffer<Conversion.BundleDetailsView>(Array.size(ids));
+		for (id in ids.vals()) {
+			switch (bundle_get(id)) {
+				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle)); };
+				case (null) {  };
+			};
+		};
+		Buffer.toArray(res);
+    };						
 
 	private func _get_classifications () : [Text] {
 		let class_buff = Buffer.Buffer<Text>(Trie.size(classification2bundle));
