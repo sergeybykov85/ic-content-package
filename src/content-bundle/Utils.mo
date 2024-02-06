@@ -16,6 +16,7 @@ import Trie "mo:base/Trie";
 import Buffer "mo:base/Buffer";
 import List "mo:base/List";
 import Option "mo:base/Option";
+import TrieSet "mo:base/TrieSet";
 
 import CommonTypes "../shared/CommonTypes";
 import Types "./Types";
@@ -159,5 +160,24 @@ module {
     	res.add(b);        
     	Buffer.toArray(res);
     };
+
+    public func build_uniq4D (ar: [[Text]]) : [Text] {
+         var set = TrieSet.empty<Text>();
+         for (array in ar.vals()) {
+            for (a in array.vals()) {
+                set := TrieSet.put(set, a, Text.hash(a), Text.equal);
+            }
+         };
+         TrieSet.toArray(set);
+    };
+
+    public func build_uniq_4D (ar1: [Text], ar2 : [Text], ar3 : [Text], ar4 : [Text]) : [Text] {
+        var set = TrieSet.empty<Text>();
+        for (a in ar1.vals()) {set := TrieSet.put(set, a, Text.hash(a), Text.equal)};
+        for (a in ar2.vals()) {set := TrieSet.put(set, a, Text.hash(a), Text.equal)};
+        for (a in ar3.vals()) {set := TrieSet.put(set, a, Text.hash(a), Text.equal)};
+        for (a in ar4.vals()) {set := TrieSet.put(set, a, Text.hash(a), Text.equal)};
+        TrieSet.toArray(set);
+    };    
 
 };

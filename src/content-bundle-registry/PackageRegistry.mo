@@ -384,7 +384,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		await index_service_actor.get_data_segmentation();
 	};
 
-	public composite query func get_packages_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundlePackageView] {
+	public composite query func get_packages_by_criteria(criteria:CommonTypes.SearchCriteriaArgs) : async  [Conversion.BundlePackageView] {
 		let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
 		
 		let by_country = switch (criteria.country_code) {
@@ -399,7 +399,11 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (?classification) { await index_service_actor.get_packages_by_classification(classification)};
 			case (null) {[]};
 		};
-		_get_packages(Utils.build_uniq([by_country, by_tag, by_class]));
+
+		var ids:[Text] = [];
+		if (criteria.intersect) {ids:=CommonUtils.build_intersect([by_country, by_tag, by_class]);}
+		else { ids:=CommonUtils.build_uniq([by_country, by_tag, by_class]);};
+		_get_packages(ids);
 	};
 
 	public query func get_index_service() : async Text {

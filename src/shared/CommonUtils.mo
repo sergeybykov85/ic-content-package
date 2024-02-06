@@ -2,6 +2,11 @@ import Prelude "mo:base/Prelude";
 import Prim "mo:⛔";
 import Text "mo:base/Text";
 import Trie "mo:base/Trie";
+import TrieSet "mo:base/TrieSet";
+import Iter "mo:base/Iter";
+import Array "mo:base/Array";
+import Buffer "mo:base/Buffer";
+import Option "mo:base/Option";
 
 import CommonTypes "./CommonTypes";
 
@@ -46,6 +51,38 @@ module {
             case (#ICP) { "ICP"};
             case (#EvmChain) {"ETH"};
         };
-    };     
+    };
+
+    public func build_uniq (arrays: [[Text]]) : [Text] {
+         var set = TrieSet.empty<Text>();
+         for (array in arrays.vals()) {
+            for (a in array.vals()) {
+                set := TrieSet.put(set, a, Text.hash(a), Text.equal);
+            }
+         };
+         TrieSet.toArray(set);
+    }; 
+
+    public func build_intersect(arrays : [[Text]]) : [Text] {
+        if (arrays.size() == 0) return [];
+        // take 1st array
+        let array_1:[Text] = arrays[0];
+        let size = arrays.size();
+        if (size == 1) return array_1;
+        let intersect = Buffer.Buffer<Text>(size);
+
+        for (id in Iter.fromArray(array_1)) {
+            var is_intersect = true;
+            let arrays_from_2 = Array.subArray<[Text]>(arrays, 1, size-1);
+            label l for (array_from_2 in Iter.fromArray(arrays_from_2)) {
+                if (Option.isNull(Array.find(array_from_2, func (a: Text) : Bool { a == id } ))) {
+                    is_intersect := false;
+                    break l; 
+                };
+            };
+            if (is_intersect) { intersect.add(id);};
+        };
+        Buffer.toArray(intersect);
+    };         
 
 };
