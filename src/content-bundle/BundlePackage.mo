@@ -861,7 +861,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle ids for the criteria
 	*/
-	public query func get_ids_for_criteria(criteria:CommonTypes.SearchCriteriaArgs) : async  [Text] {
+	public query func get_ids_for_criteria(criteria:Types.SearchCriteriaArgs) : async  [Text] {
 		_get_ids_for_criteria(criteria);
 	};	
 
@@ -896,7 +896,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle details by the search criteria
 	*/
-	public query func get_bundles_by_criteria (criteria:CommonTypes.SearchCriteriaArgs) : async  [Conversion.BundleDetailsView] {
+	public query func get_bundles_by_criteria (criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundleDetailsView] {
 		let ids = _get_ids_for_criteria(criteria);
 		_get_bundles_by_ids(ids);
 	};
@@ -972,7 +972,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
     };	
 
-	private func _get_ids_for_criteria(criteria:CommonTypes.SearchCriteriaArgs) :  [Text] {
+	private func _get_ids_for_criteria(criteria:Types.SearchCriteriaArgs) :  [Text] {
 		let by_creator = switch (criteria.creator) {
 			case (?identity) {
 				switch (creator2bundle_get(identity)) {

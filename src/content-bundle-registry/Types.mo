@@ -23,6 +23,17 @@ module {
 		#Shared;
 	};
 
+	public type SearchCriteriaArgs = {
+		// true -- AND for all filters; false --> OR for all filters
+		intersect : Bool;
+		kind : ?Submission;
+		creator : ?CommonTypes.Identity;
+		country_code :?Text;		
+		tag : ?Text;
+		classification : ?Text;
+	};		
+
+
 	public type ImageData = {
 		value : Blob;
 		content_type : ?Text;
