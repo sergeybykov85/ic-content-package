@@ -1,9 +1,9 @@
-@import "../../../styles/variables";
+@import "src/styles/variables";
 
 .card {
   position: relative;
   max-width: 600px;
-  border: 1px solid #E6E6E6;
+  border: 1px solid $border-color;
   border-radius: $border-radius;
   padding: 16px 16px 32px 16px;
   &:hover {

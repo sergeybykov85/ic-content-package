@@ -1,0 +1,15 @@
+@import "src/styles/variables";
+
+.input {
+  padding: 16px;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  transition: $transition-time;
+
+  &:active, &:focus-visible {
+    border-color: $primary-blue-color;
+  }
+
+  font-size: 16px;
+
+}

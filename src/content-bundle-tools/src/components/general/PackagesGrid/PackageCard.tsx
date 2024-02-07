@@ -1,6 +1,6 @@
 import { type FC, useMemo } from 'react'
 import styles from '~/components/general/PackagesGrid/PackageCard.module.scss'
-import { Package } from '~/types/packagesTypes.ts'
+import type { Package } from '~/types/packagesTypes.ts'
 interface PackageCardProps {
   data: Package
 }
