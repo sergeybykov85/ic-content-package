@@ -5,6 +5,7 @@
   border: 1px solid $border-color;
   border-radius: $border-radius;
   transition: $transition-time;
+  background: transparent;
 
   &:active, &:focus-visible {
     border-color: $primary-blue-color;

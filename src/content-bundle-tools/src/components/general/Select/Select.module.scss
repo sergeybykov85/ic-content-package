@@ -1,0 +1,60 @@
+@import "src/styles/variables";
+
+.select {
+  position: relative;
+  display: block;
+
+  &:after {
+    position: absolute;
+    content: "";
+    background: url("/public/images/arrow-down.svg") no-repeat center;
+    width: 10px;
+    height: 100%;
+    right: 16px;
+    transition: $transition-time;
+    z-index: -1;
+  }
+}
+
+.opened {
+  &:after {
+    transform: rotate(180deg);
+  }
+  .options {
+    display: block;
+  }
+}
+
+.input {
+  cursor: pointer;
+  padding-right: 32px;
+}
+
+.hide {
+  display: none;
+}
+
+.options {
+  display: none;
+  position: absolute;
+  z-index: 1;
+  background: #FFFFFF;
+
+  width: 100%;
+  margin-top: 8px;
+  padding: 0;
+  list-style-type: none;
+  cursor: pointer;
+  overflow: hidden;
+
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+
+  li {
+    z-index: 1;
+    padding: 16px;
+    &:hover {
+      background: $grey-background-color;
+    }
+  }
+}

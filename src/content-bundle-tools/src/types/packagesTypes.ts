@@ -9,4 +9,8 @@ export interface Package {
   logo_url?: string[]
 }
 
-export type PackageType = 'public' | 'private' | 'shared'
+export enum PackageTypes {
+  Public = 'Public',
+  Private = 'Private',
+  Shared = 'Shared',
+}
