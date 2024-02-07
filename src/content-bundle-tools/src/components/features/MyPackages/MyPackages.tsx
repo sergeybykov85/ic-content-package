@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from 'react'
 import { useServices } from '~/context/ServicesContext'
 import { useAuth } from '~/context/AuthContext'
-import { Package } from '~/types/packagesTypes.ts'
+import type { Package } from '~/types/packagesTypes.ts'
 import PackagesGrid from '~/components/general/PackagesGrid'
 
 const MyPackages: FC = () => {

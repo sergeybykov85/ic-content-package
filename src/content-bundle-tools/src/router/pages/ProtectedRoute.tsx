@@ -4,7 +4,6 @@ import { Navigate, Outlet } from 'react-router-dom'
 
 const ProtectedRoute: FC = () => {
   const { isAuthenticated, authReady } = useAuth()
-  console.log(isAuthenticated)
   if (!authReady) {
     return null // TODO: Loading...
   }
