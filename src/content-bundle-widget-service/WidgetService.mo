@@ -23,8 +23,6 @@ import ICS2Utils "mo:ics2-core/Utils";
 
 shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceArgs) = this {
 
-	let DEF_ALLOWANCE:Nat = 10;
-	
 	// immutable field
 	let CREATOR:CommonTypes.Identity = {
 		identity_type = #ICP;
@@ -39,8 +37,14 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 
 	stable let NETWORK = initArgs.network;
 
+	// trial allowance -- minimum number of packages to deploy even if allowances is not set. This is controlled by access_list.
+	stable var trial_allowance : Nat = 0;	
+
 	// all registered widgets, order is maintaited
 	stable var all_widgets : List.List<Text> = List.nil();
+
+	// type to package
+    stable var type2widget : Trie.Trie<Text, List.List<Text>> = Trie.empty();
 
     // all widgets, key - uiniq widget id
     stable var widgets : Trie.Trie<Text, Types.Widget> = Trie.empty();
@@ -60,6 +64,9 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	private func creator2widget_get(identity : CommonTypes.Identity) : ?List.List<Text> = Trie.get(creator2widget, CommonUtils.identity_key(identity), Text.equal);
 
     private func allowance_get(identity : CommonTypes.Identity) : ?Types.Allowance = Trie.get(allowance, CommonUtils.identity_key(identity), Text.equal);
+	
+    private func type2widget_get(id : Text) : ?List.List<Text> = Trie.get(type2widget, CommonUtils.text_key(id), Text.equal);	
+	
 	/**
 	* Transfers ownership of the widget service from current owner to the new one
 	*/
@@ -68,6 +75,15 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		owner :=to;
 		#ok();
 	};
+
+	/**
+	* Applies the trial allowance
+	*/
+	public shared ({ caller }) func apply_trial_allowance (v : Nat) : async Result.Result<(), CommonTypes.Errors> {
+		if (not can_manage(caller)) return #err(#AccessDenied);
+		trial_allowance := v;
+		#ok();
+	};	
 
 	/**
 	* Registers an allowance
@@ -106,7 +122,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		// allowed or not
 		let allowance = switch (allowance_get(identity)) {
 			case (?c) {c.allowed_widgets};
-			case (null) {DEF_ALLOWANCE};
+			case (null) {trial_allowance};
 		};
 		if (allowance == 0) return #err(#AccessDenied);
 		// already created
@@ -161,6 +177,13 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 			case (?by_creator) {creator2widget := Trie.put(creator2widget, CommonUtils.identity_key(identity), Text.equal, List.push(widget_id, by_creator)).0; };
 			case (null) {creator2widget := Trie.put(creator2widget, CommonUtils.identity_key(identity), Text.equal, List.push(widget_id, List.nil())).0;}
 		};
+
+		// index by type
+		let type_key = _resolve_widget_type(args.type_id);
+		switch (type2widget_get(type_key)) {
+			case (?by_kind) {type2widget := Trie.put(type2widget, CommonUtils.text_key(type_key), Text.equal, List.push(widget_id, by_kind)).0; };
+			case (null) {type2widget := Trie.put(type2widget, CommonUtils.text_key(type_key), Text.equal, List.push(widget_id, List.nil())).0;}
+		};		
 		#ok(widget_id);
 	};
 
@@ -276,8 +299,6 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 			case (null) {return #err(#NotFound)}
 		};
 	};
-	
-
 
 	public shared func wallet_receive() {
     	let amount = Cycles.available();
@@ -309,7 +330,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	public query func allowance_by(identity:CommonTypes.Identity) : async Nat {
 		switch (allowance_get(identity)) {
 			case (?c) {c.allowed_widgets};
-			case (null) {DEF_ALLOWANCE};
+			case (null) {trial_allowance};
 		};
 	};
 	/**
@@ -322,16 +343,59 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	/**
 	* Returns widgets for the creator
 	*/
-    public query func get_widgets_for_creator(identity:CommonTypes.Identity) : async [Conversion.WidgetView] {
+    public query func get_widgets_by_creator(identity:CommonTypes.Identity) : async [Conversion.WidgetView] {
 		switch (creator2widget_get(identity)) {
 			case (?ids) { _get_widgets(List.toArray(ids)) };
 			case (null) { [] };
 		};
-    };	
+    };
+	/**
+	* Returns widgets for specific type
+	*/
+	public query func get_widgets_by_type(kind:Types.WidgetType) : async [Conversion.WidgetView] {
+		let kind_key = _resolve_widget_type(kind);
+		switch (type2widget_get(kind_key)) {
+			case (?by_kind) { _get_widgets(List.toArray(by_kind)) };
+			case (null) {[]};
+		};
+    };
+	/**
+	* Returns widgets based on the search crriteria.
+	*/
+	public query func get_widget_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.WidgetView] {
+		let by_creator = switch (criteria.creator) {
+			case (?identity) {
+				switch (creator2widget_get(identity)) {
+					case (?ids) { List.toArray(ids) };
+					case (null) { [] };
+				}
+			};
+			case (null) {[]};
+		};
+		let by_type = switch (criteria.kind) {
+			case (?kind) {
+				let kind_key = _resolve_widget_type(kind);
+				switch (type2widget_get(kind_key)) {
+					case (?by_kind) {(List.toArray(by_kind)) };
+					case (null) {[]};
+				};
+			};
+			case (null) {[]};
+		};		
+
+		var ids:[Text] = [];
+		if (criteria.intersect) {ids:=CommonUtils.build_intersect([by_creator, by_type]);}
+		else { ids:=CommonUtils.build_uniq([by_creator, by_type])};
+		_get_widgets(ids);
+	};	
 
 	public query func activity_by(identity:CommonTypes.Identity) : async Types.Activity {
 		_activity_by(identity);
 	};
+
+	public query func get_trial_allowance() : async Nat {
+		return trial_allowance;
+  	};
 
 	public query func total_supply() : async Nat {
 		return List.size(all_widgets);
@@ -372,7 +436,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	private func _activity_by(identity:CommonTypes.Identity) : Types.Activity {
 		let allowance = switch (allowance_get(identity)) {
 			case (?c) {c.allowed_widgets};
-			case (null) {DEF_ALLOWANCE};
+			case (null) {trial_allowance};
 		};
 		{ registered_widgets = switch (creator2widget_get(identity)) {
 			case (?c) {List.toArray(c)};
@@ -391,6 +455,14 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 			};
 		};
 		Buffer.toArray(res);
+    };
+
+
+	private func _resolve_widget_type (widget_type: Types.WidgetType) : Text {
+        switch (widget_type) {
+            case (#Bundle) { "Bundle"};
+            case (#Feed) { "Feed"};
+        };
     };
 	
 
