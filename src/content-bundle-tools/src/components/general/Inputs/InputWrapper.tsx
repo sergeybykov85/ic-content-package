@@ -1,6 +1,6 @@
 import { Children, cloneElement, type FC, isValidElement, ReactNode, useId } from 'react'
 import clsx from 'clsx'
-import styles from '~/components/general/Inputs/InputWrapper.module.scss'
+import styles from '~/components/general/Inputs/Inputs.module.scss'
 import If from '~/components/general/If'
 
 export interface InputWrapperProps {

@@ -2,8 +2,27 @@
 
 .select {
   position: relative;
-  display: block;
+  display: inline-block;
+}
 
+.label {
+  display: block;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.opened {
+  .input:after {
+    transform: rotate(180deg);
+  }
+  .options {
+    display: block;
+  }
+}
+
+.input {
+  width: 100%;
+  position: relative;
   &:after {
     position: absolute;
     content: "";
@@ -15,20 +34,10 @@
     transition: $transition-time;
     z-index: -1;
   }
-}
-
-.opened {
-  &:after {
-    transform: rotate(180deg);
+  input {
+    cursor: pointer;
+    padding-right: 32px;
   }
-  .options {
-    display: block;
-  }
-}
-
-.input input {
-  cursor: pointer;
-  padding-right: 32px;
 }
 
 .hide {

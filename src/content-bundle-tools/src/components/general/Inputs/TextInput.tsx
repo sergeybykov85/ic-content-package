@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, FC } from 'react'
-import styles from './InputWrapper.module.scss'
+import styles from '~/components/general/Inputs/Inputs.module.scss'
 import clsx from 'clsx'
 import InputWrapper, { type InputWrapperProps } from './InputWrapper.tsx'
 

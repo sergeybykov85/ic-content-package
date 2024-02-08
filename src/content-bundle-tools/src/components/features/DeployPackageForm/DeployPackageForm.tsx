@@ -1,4 +1,4 @@
-import { type FC } from 'react'
+import { type FC, useCallback, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { TextArea, TextInput } from '~/components/general/Inputs'
@@ -6,9 +6,15 @@ import Button from '~/components/general/Button'
 import styles from './DeployPackageForm.module.scss'
 import { useServices } from '~/context/ServicesContext'
 import { PackageTypes } from '~/types/packagesTypes.ts'
+import Select from '~/components/general/Select'
+
+const packageTypes = Object.values(PackageTypes)
 
 const DeployPackageForm: FC = () => {
   const { packageService } = useServices()
+  const [type, setType] = useState<PackageTypes>(PackageTypes.Public)
+
+  const onSelect = useCallback((type: PackageTypes) => setType(type), [])
 
   const form = useFormik({
     initialValues: {
@@ -23,7 +29,7 @@ const DeployPackageForm: FC = () => {
     onSubmit: values => {
       console.log('Deploying...', values)
       packageService
-        ?.deployPackage(PackageTypes.Private, { ...values })
+        ?.deployPackage(type, { ...values })
         .then(response => {
           console.log('SUCCESS', response)
         })
@@ -32,8 +38,10 @@ const DeployPackageForm: FC = () => {
         })
     },
   })
+
   return (
     <form onSubmit={form.handleSubmit}>
+      <Select<PackageTypes> label="Chose type" defaultValue={type} options={packageTypes} onSelect={onSelect} />
       <TextInput
         name="name"
         label="Name"
