@@ -3,6 +3,7 @@ import WelcomePage from '~/router/pages/WelcomePage.tsx'
 import ProtectedRoute from '~/router/pages/ProtectedRoute.tsx'
 import MyPackagesPage from '~/router/pages/MyPackagesPage.tsx'
 import WarehousePage from '~/router/pages/WarehousePage.tsx'
+import DeployPackagePage from '~/router/pages/DeployPackagePage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
       {
         path: 'my-packages',
         element: <MyPackagesPage />,
+      },
+      {
+        path: 'deploy-package',
+        element: <DeployPackagePage />,
       },
       {
         path: 'warehouse',

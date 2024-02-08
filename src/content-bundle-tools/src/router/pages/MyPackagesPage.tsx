@@ -9,7 +9,7 @@ const MyPackagesPage: FC = () => {
     <SectionLayout
       title="My packages"
       rightElement={
-        <Link to="">
+        <Link to="/deploy-package">
           <Button text="Deploy new package" />
         </Link>
       }

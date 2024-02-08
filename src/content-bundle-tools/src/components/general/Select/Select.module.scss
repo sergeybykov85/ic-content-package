@@ -10,6 +10,7 @@
     background: url("/public/images/arrow-down.svg") no-repeat center;
     width: 10px;
     height: 100%;
+    top: 0;
     right: 16px;
     transition: $transition-time;
     z-index: -1;
@@ -25,7 +26,7 @@
   }
 }
 
-.input {
+.input input {
   cursor: pointer;
   padding-right: 32px;
 }

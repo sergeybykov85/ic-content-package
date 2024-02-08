@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useState } from 'react'
-import TextInput from '~/components/general/TextInput'
+import { TextInput } from '~/components/general/Inputs'
 import useClickAway from '~/hooks/useClickAway.ts'
 import styles from './Select.module.scss'
 import clsx from 'clsx'

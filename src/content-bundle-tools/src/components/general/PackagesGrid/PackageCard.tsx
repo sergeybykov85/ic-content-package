@@ -13,7 +13,6 @@ const PackageCard: FC<PackageCardProps> = ({ data }) => {
     <div className={styles.card}>
       <img src={logoUrl} alt={`${data.name} package picture`} />
       <h3 className={styles.name}>{data.name}</h3>
-      <p className={styles.description}>{data.description}</p>
       <p className={styles.created}>
         Created: <span>{created}</span>
       </p>
