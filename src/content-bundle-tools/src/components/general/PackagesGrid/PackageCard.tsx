@@ -5,7 +5,7 @@ interface PackageCardProps {
   data: Package
 }
 const PackageCard: FC<PackageCardProps> = ({ data }) => {
-  const logoUrl = useMemo(() => data.logo_url?.[0] || '', [data.logo_url]) // TODO: Image is optional
+  const logoUrl = useMemo(() => data.logo_url?.[0] || '/images/empty-image.svg', [data.logo_url]) // TODO: Image is optional
   const created = useMemo(() => {
     return new Date(Number(data.created) / 1000000).toLocaleDateString()
   }, [data.created])

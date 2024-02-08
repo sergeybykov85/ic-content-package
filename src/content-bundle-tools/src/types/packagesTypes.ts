@@ -14,3 +14,9 @@ export enum PackageTypes {
   Private = 'Private',
   Shared = 'Shared',
 }
+
+export interface DeployPackageParams {
+  name: string
+  description: string
+  logo?: Uint8Array
+}
