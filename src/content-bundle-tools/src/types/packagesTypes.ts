@@ -1,11 +1,11 @@
-export interface Package {
+export interface PackageRaw {
   created: bigint // nanoseconds
   description: string
   id: string
   max_supply: bigint[]
   name: string
   registered: string
-  submission: Record<string, null>
+  submission: Record<PackageTypes, null>
   logo_url?: string[]
 }
 

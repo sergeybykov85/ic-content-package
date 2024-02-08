@@ -1,4 +1,5 @@
-import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import type { FC, ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AuthClient } from '@dfinity/auth-client'
 import { enqueueSnackbar } from 'notistack'
 import cookies from '~/utils/cookies.ts'
@@ -9,7 +10,7 @@ import {
   AUTH_TYPE,
   COOKIE_AUTH_TYPE_NAME,
   COOKIE_IDENTITY_NAME,
-  IdentityInstance,
+  type IdentityInstance,
 } from '~/types/authTypes.ts'
 import { AuthContext } from './index.ts'
 
@@ -42,9 +43,11 @@ const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       const authTypeFromCookie = cookies.getCookie(COOKIE_AUTH_TYPE_NAME) as AUTH_TYPE
       if (Object.values(AUTH_TYPE).includes(authTypeFromCookie)) {
         setAuthType(authTypeFromCookie)
+      } else {
+        setAuthReady(true)
       }
     }
-  }, [authClient, setAuthType])
+  }, [authClient, authType, setAuthType])
 
   const checkIIAuth = useCallback(() => {
     authClient

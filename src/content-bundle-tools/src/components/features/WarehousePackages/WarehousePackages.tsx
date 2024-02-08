@@ -1,5 +1,6 @@
-import { type Package, PackageTypes } from '~/types/packagesTypes.ts'
-import { FC, useEffect, useState } from 'react'
+import type { PackageTypes } from '~/types/packagesTypes.ts'
+import type { Package } from '~/models/Package.tsx'
+import { type FC, useEffect, useState } from 'react'
 import PackagesGrid from '~/components/general/PackagesGrid'
 import { useServices } from '~/context/ServicesContext'
 
@@ -17,7 +18,7 @@ const WarehousePackages: FC<WarehousePackagesProps> = ({ type }) => {
         setPackages(res)
       })
     }
-  }, [type])
+  }, [packageRegistry, type])
 
   return <PackagesGrid packages={packages} />
 }

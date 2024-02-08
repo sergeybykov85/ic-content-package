@@ -1,8 +1,8 @@
-import { FC, useEffect, useState } from 'react'
+import { type FC, useEffect, useState } from 'react'
 import { useServices } from '~/context/ServicesContext'
 import { useAuth } from '~/context/AuthContext'
-import type { Package } from '~/types/packagesTypes.ts'
 import PackagesGrid from '~/components/general/PackagesGrid'
+import type { Package } from '~/models/Package.tsx'
 
 const MyPackages: FC = () => {
   const { principal = '' } = useAuth()
@@ -13,7 +13,7 @@ const MyPackages: FC = () => {
     if (packageRegistry) {
       packageRegistry.getMyPackages(principal).then(res => setPackages(res))
     }
-  }, [])
+  }, [packageRegistry, principal])
 
   return <PackagesGrid packages={packages} />
 }

@@ -24,6 +24,16 @@
   font-weight: 500;
   margin: 16px 0;
 }
+.submission {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: $border-radius;
+  background: black;
+  color: #FFFFFF;
+}
 .created {
   width: 100%;
   font-size: 14px;

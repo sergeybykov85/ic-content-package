@@ -35,8 +35,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       external: [
-        // path.resolve(__dirname, '../', 'declarations', 'package_registry', 'index.js')
         path.join(declarationsDirPath, 'package_registry', 'index.js'),
+        path.join(declarationsDirPath, 'package_service', 'index.js'),
       ],
     },
   },
