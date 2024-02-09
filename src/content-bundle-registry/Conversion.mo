@@ -20,6 +20,10 @@ module {
 		logo_url : ?Text;
 		created: Time.Time;
 		registered: Time.Time;
+		// who created a package
+		creator : CommonTypes.Identity;
+		// who registered a package
+		submitter : CommonTypes.Identity;		
 	};
 
 	public type SubmitterView = {
@@ -40,7 +44,9 @@ module {
 			description = info.description;
 			logo_url = info.logo_url;
 			created = info.created;
+			creator = info.creator;
 			registered = info.registered;
+			submitter = info.submitter;
         };
     };		
 
