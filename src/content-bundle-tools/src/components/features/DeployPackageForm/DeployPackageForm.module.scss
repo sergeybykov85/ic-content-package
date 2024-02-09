@@ -1,5 +1,7 @@
-.form {
-
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-column-gap: 32px;
 }
 .input {
   display: block;

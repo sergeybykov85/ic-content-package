@@ -18,5 +18,5 @@ export enum PackageTypes {
 export interface DeployPackageParams {
   name: string
   description: string
-  logo?: Uint8Array
+  logo?: { value: Uint8Array; type?: string }
 }

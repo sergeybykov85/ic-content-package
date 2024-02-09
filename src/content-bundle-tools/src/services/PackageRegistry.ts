@@ -1,16 +1,15 @@
-import createActor, { type ActorInstance } from '~/utils/createActor.ts'
 import { idlFactory as idl } from '~/../../declarations/package_registry'
-import { PackageRaw, PackageTypes } from '~/types/packagesTypes.ts'
+import type { PackageRaw, PackageTypes } from '~/types/packagesTypes.ts'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 import { Package } from '~/models/Package.tsx'
+import CanisterService from '~/models/CanisterService.ts'
 
 const PACKAGE_REGISTRY_CANISTER_ID = import.meta.env.VITE_PACKAGE_REGISTRY_CANISTER_ID
 
-export default class PackageRegistry {
-  private actor: ActorInstance
+export default class PackageRegistry extends CanisterService {
   constructor(identity?: Identity | Secp256k1KeyIdentity) {
-    this.actor = createActor(idl, PACKAGE_REGISTRY_CANISTER_ID, identity)
+    super(idl, PACKAGE_REGISTRY_CANISTER_ID, identity)
   }
   public getMyPackages = async (principal: string): Promise<Package[]> => {
     const rawPackages = (await this.actor.get_packages_for_creator({
