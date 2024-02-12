@@ -2,6 +2,7 @@ import type { IDL } from '@dfinity/candid'
 import type { Identity } from '@dfinity/agent'
 import { Actor, type ActorMethod, type ActorSubclass, HttpAgent } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
+import type { CanisterResponse } from '~/types/globals.ts'
 
 type ActorInstance = ActorSubclass<Record<string, ActorMethod<unknown[], unknown>>>
 
@@ -30,5 +31,13 @@ export default class CanisterService {
       agent,
       canisterId,
     })
+  }
+
+  protected responseHandler = <T>(response: CanisterResponse<T>): T => {
+    const { ok, err } = response
+    if (err || !ok) {
+      throw err || new Error('Something went wrong')
+    }
+    return ok
   }
 }

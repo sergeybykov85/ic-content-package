@@ -30,3 +30,7 @@ a {
 button, dialog {
   border: 0;
 }
+ul, ol {
+  list-style-type: none;
+  padding-left: initial;
+}

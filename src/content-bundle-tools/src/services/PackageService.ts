@@ -12,7 +12,7 @@ export default class PackageService extends CanisterService {
     super(idl, PACKAGE_SERVICE_CANISTER_ID, identity)
   }
 
-  public deployPackage = async (type: PackageTypes, params: DeployPackageParams): Promise<CanisterResponse<string>> => {
+  public deployPackage = async (type: PackageTypes, params: DeployPackageParams): Promise<string> => {
     const { name, description } = params
     // prettier-ignore
     const logo = params.logo ? [
@@ -22,9 +22,11 @@ export default class PackageService extends CanisterService {
       },
     ] : []
 
-    return (await this.actor[`deploy_${type.toLowerCase()}_package`](
+    const response = (await this.actor[`deploy_${type.toLowerCase()}_package`](
       { name, description, logo },
       [],
     )) as CanisterResponse<string>
+
+    return this.responseHandler(response)
   }
 }

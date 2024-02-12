@@ -1,3 +1,4 @@
 export interface CanisterResponse<T> {
-  ok: T
+  ok?: T
+  err?: unknown
 }

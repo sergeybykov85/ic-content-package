@@ -1,7 +1,7 @@
 import { type FC } from 'react'
 import PackageCard from '~/components/general/PackagesGrid/PackageCard.tsx'
 import styles from '~/components/general/PackagesGrid/PackagesGrid.module.scss'
-import { type Package } from '~/models/Package.tsx'
+import { type Package } from '~/models/Package.ts'
 import { Link } from 'react-router-dom'
 
 interface PackagesProps {

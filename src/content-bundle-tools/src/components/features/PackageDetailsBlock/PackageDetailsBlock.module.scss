@@ -1,0 +1,39 @@
+@import "src/styles/variables";
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+
+  padding: 32px;
+}
+
+.name {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.details {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+  }
+  span {
+    display: block;
+    color: #727272;
+    margin-right: auto;
+  }
+}
+
+.img {
+  border-radius: $border-radius;
+  width: 100%;
+}
+// color: #727272;

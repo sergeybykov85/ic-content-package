@@ -1,15 +1,19 @@
 import { type FC, useCallback } from 'react'
 import SectionLayout from '~/components/layouts/SectionLayout'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import Loader from '~/components/general/Loader'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import If from '~/components/general/If'
 import Button from '~/components/general/Button'
+import PackageDetailsBlock from '~/components/features/PackageDetailsBlock'
 
 const PackageDetailsPage: FC = () => {
   const { packageId } = useParams()
   const { key } = useLocation()
   const navigate = useNavigate()
   const goBack = useCallback(() => navigate(-1), [navigate])
+
+  if (!packageId) {
+    return <Navigate to="/" replace />
+  }
   return (
     <SectionLayout
       title={`Package ID ${packageId}`}
@@ -21,7 +25,7 @@ const PackageDetailsPage: FC = () => {
         </If>
       }
     >
-      <Loader />
+      <PackageDetailsBlock packageId={packageId} />
     </SectionLayout>
   )
 }

@@ -1,18 +1,20 @@
-export interface PackageRaw {
+export enum PackageTypes {
+  Public = 'Public',
+  Private = 'Private',
+  Shared = 'Shared',
+}
+
+type PackageSubmission = Record<PackageTypes, null>
+
+export interface PackageDto {
   created: bigint // nanoseconds
   description: string
   id: string
   max_supply: bigint[]
   name: string
-  registered: string
-  submission: Record<PackageTypes, null>
-  logo_url?: string[]
-}
-
-export enum PackageTypes {
-  Public = 'Public',
-  Private = 'Private',
-  Shared = 'Shared',
+  registered: bigint // nanoseconds
+  submission: PackageSubmission
+  logo_url: string[]
 }
 
 export interface DeployPackageParams {

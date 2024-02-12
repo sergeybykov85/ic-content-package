@@ -2,7 +2,7 @@ import { type FC, useEffect, useState } from 'react'
 import { useServices } from '~/context/ServicesContext'
 import { useAuth } from '~/context/AuthContext'
 import PackagesGrid from '~/components/general/PackagesGrid'
-import type { Package } from '~/models/Package.tsx'
+import type { Package } from '~/models/Package.ts'
 
 const MyPackages: FC = () => {
   const { principal = '' } = useAuth()
