@@ -178,7 +178,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							creator = creator;
 							submitter = submitter_identity;
 							created = package_details.created;
-							registered = Time.now();
+							submitted = Time.now();
 						}:Types.BundlePackage).0;
 
 						submitter.packages:=List.push(package_id, submitter.packages);

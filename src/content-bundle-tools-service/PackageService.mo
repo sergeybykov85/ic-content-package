@@ -134,6 +134,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	* Deploys a public package
 	*/
 	public shared ({ caller }) func deploy_public_package (metadata:Types.MetadataArgs, options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller))  return #err(#UnAuthorized);
 		let identity = _build_identity(caller);
 		let act : Types.Activity = _activity_by(identity);
 		if (act.allowance == 0)  return #err(#AccessDenied);
@@ -170,6 +171,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	* Deploys a private package
 	*/
 	public shared ({ caller }) func deploy_private_package (metadata:Types.MetadataArgs, options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller))  return #err(#UnAuthorized);
 		let identity = _build_identity(caller);
 		let act : Types.Activity = _activity_by(identity);
 		if (act.allowance == 0)  return #err(#AccessDenied);
@@ -203,6 +205,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	* Deploys a shared package. Parameter contributors allows to specify list of users who can create bundles inside the package
 	*/
 	public shared ({ caller }) func deploy_shared_package (metadata:Types.MetadataArgs, contributors:[CommonTypes.Identity], options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller))  return #err(#UnAuthorized);
 		let identity = _build_identity(caller);
 		let act : Types.Activity = _activity_by(identity);
 		if (act.allowance == 0)  return #err(#AccessDenied);

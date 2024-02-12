@@ -71,6 +71,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	* Transfers ownership of the widget service from current owner to the new one
 	*/
 	public shared ({ caller }) func transfer_ownership (to : CommonTypes.Identity) : async Result.Result<(), CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		if (not CommonUtils.identity_equals({identity_type = #ICP; identity_id = Principal.toText(caller);}, owner)) return #err(#AccessDenied);
 		owner :=to;
 		#ok();
@@ -80,6 +81,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	* Applies the trial allowance
 	*/
 	public shared ({ caller }) func apply_trial_allowance (v : Nat) : async Result.Result<(), CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		if (not can_manage(caller)) return #err(#AccessDenied);
 		trial_allowance := v;
 		#ok();
@@ -89,6 +91,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	* Registers an allowance
 	*/
 	public shared ({ caller }) func register_allowance (args : Types.AllowanceArgs) : async Result.Result<(), CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		if (not can_manage(caller)) return #err(#AccessDenied);
 		switch (allowance_get(args.identity)) {
 			case (?allowance) { return #err(#DuplicateRecord); };
@@ -104,6 +107,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	* Removes an existing allowance
 	*/
 	public shared ({ caller }) func remove_allowance (identity : CommonTypes.Identity) : async Result.Result<(), CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		if (not can_manage(caller)) return #err(#AccessDenied);
 		switch (allowance_get(identity)) {
 			case (null) { return #err(#NotFound); };
@@ -118,6 +122,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	* Creates a new widget object
 	*/
 	public shared ({ caller }) func create_widget (args : Types.WidgetCreationRequest) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		let identity = _build_identity(caller);
 		// allowed or not
 		let allowance = switch (allowance_get(identity)) {
@@ -188,6 +193,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	};
 
 	public shared ({ caller }) func update_widget_criteria (widget_id:Text, criteria: Types.CriteriaArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (widget_get(widget_id)) {
 			case (?w) {
 				let identity = _build_identity(caller);
@@ -220,6 +226,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 	* Removes an existing widget object
 	*/
 	public shared ({ caller }) func remove_widget (widget_id:Text) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (widget_get(widget_id)) {
 			case (?w) {
 				let identity = _build_identity(caller);

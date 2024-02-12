@@ -19,10 +19,10 @@ module {
 		description : Text;
 		logo_url : ?Text;
 		created: Time.Time;
-		registered: Time.Time;
+		submitted: Time.Time;
 		// who created a package
 		creator : CommonTypes.Identity;
-		// who registered a package
+		// who submitted a package
 		submitter : CommonTypes.Identity;		
 	};
 
@@ -45,7 +45,7 @@ module {
 			logo_url = info.logo_url;
 			created = info.created;
 			creator = info.creator;
-			registered = info.registered;
+			submitted = info.submitted;
 			submitter = info.submitter;
         };
     };		

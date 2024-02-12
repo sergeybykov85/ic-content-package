@@ -17,7 +17,7 @@ module {
 		name : Text;
 		description : Text;
 		created: Time.Time;
-		registered: Time.Time;
+		submitted: Time.Time;
 	};
 
 	public type SubmitterView = {
@@ -36,7 +36,7 @@ module {
 			name = info.name;
 			description = info.description;
 			created = info.created;
-			registered = info.registered;
+			submitted = info.submitted;
         };
     };		
 

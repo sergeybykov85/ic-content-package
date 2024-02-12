@@ -109,7 +109,7 @@ module {
 			name : Text;
 			description : Text;
 			created: Time.Time;
-			registered: Time.Time;
+			submitted: Time.Time;
 		};		
 
 		public type DataIndexView = {
@@ -144,7 +144,7 @@ module {
 			name : Text;
 			description : Text;
 			created: Time.Time;
-			registered: Time.Time;
+			submitted: Time.Time;
 		};
 	
 		public type PackageRegistryActor = actor {

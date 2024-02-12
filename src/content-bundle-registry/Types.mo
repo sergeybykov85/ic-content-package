@@ -74,10 +74,10 @@ module {
 		max_supply : ?Nat;
 		// who created a package
 		creator : CommonTypes.Identity;
-		// who registered a package
+		// who submitted a package
 		submitter : CommonTypes.Identity;
 		created: Time.Time;
-		registered: Time.Time;
+		submitted: Time.Time;
 	};
 
 	public type Submitter = {

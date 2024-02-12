@@ -79,6 +79,8 @@ module {
         #NotRegistered;
 		// when input argument contains wrong value
 		#InvalidRequest;
+		// not authorized
+		#UnAuthorized;		
 		// not authorized to manage certain object
 		#AccessDenied;
 		// no resource or no chunk

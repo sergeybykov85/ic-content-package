@@ -200,7 +200,7 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 					let segment = await package_actor.get_data_segmentation();
 					all_packages:= List.push(package_id, all_packages);
 					packages := Trie.put(packages, CommonUtils.text_key(package_id), Text.equal, {
-						registered = Time.now();
+						submitted = Time.now();
 						var last_scan = Time.now();
 					}:Types.PackageRef).0;
 					
@@ -293,7 +293,7 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 			case (?r) {
 				return #ok({
 					id = package_id;
-					registered = r.registered;
+					submitted = r.submitted;
 					last_scan = r.last_scan;
 					tags = switch (package2tag_get(package_id)) {
 						case (?ids) {ids };
