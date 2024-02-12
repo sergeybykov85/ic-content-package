@@ -2,6 +2,7 @@ import { type FC } from 'react'
 import PackageCard from '~/components/general/PackagesGrid/PackageCard.tsx'
 import styles from '~/components/general/PackagesGrid/PackagesGrid.module.scss'
 import { type Package } from '~/models/Package.tsx'
+import { Link } from 'react-router-dom'
 
 interface PackagesProps {
   packages: Package[]
@@ -13,7 +14,9 @@ const PackagesGrid: FC<PackagesProps> = ({ packages }) => {
   return (
     <div className={styles.grid}>
       {packages.map(item => (
-        <PackageCard data={item} key={item.id} />
+        <Link to={`/package/${item.id}`} key={item.id}>
+          <PackageCard data={item} />
+        </Link>
       ))}
     </div>
   )

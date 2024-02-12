@@ -4,6 +4,7 @@ import ProtectedRoute from '~/router/pages/ProtectedRoute.tsx'
 import MyPackagesPage from '~/router/pages/MyPackagesPage.tsx'
 import WarehousePage from '~/router/pages/WarehousePage.tsx'
 import DeployPackagePage from '~/router/pages/DeployPackagePage.tsx'
+import PackageDetailsPage from '~/router/pages/PackageDetailsPage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: 'warehouse',
         element: <WarehousePage />,
+      },
+      {
+        path: 'package/:packageId',
+        element: <PackageDetailsPage />,
       },
     ],
   },
