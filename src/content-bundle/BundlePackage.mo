@@ -819,7 +819,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
     public query func get_bundle_ref(id:Text) : async Result.Result<Conversion.BundleRefView, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
-			case (?bundle) { #ok(Conversion.convert_bundle_ref_view(bundle)); };
+			case (?bundle) { #ok(Conversion.convert_bundle_ref_view(bundle, id)); };
 			case (null) { return #err(#NotFound); };
 		};
     };
@@ -829,7 +829,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
     public query func get_bundle(id:Text) : async Result.Result<Conversion.BundleDetailsView, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
-			case (?bundle) { #ok(Conversion.convert_bundle_details_view(bundle)); };
+			case (?bundle) { #ok(Conversion.convert_bundle_details_view(bundle, id)); };
 			case (null) { return #err(#NotFound); };
 		};
     };		
@@ -900,7 +900,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		let res = Buffer.Buffer<Conversion.BundleRefView>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle, id)); };
 				case (null) {  };
 			};
 		};
@@ -932,7 +932,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         while (i < start + limit and i < all.size()) {
 			let id = all[i];
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle, id)); };
 				case (null) {  };
 			};
             i += 1;
@@ -1016,7 +1016,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		let res = Buffer.Buffer<Conversion.BundleDetailsView>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle, id)); };
 				case (null) {  };
 			};
 		};
