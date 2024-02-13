@@ -1,0 +1,9 @@
+@mixin ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@mixin grid-columns($repeat: 1) {
+  grid-template-columns: repeat($repeat, minmax(0, 1fr));
+}

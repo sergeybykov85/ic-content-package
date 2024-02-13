@@ -1,8 +1,9 @@
-import { type FC, useEffect, useMemo, useState } from 'react'
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { useServices } from '~/context/ServicesContext'
 import { enqueueSnackbar } from 'notistack'
 import styles from './PackageDetailsBlock.module.scss'
 import PackageDetails from '~/models/PackageDetails.ts'
+import copyToClipboard from '~/utils/copyToClipboard.ts'
 
 interface PackageDetailsBlockProps {
   packageId: string
@@ -14,26 +15,31 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
     () => initBundlePackageService?.(packageId),
     [initBundlePackageService, packageId],
   )
+
   const [packageData, setPackageData] = useState<PackageDetails | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    bundlePackageService?.dataSegmentation()
-  }, [])
-
-  useEffect(() => {
     bundlePackageService
-      ?.getPackageDetails(packageId)
+      ?.getPackageDetails()
       .then(data => setPackageData(data))
       .catch(error => {
-        // console.log(JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error))))
-        console.log(error)
+        console.error(error)
         enqueueSnackbar(error.message, {
           variant: 'error',
         })
       })
       .finally(() => setLoading(false))
   }, [bundlePackageService, packageId])
+
+  const handleCopyId = useCallback((value: string) => {
+    copyToClipboard(value, () => {
+      enqueueSnackbar('Copied to clipboard', {
+        variant: 'success',
+        preventDuplicate: false,
+      })
+    })
+  }, [])
 
   if (loading) {
     return <p>Skeleton</p>
@@ -47,16 +53,30 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
           <p>{packageData.description}</p>
           <ul className={styles.details}>
             <li>
-              <span>Type:</span>
-              {packageData.submission}
+              Type:
+              <span>{packageData.submission}</span>
             </li>
             <li>
-              <span>Max. supply:</span>
-              {packageData.maxSupply}
+              Created:
+              <span>{packageData.created}</span>
             </li>
             <li>
-              <span>Created:</span>
-              {packageData.created}
+              Creator:
+              <span className={styles['clickable-id']} onClick={() => handleCopyId(packageData.creator)}>
+                {packageData.creator}
+              </span>
+            </li>
+            <li onClick={() => handleCopyId(packageData.owner)}>
+              Owner:
+              <span className={styles['clickable-id']} onClick={() => handleCopyId(packageData.owner)}>
+                {packageData.owner}
+              </span>
+            </li>
+            <li>
+              Supply:
+              <span>
+                {packageData.totalBundles} / {packageData.maxSupply}
+              </span>
             </li>
           </ul>
         </div>

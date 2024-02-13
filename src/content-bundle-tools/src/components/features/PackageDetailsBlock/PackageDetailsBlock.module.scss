@@ -1,12 +1,13 @@
 @import "src/styles/variables";
+@import "src/styles/mixins";
 
 .container {
   display: grid;
-  grid-template-columns: 1fr;
+  @include grid-columns(1);
   gap: 32px;
 
   @media (min-width: $bp-md) {
-    grid-template-columns: 1fr 1fr;
+    @include grid-columns(2);
   }
 
   border: 1px solid $border-color;
@@ -28,16 +29,23 @@
 
   li {
     display: flex;
+    color: #727272;
   }
   span {
     display: block;
-    color: #727272;
-    margin-right: auto;
+    margin-left: auto;
+    color: black;
+    max-width: 250px;
+    @include ellipsis;
   }
+}
+
+.clickable-id {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .img {
   border-radius: $border-radius;
   width: 100%;
 }
-// color: #727272;
