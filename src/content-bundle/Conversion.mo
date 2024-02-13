@@ -57,6 +57,7 @@ module {
 	};	
 
 	public type BundleRefView = {
+		id : Text;
 		data_path : CommonTypes.ResourcePath;
 		name : Text;
 		description : Text;
@@ -68,6 +69,7 @@ module {
 	};
 
 	public type BundleDetailsView = {
+		id : Text;
 		data_path : CommonTypes.ResourcePath;
 		name : Text;
 		description : Text;
@@ -78,8 +80,9 @@ module {
 		created : Time.Time;
 	};	
 
-    public func convert_bundle_ref_view (info: Types.Bundle) : BundleRefView {
+    public func convert_bundle_ref_view (info: Types.Bundle, id: Text) : BundleRefView {
         return {
+			id = id;
 			data_path = info.data_path;
 			name = info.name;
 			description = info.description;
@@ -90,8 +93,9 @@ module {
         };
     };
 
-    public func convert_bundle_details_view (info: Types.Bundle) : BundleDetailsView {
+    public func convert_bundle_details_view (info: Types.Bundle, id: Text) : BundleDetailsView {
         return {
+			id = id;
 			data_path = info.data_path;
 			name = info.name;
 			description = info.description;

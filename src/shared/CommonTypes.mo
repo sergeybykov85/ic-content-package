@@ -31,14 +31,6 @@ module {
 		#EvmChain; 
 	};
 
-	public type SearchCriteriaArgs = {
-		intersect : Bool;
-		country_code :?Text;
-		creator : ?Identity;
-		tag : ?Text;
-		classification : ?Text;
-	};		
-
 	public type Network = {
         #IC;
         #Local: Text; // host details like localhost:4943
@@ -87,6 +79,8 @@ module {
         #NotRegistered;
 		// when input argument contains wrong value
 		#InvalidRequest;
+		// not authorized
+		#UnAuthorized;		
 		// not authorized to manage certain object
 		#AccessDenied;
 		// no resource or no chunk

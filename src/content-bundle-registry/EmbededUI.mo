@@ -81,7 +81,7 @@ module {
 		};		
 		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Created</b> : <span class=\"right\"><span class=\"js_date\">"# Int.toText(r.created) # "</span></span></div>";
 		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Creator</b> : <span class=\"right\">"# debug_show(r.creator) # "</span></div>";
-		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Registered</b> : <span class=\"right\"><span class=\"js_date\">"# Int.toText(r.registered) # "</span></span></div>";
+		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Submitted</b> : <span class=\"right\"><span class=\"js_date\">"# Int.toText(r.submitted) # "</span></span></div>";
 		resource_html := resource_html # "<div style=\"padding: 8px 4px;\"><b>Submitter</b> : <span class=\"right\">"# debug_show(r.submitter) # "</span></div>";
 		
 		return  resource_html # "</div>";	

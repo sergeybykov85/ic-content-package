@@ -182,6 +182,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Registers a new bunle.
 	*/
 	public shared ({ caller }) func register_bundle (args : Types.BundleArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		// different restrictions based on the mode
 		let caller_identity = _build_identity(caller);
         switch (MODE.submission) {
@@ -207,6 +208,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner of the bundle.
 	*/
 	public shared ({ caller }) func update_bundle (id: Text, args : Types.BundleUpdateArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (bundle_get(id)) {
 			case (?bundle) {
             	// account should be controlled by owner,
@@ -271,6 +273,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner of the bundle.
 	*/
 	public shared ({ caller }) func apply_bundle_logo (id: Text, logo : ?Types.DataRawPayload) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (bundle_get(id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
@@ -286,6 +289,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner of the bundle.
 	*/
 	public shared ({ caller }) func remove_empty_bundle (bundle_id: Text) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
@@ -321,6 +325,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner of the bundle.
 	*/
 	public shared ({ caller }) func apply_access_list (id: Text, args : Types.DataAccessListArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (bundle_get(id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
@@ -352,6 +357,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Transfers ownership for the specified bundle from current owner to the new one
 	*/
 	public shared ({ caller }) func transfer_bundle_ownership (id: Text, to : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (bundle_get(id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
@@ -365,6 +371,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	};
 
 	public shared ({ caller }) func freeze_bundle (id: Text, args: Types.DataFreezeArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (bundle_get(id)) {
 			case (?bundle) {
 				if (not _access_allowed (bundle, _build_identity(caller), null)) return #err(#AccessDenied);
@@ -404,6 +411,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Removes bundle data if it is allowed
 	*/
 	public shared ({ caller }) func remove_bundle_data (bundle_id: Text, args : Types.DataPathArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
@@ -470,6 +478,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Applies data section based on the given binary data. No transformation performed.
 	*/
 	public shared ({ caller }) func apply_bundle_section_raw (bundle_id: Text, args : Types.DataPackageRawArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
@@ -490,6 +499,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Only reserved fields could be submitted.
 	*/
 	public shared ({ caller }) func apply_bundle_section (bundle_id: Text, args : Types.DataPackageArgs) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {
@@ -549,6 +559,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner or creator. If active bucket is already present --> no effect
 	*/
 	public shared ({ caller }) func init_data_store (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		let caller_identity = _build_identity(caller);
 		if (not (CommonUtils.identity_equals(caller_identity, owner) or 
 			CommonUtils.identity_equals(caller_identity, CREATOR))) return #err(#AccessDenied);
@@ -581,6 +592,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Allowed only to the owner 
 	*/
 	public shared ({ caller }) func new_data_bucket (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
         if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 
@@ -712,6 +724,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Check a contribute opportunity on the package level for the identity
 	*/
 	public query func contribute_opportunity_for (to:Principal) : async Bool {
+		if (Principal.isAnonymous(to)) return false;
         switch (MODE.submission) {
             case (#Private) { CommonUtils.identity_equals(_build_identity(to), owner)};
             case (#Public) { true };
@@ -726,6 +739,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Check a contribute opportunity on the bundle level for the identity
 	*/
 	public query func bundle_contribute_opportunity_for (bundle_id: Text, to:Principal) : async Bool {
+		if (Principal.isAnonymous(to)) return false;
 		switch (bundle_get(bundle_id)) {
 			case (?bundle) {_access_allowed (bundle, _build_identity(to), null)};
 			case (null) {false};
@@ -805,7 +819,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
     public query func get_bundle_ref(id:Text) : async Result.Result<Conversion.BundleRefView, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
-			case (?bundle) { #ok(Conversion.convert_bundle_ref_view(bundle)); };
+			case (?bundle) { #ok(Conversion.convert_bundle_ref_view(bundle, id)); };
 			case (null) { return #err(#NotFound); };
 		};
     };
@@ -815,7 +829,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
     public query func get_bundle(id:Text) : async Result.Result<Conversion.BundleDetailsView, CommonTypes.Errors> {
 		switch (bundle_get(id)) {
-			case (?bundle) { #ok(Conversion.convert_bundle_details_view(bundle)); };
+			case (?bundle) { #ok(Conversion.convert_bundle_details_view(bundle, id)); };
 			case (null) { return #err(#NotFound); };
 		};
     };		
@@ -861,7 +875,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle ids for the criteria
 	*/
-	public query func get_ids_for_criteria(criteria:CommonTypes.SearchCriteriaArgs) : async  [Text] {
+	public query func get_ids_for_criteria(criteria:Types.SearchCriteriaArgs) : async  [Text] {
 		_get_ids_for_criteria(criteria);
 	};	
 
@@ -886,7 +900,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		let res = Buffer.Buffer<Conversion.BundleRefView>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle, id)); };
 				case (null) {  };
 			};
 		};
@@ -896,7 +910,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Returns bundle details by the search criteria
 	*/
-	public query func get_bundles_by_criteria (criteria:CommonTypes.SearchCriteriaArgs) : async  [Conversion.BundleDetailsView] {
+	public query func get_bundles_by_criteria (criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundleDetailsView] {
 		let ids = _get_ids_for_criteria(criteria);
 		_get_bundles_by_ids(ids);
 	};
@@ -918,7 +932,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         while (i < start + limit and i < all.size()) {
 			let id = all[i];
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle, id)); };
 				case (null) {  };
 			};
             i += 1;
@@ -972,7 +986,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		};
     };	
 
-	private func _get_ids_for_criteria(criteria:CommonTypes.SearchCriteriaArgs) :  [Text] {
+	private func _get_ids_for_criteria(criteria:Types.SearchCriteriaArgs) :  [Text] {
 		let by_creator = switch (criteria.creator) {
 			case (?identity) {
 				switch (creator2bundle_get(identity)) {
@@ -1002,7 +1016,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		let res = Buffer.Buffer<Conversion.BundleDetailsView>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle, id)); };
 				case (null) {  };
 			};
 		};

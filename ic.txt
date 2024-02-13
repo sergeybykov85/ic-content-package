@@ -1,20 +1,22 @@
 dfx deploy package_registry --argument="(record {network = variant {Local = \"localhost:4943\"}; owner = null; index_service = null;} )";
 
-// tag serice
+// index serice
 dfx deploy index_service --argument="(record {network = variant {Local = \"localhost:4943\"}; operators = vec {principal \"bkyz2-fmaaa-aaaaa-qaaaq-cai\"} })";
 
-// apply tag service
+// apply index service
 dfx canister call package_registry apply_index_service "(principal \"be2us-64aaa-aaaaa-qaabq-cai\")";
-
 
 // package_registry is a canister id from the prev step
 dfx deploy package_service --argument="(record {network = variant {Local = \"localhost:4943\"}; owner = null; package_registry = opt \"bkyz2-fmaaa-aaaaa-qaaaq-cai\"})";
+
 
 // identity_id is a canister id from the previous step 
 dfx canister call package_registry register_submitter "(record {identity = record {identity_type = variant {ICP}; identity_id = \"br5f7-7uaaa-aaaaa-qaaca-cai\"}; name = \"Package management tools\"; description = \"Service to deploy new packages\"; urls = vec {}})";
 
 // register allowance for the package service
 dfx canister call package_service register_allowance "(record {identity = record {identity_type = variant {ICP}; identity_id = \"nko75-gurhe-pmt5b-mhzyt-42njv-cdchk-fnwyz-ye6k6-melkn-btfz2-tae\"}; allowed_packages = 20})";
+// trial
+dfx canister call package_service apply_trial_allowance "(2)";
 
 // register allowance for the package service
 dfx canister call package_service remove_allowance "(record {identity_type = variant {ICP}; identity_id = \"nko75-gurhe-pmt5b-mhzyt-42njv-cdchk-fnwyz-ye6k6-melkn-btfz2-tae\"})";

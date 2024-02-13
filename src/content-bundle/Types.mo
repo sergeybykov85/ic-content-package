@@ -108,6 +108,15 @@ module {
 		#Hash;
 	};
 
+	public type SearchCriteriaArgs = {
+		// true -- AND for all filters; false --> OR for all filters
+		intersect : Bool;
+		country_code :?Text;
+		creator : ?CommonTypes.Identity;
+		tag : ?Text;
+		classification : ?Text;
+	};	
+
 	public type PackageDetails = {
 		submission : Submission;
 		creator : CommonTypes.Identity;

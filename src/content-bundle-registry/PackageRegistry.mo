@@ -178,7 +178,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							creator = creator;
 							submitter = submitter_identity;
 							created = package_details.created;
-							registered = Time.now();
+							submitted = Time.now();
 						}:Types.BundlePackage).0;
 
 						submitter.packages:=List.push(package_id, submitter.packages);
@@ -384,9 +384,30 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		await index_service_actor.get_data_segmentation();
 	};
 
-	public composite query func get_packages_by_criteria(criteria:CommonTypes.SearchCriteriaArgs) : async  [Conversion.BundlePackageView] {
+	public composite query func get_packages_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundlePackageView] {
 		let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
-		
+
+		let by_creator = switch (criteria.creator) {
+			case (?identity) {
+				switch (creator2package_get(identity)) {
+					case (?ids) { List.toArray(ids) };
+					case (null) { [] };
+				}
+			};
+			case (null) {[]};
+		};
+
+		let by_type = switch (criteria.kind) {
+			case (?kind) {
+				let kind_key = Utils.resolve_submission_name(kind);
+				switch (type2package_get(kind_key)) {
+					case (?by_kind) {(List.toArray(by_kind)) };
+					case (null) {[]};
+				};
+			};
+			case (null) {[]};
+		};		
+	
 		let by_country = switch (criteria.country_code) {
 			case (?country_code) { await index_service_actor.get_packages_by_country(country_code)};
 			case (null) {[]};
@@ -401,8 +422,8 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		};
 
 		var ids:[Text] = [];
-		if (criteria.intersect) {ids:=CommonUtils.build_intersect([by_country, by_tag, by_class]);}
-		else { ids:=CommonUtils.build_uniq([by_country, by_tag, by_class]);};
+		if (criteria.intersect) {ids:=CommonUtils.build_intersect([by_creator, by_type, by_country, by_tag, by_class]);}
+		else { ids:=CommonUtils.build_uniq([by_creator, by_type, by_country, by_tag, by_class]);};
 		_get_packages(ids);
 	};
 

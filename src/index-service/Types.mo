@@ -11,13 +11,13 @@ module {
 	};
 
 	public type PackageRef = {
-		registered: Time.Time;
+		submitted: Time.Time;
 		var last_scan : Time.Time;
 	};	
 
 	public type PackageRefView = {
 		id : Text;
-		registered: Time.Time;
+		submitted: Time.Time;
 		last_scan : Time.Time;
 		tags : [Text];
 		classifications : [Text];

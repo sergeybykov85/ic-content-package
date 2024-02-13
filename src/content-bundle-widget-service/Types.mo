@@ -89,6 +89,13 @@ module {
 		created : Time.Time;
 	};
 
+	public type SearchCriteriaArgs = {
+		// true -- AND for all filters; false --> OR for all filters
+		intersect : Bool;
+		kind : ?WidgetType;
+		creator : ?CommonTypes.Identity;
+	};	
+
 	/**
 		Module to inter-canister calls
 	*/
@@ -102,7 +109,7 @@ module {
 			name : Text;
 			description : Text;
 			created: Time.Time;
-			registered: Time.Time;
+			submitted: Time.Time;
 		};		
 
 		public type DataIndexView = {
@@ -137,7 +144,7 @@ module {
 			name : Text;
 			description : Text;
 			created: Time.Time;
-			registered: Time.Time;
+			submitted: Time.Time;
 		};
 	
 		public type PackageRegistryActor = actor {

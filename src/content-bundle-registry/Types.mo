@@ -23,6 +23,17 @@ module {
 		#Shared;
 	};
 
+	public type SearchCriteriaArgs = {
+		// true -- AND for all filters; false --> OR for all filters
+		intersect : Bool;
+		kind : ?Submission;
+		creator : ?CommonTypes.Identity;
+		country_code :?Text;		
+		tag : ?Text;
+		classification : ?Text;
+	};		
+
+
 	public type ImageData = {
 		value : Blob;
 		content_type : ?Text;
@@ -63,10 +74,10 @@ module {
 		max_supply : ?Nat;
 		// who created a package
 		creator : CommonTypes.Identity;
-		// who registered a package
+		// who submitted a package
 		submitter : CommonTypes.Identity;
 		created: Time.Time;
-		registered: Time.Time;
+		submitted: Time.Time;
 	};
 
 	public type Submitter = {
