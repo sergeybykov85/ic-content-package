@@ -1,8 +1,8 @@
 import { type FC, useEffect, useMemo, useState } from 'react'
 import { useServices } from '~/context/ServicesContext'
-import type { Package } from '~/models/Package.ts'
 import { enqueueSnackbar } from 'notistack'
 import styles from './PackageDetailsBlock.module.scss'
+import PackageDetails from '~/models/PackageDetails.ts'
 
 interface PackageDetailsBlockProps {
   packageId: string
@@ -14,8 +14,12 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
     () => initBundlePackageService?.(packageId),
     [initBundlePackageService, packageId],
   )
-  const [packageData, setPackageData] = useState<Package | null>(null)
+  const [packageData, setPackageData] = useState<PackageDetails | null>(null)
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    bundlePackageService?.dataSegmentation()
+  }, [])
 
   useEffect(() => {
     bundlePackageService
