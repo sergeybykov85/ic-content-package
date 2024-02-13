@@ -6,14 +6,14 @@ import type { Package } from '~/models/Package.ts'
 
 const MyPackages: FC = () => {
   const { principal = '' } = useAuth()
-  const { packageRegistry } = useServices()
+  const { packageRegistryService } = useServices()
   const [packages, setPackages] = useState<Package[]>([])
 
   useEffect(() => {
-    if (packageRegistry) {
-      packageRegistry.getMyPackages(principal).then(res => setPackages(res))
+    if (packageRegistryService) {
+      packageRegistryService.getMyPackages(principal).then(res => setPackages(res))
     }
-  }, [packageRegistry, principal])
+  }, [packageRegistryService, principal])
 
   return <PackagesGrid packages={packages} />
 }

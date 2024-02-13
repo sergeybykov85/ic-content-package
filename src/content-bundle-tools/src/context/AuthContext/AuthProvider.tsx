@@ -98,7 +98,7 @@ const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         cookies.setCookie(COOKIE_IDENTITY_NAME, identityJsonHelper.toJSON(newIdentity), AUTH_EXPIRATION_TIME)
       } catch (e) {
         const error = e instanceof Error ? e.message : 'Decode PEM file failed'
-        enqueueSnackbar(`Login error: ${error}`, { variant: 'error', style: { whiteSpace: 'pre-line' } })
+        enqueueSnackbar(`Login error: ${error}`, { variant: 'error' })
       }
     },
     [setAuthType, setIdentity],

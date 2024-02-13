@@ -5,7 +5,7 @@ interface PackageCardProps {
   data: Package
 }
 const PackageCard: FC<PackageCardProps> = ({ data }) => {
-  const logoUrl = useMemo(() => data.logo_url || '/images/empty-image.svg', [data.logo_url])
+  const logoUrl = useMemo(() => data.logoUrl || '/images/empty-image.svg', [data.logoUrl])
 
   return (
     <div className={styles.card}>

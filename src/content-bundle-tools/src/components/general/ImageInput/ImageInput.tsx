@@ -3,6 +3,7 @@ import FileInput, { type FileInputProps } from '~/components/general/FileInput'
 import styles from './ImageInput.module.scss'
 import { enqueueSnackbar } from 'notistack'
 import bytesToMb from '~/utils/bytesToMb.ts'
+import clsx from 'clsx'
 
 export type OnLoaded = (result: { src?: string; file: File }) => void
 
@@ -10,9 +11,10 @@ export interface ImageInputProps {
   src?: string
   onLoaded?: OnLoaded
   maxSize?: number // in bytes
+  className?: string
 }
 
-const ImageInput: FC<ImageInputProps> = ({ src, onLoaded, maxSize }) => {
+const ImageInput: FC<ImageInputProps> = ({ src, onLoaded, maxSize, className }) => {
   const [imgSrc, setImgSrc] = useState(src)
 
   const onFileLoaded = useCallback<FileInputProps['onLoaded']>(
@@ -30,7 +32,7 @@ const ImageInput: FC<ImageInputProps> = ({ src, onLoaded, maxSize }) => {
   )
 
   return (
-    <FileInput accept="image/*" getAs="base64" onLoaded={onFileLoaded} className={styles.container}>
+    <FileInput accept="image/*" getAs="base64" onLoaded={onFileLoaded} className={clsx(styles.container, className)}>
       <img src={imgSrc} alt="" />
       <div className={styles.overlay}>
         <p>Upload image</p>

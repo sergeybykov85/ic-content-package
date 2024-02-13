@@ -2,27 +2,27 @@ import type { PackageDto, PackageTypes } from '~/types/packagesTypes.ts'
 import CanisterDTO from '~/models/CanisterDTO.ts'
 
 export class Package extends CanisterDTO {
-  created: string
-  description: string
-  id: string
-  max_supply: number | 'unlimited'
-  name: string
-  registered: string
-  submission: PackageTypes
-  logo_url: string
-  constructor(rawPackage: PackageDto) {
+  public created: string
+  public description: string
+  public id: string
+  public maxSupply: number | 'unlimited'
+  public name: string
+  // public registered: string
+  public submission: PackageTypes
+  public logoUrl: string
+  constructor(packageDto: PackageDto) {
     super()
-    this.created = this.toLocalDateString(rawPackage.created)
-    this.description = rawPackage.description
-    this.id = rawPackage.id
-    this.max_supply = this.parseMaxSupply(rawPackage.max_supply)
-    this.name = rawPackage.name
-    this.registered = this.toLocalDateString(rawPackage.registered)
-    this.submission = this.parseSubmission(rawPackage.submission)
-    this.logo_url = this.parseOptionParam(rawPackage.logo_url, '')
+    this.created = this.toLocalDateString(packageDto.created)
+    this.description = packageDto.description
+    this.id = packageDto.id
+    this.maxSupply = this.parseMaxSupply(packageDto.max_supply)
+    this.name = packageDto.name
+    // this.registered = this.toLocalDateString(packageDto.registered)
+    this.submission = this.parseSubmission(packageDto.submission)
+    this.logoUrl = this.parseOptionParam(packageDto.logo_url, '')
   }
 
-  private parseMaxSupply = (value: PackageDto['max_supply']): Package['max_supply'] => {
+  private parseMaxSupply = (value: PackageDto['max_supply']): Package['maxSupply'] => {
     const maxSupplyBigInt = this.parseOptionParam(value, 0n)
     return Number(maxSupplyBigInt) || 'unlimited'
   }

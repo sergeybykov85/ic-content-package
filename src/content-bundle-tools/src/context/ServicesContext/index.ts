@@ -1,15 +1,18 @@
 import { createContext, useContext } from 'react'
-import type PackageRegistry from '~/services/PackageRegistry.ts'
+import type PackageRegistryService from '~/services/PackageRegistryService.ts'
 import type PackageService from '~/services/PackageService.ts'
+import type BundlePackageService from '~/services/BundlePackageService.ts'
 
 export interface ServicesContext {
-  packageRegistry: PackageRegistry | null
+  packageRegistryService: PackageRegistryService | null
   packageService: PackageService | null
+  initBundlePackageService: ((packageId: string) => BundlePackageService) | null
 }
 
 export const ServicesContext = createContext<ServicesContext>({
-  packageRegistry: null,
+  packageRegistryService: null,
   packageService: null,
+  initBundlePackageService: null,
 })
 
 export const useServices = (): ServicesContext => useContext(ServicesContext)

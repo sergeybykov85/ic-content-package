@@ -9,16 +9,16 @@ interface WarehousePackagesProps {
 }
 
 const WarehousePackages: FC<WarehousePackagesProps> = ({ type }) => {
-  const { packageRegistry } = useServices()
+  const { packageRegistryService } = useServices()
   const [packages, setPackages] = useState<Package[]>([])
 
   useEffect(() => {
-    if (packageRegistry) {
-      packageRegistry.getPackagesByType(type).then(res => {
+    if (packageRegistryService) {
+      packageRegistryService.getPackagesByType(type).then(res => {
         setPackages(res)
       })
     }
-  }, [packageRegistry, type])
+  }, [packageRegistryService, type])
 
   return <PackagesGrid packages={packages} />
 }

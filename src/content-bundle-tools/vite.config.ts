@@ -37,6 +37,7 @@ export default defineConfig({
       external: [
         path.join(declarationsDirPath, 'package_registry', 'index.js'),
         path.join(declarationsDirPath, 'package_service', 'index.js'),
+        path.join(declarationsDirPath, 'bundle_package', 'index.js'),
       ],
     },
   },

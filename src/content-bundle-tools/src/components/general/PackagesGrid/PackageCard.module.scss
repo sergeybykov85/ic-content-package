@@ -6,6 +6,7 @@
   border: 1px solid $border-color;
   border-radius: $border-radius;
   padding: 16px 16px 32px 16px;
+  height: 275px;
   &:hover {
     box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.08);
     cursor: pointer;
