@@ -4,11 +4,11 @@
   border: 1px dashed $border-color;
   border-radius: $border-radius;
   background: url('/images/empty-image.svg') no-repeat center;
+  overflow: hidden;
 
   cursor: pointer;
 
   position: relative;
-
 }
 .img {
   object-fit: contain;
