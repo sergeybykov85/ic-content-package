@@ -54,7 +54,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
           <ul className={styles.details}>
             <li>
               Type:
-              <span>{packageData.submission}</span>
+              <span className={styles.submission}>{packageData.submission}</span>
             </li>
             <li>
               Created:

@@ -29,6 +29,7 @@
 
   li {
     display: flex;
+    align-items: center;
     color: #727272;
   }
   span {
@@ -43,6 +44,13 @@
 .clickable-id {
   text-decoration: underline;
   cursor: pointer;
+}
+
+.submission {
+  padding: 4px 8px;
+  border-radius: $border-radius;
+  background: black;
+  color: #FFFFFF!important;
 }
 
 .img {
