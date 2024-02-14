@@ -3,11 +3,14 @@ import styles from '~/components/general/Inputs/Inputs.module.scss'
 import clsx from 'clsx'
 import InputWrapper, { type InputWrapperProps } from './InputWrapper.tsx'
 
-type TextInputProps = InputWrapperProps & Omit<ComponentPropsWithoutRef<'input'>, 'type'>
+type TextInputProps = InputWrapperProps &
+  Omit<ComponentPropsWithoutRef<'input'>, 'type'> & {
+    type?: 'text' | 'number'
+  }
 
-const TextInput: FC<TextInputProps> = ({ className, label, error, ...props }) => (
+const TextInput: FC<TextInputProps> = ({ className, label, error, type = 'text', ...props }) => (
   <InputWrapper {...{ className, label, error }}>
-    <input type="text" className={clsx(styles.input)} {...props} />
+    <input type={type} className={clsx(styles.input)} {...props} />
   </InputWrapper>
 )
 

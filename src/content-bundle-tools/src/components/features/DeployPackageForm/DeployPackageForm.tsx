@@ -5,7 +5,8 @@ import { TextArea, TextInput } from '~/components/general/Inputs'
 import Button from '~/components/general/Button'
 import styles from './DeployPackageForm.module.scss'
 import { useServices } from '~/context/ServicesContext'
-import { type DeployPackageParams, PackageTypes } from '~/types/packagesTypes.ts'
+import { IdentifierTypes, PackageTypes } from '~/types/packagesTypes.ts'
+import type { DeployPackageMetadata /*DeployPackageOptions*/ } from '~/types/packagesTypes.ts'
 import Select from '~/components/general/Select'
 import ImageInput, { type OnLoaded } from '~/components/general/ImageInput'
 import fileToUint8Array from '~/utils/fileToUint8Array.ts'
@@ -14,10 +15,14 @@ import { useNavigate } from 'react-router-dom'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 
 const packageTypes = Object.values(PackageTypes)
+const identifierTypes = Object.values(IdentifierTypes)
 
 interface FormValues {
   name: string
   description: string
+  maxTagSupply?: number
+  maxCreatorSupply?: number
+  maxSupply?: number
 }
 
 const DeployPackageForm: FC = () => {
@@ -25,9 +30,11 @@ const DeployPackageForm: FC = () => {
   const navigate = useNavigate()
   const { setLoading } = useFullScreenLoading()
   const [type, setType] = useState<PackageTypes>(PackageTypes.Public)
+  const [identifierType, setIdentifierType] = useState<IdentifierTypes>(IdentifierTypes.Hash)
   const [imageFile, setImageFile] = useState<File | undefined>()
 
-  const onSelect = useCallback((type: PackageTypes) => setType(type), [])
+  const onSelectType = useCallback((type: PackageTypes) => setType(type), [])
+  const onSelectIdType = useCallback((type: IdentifierTypes) => setIdentifierType(type), [])
 
   const imageOnLoaded = useCallback<OnLoaded>(({ file }) => {
     setImageFile(file)
@@ -37,13 +44,18 @@ const DeployPackageForm: FC = () => {
     async (values: FormValues): Promise<void> => {
       try {
         setLoading(true)
-        const logo: DeployPackageParams['logo'] = imageFile
-          ? {
-              type: imageFile.type,
-              value: await fileToUint8Array(imageFile),
-            }
+
+        const logo: DeployPackageMetadata['logo'] = imageFile
+          ? { type: imageFile.type, value: await fileToUint8Array(imageFile) }
           : undefined
-        const packageId = await packageService?.deployPackage(type, { ...values, logo })
+        const { name, description, ...options } = values
+
+        const packageId = await packageService?.deployPackage(
+          type,
+          { name, description, logo },
+          { ...options, identifierType },
+        )
+
         enqueueSnackbar(`${type} package has been deployed `, { variant: 'success' })
         setLoading(false)
         navigate(`/package/${packageId}`)
@@ -53,18 +65,24 @@ const DeployPackageForm: FC = () => {
         setLoading(false)
       }
     },
-    [imageFile, packageService, type],
+    [imageFile, navigate, packageService, setLoading, type, identifierType],
   )
 
   const form = useFormik<FormValues>({
     initialValues: {
       name: '',
       description: '',
+      maxSupply: 0,
+      maxCreatorSupply: 0,
+      maxTagSupply: 0,
     },
     validateOnChange: false,
     validationSchema: Yup.object().shape({
       name: Yup.string().min(2, 'Too Short!').max(50, 'Maximum length 100 characters').required('Required!'),
       description: Yup.string().min(2, 'Too Short!').max(100, 'Maximum length 300 characters').required('Required!'),
+      maxCreatorSupply: Yup.number(),
+      maxSupply: Yup.number(),
+      maxTagSupply: Yup.number(),
     }),
     onSubmit,
   })
@@ -73,10 +91,11 @@ const DeployPackageForm: FC = () => {
     <form onSubmit={form.handleSubmit}>
       <div className={styles.grid}>
         <div>
-          <Select<PackageTypes> label="Chose type" defaultValue={type} options={packageTypes} onSelect={onSelect} />
+          <Select<PackageTypes> label="Chose type" defaultValue={type} options={packageTypes} onSelect={onSelectType} />
           <TextInput
             name="name"
             label="Name"
+            placeholder="Set package name"
             value={form.values.name}
             onChange={form.handleChange}
             error={form.errors.name}
@@ -85,12 +104,48 @@ const DeployPackageForm: FC = () => {
           <TextArea
             name="description"
             label="Description"
+            placeholder="Set package description"
             value={form.values.description}
             onChange={form.handleChange}
             error={form.errors.description}
             className={styles.input}
             rows={3}
           />
+          <div className={styles.options}>
+            <TextInput
+              name="maxSupply"
+              label="Max supply"
+              placeholder="Infinit"
+              value={form.values.maxSupply || ''}
+              onChange={form.handleChange}
+              error={form.errors.maxSupply}
+              type="number"
+            />
+            <TextInput
+              name="maxCreatorSupply"
+              label="Max creator supply"
+              placeholder="Infinit"
+              value={form.values.maxCreatorSupply || ''}
+              onChange={form.handleChange}
+              error={form.errors.maxCreatorSupply}
+              type="number"
+            />
+            <TextInput
+              name="maxTagSupply"
+              label="Max tag supply"
+              placeholder="Infinit"
+              value={form.values.maxTagSupply || ''}
+              onChange={form.handleChange}
+              error={form.errors.maxTagSupply}
+              type="number"
+            />
+            <Select<IdentifierTypes>
+              label="Chose ID type"
+              defaultValue={identifierType}
+              options={identifierTypes}
+              onSelect={onSelectIdType}
+            />
+          </div>
         </div>
         <ImageInput maxSize={2097152} onLoaded={imageOnLoaded} className={styles.img} />
       </div>

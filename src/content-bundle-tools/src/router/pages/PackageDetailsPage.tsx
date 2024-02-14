@@ -7,7 +7,7 @@ import PackageDetailsBlock from '~/components/features/PackageDetailsBlock'
 
 const PackageDetailsPage: FC = () => {
   const { packageId } = useParams()
-  const { key } = useLocation()
+  const { state } = useLocation()
   const navigate = useNavigate()
   const goBack = useCallback(() => navigate(-1), [navigate])
 
@@ -18,7 +18,7 @@ const PackageDetailsPage: FC = () => {
     <SectionLayout
       title={`Package ID ${packageId}`}
       rightElement={
-        <If condition={key !== 'default'}>
+        <If condition={state?.backToList}>
           <Button variant="text" onClick={goBack}>
             Back to the list
           </Button>

@@ -6,6 +6,11 @@ export enum PackageTypes {
   Shared = 'Shared',
 }
 
+export enum IdentifierTypes {
+  Hash = 'Hash',
+  Ordinal = 'Ordinal',
+}
+
 type PackageSubmission = VariantType<PackageTypes>
 
 export interface PackageDto {
@@ -25,8 +30,15 @@ export interface PackageDetailsDto extends PackageDto {
   total_bundles: bigint
 }
 
-export interface DeployPackageParams {
+export interface DeployPackageMetadata {
   name: string
   description: string
   logo?: { value: Uint8Array; type?: string }
+}
+
+export interface DeployPackageOptions {
+  maxTagSupply?: number
+  maxCreatorSupply?: number
+  identifierType?: IdentifierTypes
+  maxSupply?: number
 }

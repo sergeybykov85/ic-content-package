@@ -40,4 +40,8 @@ export default class CanisterService {
     }
     return ok
   }
+
+  protected createOptionalParam = <T>(value: T): T[] => {
+    return value ? [value] : []
+  }
 }

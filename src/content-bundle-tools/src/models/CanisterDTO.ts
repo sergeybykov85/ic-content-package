@@ -6,6 +6,10 @@ export default class CanisterDTO {
   }
 
   protected toLocalDateString = (date: bigint): string => {
-    return new Date(nanosecToSec(date)).toLocaleDateString()
+    const dateInstance = new Date(nanosecToSec(date))
+    return `${dateInstance.toLocaleDateString()} - ${dateInstance.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    })}`
   }
 }

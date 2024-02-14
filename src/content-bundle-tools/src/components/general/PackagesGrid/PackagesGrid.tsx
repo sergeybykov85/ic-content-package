@@ -14,7 +14,7 @@ const PackagesGrid: FC<PackagesProps> = ({ packages }) => {
   return (
     <div className={styles.grid}>
       {packages.map(item => (
-        <Link to={`/package/${item.id}`} key={item.id}>
+        <Link to={`/package/${item.id}`} key={item.id} state={{ backToList: true }}>
           <PackageCard data={item} />
         </Link>
       ))}

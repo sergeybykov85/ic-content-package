@@ -1,11 +1,12 @@
 @import "src/styles/variables";
+@import "src/styles/mixins";
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr;
+  @include grid-columns(1);
   grid-gap: 32px;
   @media (min-width: $bp-md) {
-    grid-template-columns: 1fr 1fr;
+    @include grid-columns(2);
   }
 }
 .input {
@@ -18,4 +19,10 @@
 }
 .btn {
   margin-top: 32px;
+}
+.options {
+  margin-top: 16px;
+  display: grid;
+  grid-gap: 16px 32px;
+  @include grid-columns(2);
 }
