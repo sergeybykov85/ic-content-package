@@ -39,7 +39,7 @@ function Select<T extends string = string>({
   return (
     <div ref={ref} className={clsx(styles.select, className, visible && styles.opened)}>
       <label>
-        <span className={styles.label}>{label}</span>
+        <span className={clsx(styles.label, !label && styles['no-label'])}>{label}</span>
         <TextInput readOnly {...{ value, onFocus }} className={styles.input} />
       </label>
       <ul className={clsx(styles.options)}>

@@ -10,6 +10,9 @@
   margin-bottom: 8px;
   cursor: pointer;
 }
+.no-label {
+  margin-bottom: 0;
+}
 
 .opened {
   .input:after {
