@@ -37,8 +37,6 @@ export default class PackageService extends CanisterService {
       })
     }
 
-    console.log('packageOptions', packageOptions)
-
     const response = (await this.actor[`deploy_${type.toLowerCase()}_package`](
       { name, description, logo },
       packageOptions,
