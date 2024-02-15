@@ -60,9 +60,10 @@ module {
 		id : Text;
 		data_path : CommonTypes.ResourcePath;
 		name : Text;
-		description : Text;
 		// simple light weigh logo
 		logo : ?CommonTypes.ResourcePath;
+		tags : [Text];
+		classification : Text;		
 		creator : CommonTypes.Identity;
 		owner : CommonTypes.Identity;
 		created : Time.Time;
@@ -85,8 +86,10 @@ module {
 			id = id;
 			data_path = info.data_path;
 			name = info.name;
-			description = info.description;
 			logo = info.logo;
+			// in case of "ref" about and location is not propagated to reduce the traffic
+			tags = List.toArray (info.index.tags);
+			classification = info.index.classification;			
 			creator = info.creator;
 			owner = info.owner;
 			created = info.created;
