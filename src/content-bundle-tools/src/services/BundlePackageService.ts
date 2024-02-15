@@ -4,6 +4,10 @@ import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 import { idlFactory as idl } from '~/../../declarations/bundle_package'
 import type { PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
+import Bundle from '~/models/Bundle.ts'
+import type { BundleDto } from '~/types/bundleTypes.ts'
+import PaginatedList from '~/models/PaginatedList.ts'
+import type { PaginatedListResponse } from '~/types/globals.ts'
 
 export default class BundlePackageService extends CanisterService {
   constructor(packageId: string, identity?: Identity | Secp256k1KeyIdentity) {
@@ -13,5 +17,23 @@ export default class BundlePackageService extends CanisterService {
   public getPackageDetails = async (): Promise<PackageDetails> => {
     const response = (await this.actor.get_details()) as PackageDetailsDto
     return new PackageDetails(response)
+  }
+
+  public getBundlesList = async (): Promise<Bundle[]> => {
+    const response = (await this.actor.get_bundles_page(0, 10)) as BundleDto[]
+    return response.map(item => new Bundle(item))
+  }
+
+  public getBundlesPaginatedList = async (page: number, pageSize: number = 10): Promise<PaginatedList<Bundle>> => {
+    const startIndex = page * 10
+    const limit = startIndex + pageSize
+    const { total_supply: totalItems, data } = (await this.actor.get_bundles_page(
+      startIndex,
+      limit,
+    )) as PaginatedListResponse<BundleDto>
+    return new PaginatedList(
+      { page, pageSize, totalItems },
+      data.map(i => new Bundle(i)),
+    )
   }
 }

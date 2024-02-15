@@ -3,6 +3,11 @@ export interface CanisterResponse<T> {
   err?: unknown
 }
 
+export interface PaginatedListResponse<DataType> {
+  total_supply: number
+  data: DataType[]
+}
+
 export type VariantType<T extends string> = Record<T, null>
 
 export enum IdentityTypes {
@@ -13,4 +18,11 @@ export enum IdentityTypes {
 export type IdentityRecord = {
   identity_type: VariantType<IdentityTypes>
   identity_id: string
+}
+
+export interface Pagination {
+  page: number
+  pageSize: number
+  totalPages: number
+  totalItems: number
 }

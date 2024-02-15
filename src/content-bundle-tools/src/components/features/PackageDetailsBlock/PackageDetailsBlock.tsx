@@ -2,7 +2,7 @@ import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { useServices } from '~/context/ServicesContext'
 import { enqueueSnackbar } from 'notistack'
 import styles from './PackageDetailsBlock.module.scss'
-import PackageDetails from '~/models/PackageDetails.ts'
+import type PackageDetails from '~/models/PackageDetails.ts'
 import copyToClipboard from '~/utils/copyToClipboard.ts'
 
 interface PackageDetailsBlockProps {
@@ -15,6 +15,10 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
     () => initBundlePackageService?.(packageId),
     [initBundlePackageService, packageId],
   )
+
+  useEffect(() => {
+    void bundlePackageService?.getBundlesList()
+  }, [bundlePackageService])
 
   const [packageData, setPackageData] = useState<PackageDetails | null>(null)
   const [loading, setLoading] = useState(true)
@@ -30,7 +34,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
         })
       })
       .finally(() => setLoading(false))
-  }, [bundlePackageService, packageId])
+  }, [bundlePackageService])
 
   const handleCopyId = useCallback((value: string) => {
     copyToClipboard(value, () => {
@@ -66,7 +70,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
                 {packageData.creator}
               </span>
             </li>
-            <li onClick={() => handleCopyId(packageData.owner)}>
+            <li>
               Owner:
               <span className={styles['clickable-id']} onClick={() => handleCopyId(packageData.owner)}>
                 {packageData.owner}
