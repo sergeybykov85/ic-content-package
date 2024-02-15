@@ -26,6 +26,13 @@ module {
 		tags : [Text];
 	};
 
+	public type DataSlice <T> = {
+		// global supply irrespective of the response
+		total_supply : Nat;
+		// items based on the criterria
+		items : [T];
+	};
+
 	public type IdentityType = {
 		#ICP;
 		#EvmChain; 

@@ -897,47 +897,34 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Returns bundles by their ids
 	*/
     public query func get_bundle_refs_by_ids(ids:[Text]) : async [Conversion.BundleRefView] {
-		let res = Buffer.Buffer<Conversion.BundleRefView>(Array.size(ids));
-		for (id in ids.vals()) {
-			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle, id)); };
-				case (null) {  };
-			};
-		};
-		Buffer.toArray(res);
+		_get_bundle_refs_by_ids(ids);
     };
 
 	/**
-	* Returns bundle details by the search criteria
+	* Returns bundle refs by the search criteria
 	*/
-	public query func get_bundles_by_criteria (criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundleDetailsView] {
+	public query func get_bundle_refs_by_criteria (criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundleRefView] {
 		let ids = _get_ids_for_criteria(criteria);
-		_get_bundles_by_ids(ids);
+		_get_bundle_refs_by_ids(ids);
 	};
 
-	/**
-	* Returns bundle details by their ids
-	*/
-    public query func get_bundles_by_ids(ids:[Text]) : async [Conversion.BundleDetailsView] {
-		_get_bundles_by_ids(ids);
-    };	
 
 	/**
-	* Returns bundle details by portions
+	* Returns bundle refs by portions
 	*/
-    public query func get_bundles_page(start: Nat, limit: Nat): async [Conversion.BundleDetailsView] {
-        let res = Buffer.Buffer<Conversion.BundleDetailsView>(limit);
+    public query func get_bundle_refs_page(start: Nat, limit: Nat): async CommonTypes.DataSlice<Conversion.BundleRefView> {
+        let res = Buffer.Buffer<Conversion.BundleRefView>(limit);
         var i = start;
 		let all = List.toArray(all_bundles);
         while (i < start + limit and i < all.size()) {
 			let id = all[i];
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle, id)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle, id)); };
 				case (null) {  };
 			};
             i += 1;
         };
-        return Buffer.toArray(res);
+        return {items = Buffer.toArray(res); total_supply = Trie.size(bundles); };
     };	
 
 	/**
@@ -1012,11 +999,11 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		else {CommonUtils.build_uniq([by_creator, by_country, by_tag, by_class]);}
 	};
 
-    private func _get_bundles_by_ids(ids:[Text]) : [Conversion.BundleDetailsView] {
-		let res = Buffer.Buffer<Conversion.BundleDetailsView>(Array.size(ids));
+    private func _get_bundle_refs_by_ids(ids:[Text]) : [Conversion.BundleRefView] {
+		let res = Buffer.Buffer<Conversion.BundleRefView>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_details_view(bundle, id)); };
+				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle, id)); };
 				case (null) {  };
 			};
 		};
