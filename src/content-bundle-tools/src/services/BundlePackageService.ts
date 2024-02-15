@@ -19,21 +19,17 @@ export default class BundlePackageService extends CanisterService {
     return new PackageDetails(response)
   }
 
-  public getBundlesList = async (): Promise<Bundle[]> => {
-    const response = (await this.actor.get_bundles_page(0, 10)) as BundleDto[]
-    return response.map(item => new Bundle(item))
-  }
-
-  public getBundlesPaginatedList = async (page: number, pageSize: number = 10): Promise<PaginatedList<Bundle>> => {
-    const startIndex = page * 10
+  public getBundlesPaginatedList = async (page: number, pageSize: number): Promise<PaginatedList<Bundle>> => {
+    const startIndex = page * pageSize
     const limit = startIndex + pageSize
-    const { total_supply: totalItems, data } = (await this.actor.get_bundles_page(
+    const { total_supply, items } = (await this.actor.get_bundle_refs_page(
       startIndex,
       limit,
     )) as PaginatedListResponse<BundleDto>
+    console.log(items)
     return new PaginatedList(
-      { page, pageSize, totalItems },
-      data.map(i => new Bundle(i)),
+      { page, pageSize, totalItems: Number(total_supply) },
+      items.map(i => new Bundle(i)),
     )
   }
 }

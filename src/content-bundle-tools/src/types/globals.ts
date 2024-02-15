@@ -4,8 +4,8 @@ export interface CanisterResponse<T> {
 }
 
 export interface PaginatedListResponse<DataType> {
-  total_supply: number
-  data: DataType[]
+  total_supply: bigint
+  items: DataType[]
 }
 
 export type VariantType<T extends string> = Record<T, null>
