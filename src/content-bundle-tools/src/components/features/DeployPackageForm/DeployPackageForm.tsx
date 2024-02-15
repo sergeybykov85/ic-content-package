@@ -1,4 +1,4 @@
-import { type FC, useCallback, useState } from 'react'
+import { type ChangeEventHandler, type FC, useCallback, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { TextArea, TextInput } from '~/components/general/Inputs'
@@ -6,13 +6,15 @@ import Button from '~/components/general/Button'
 import styles from './DeployPackageForm.module.scss'
 import { useServices } from '~/context/ServicesContext'
 import { IdentifierTypes, PackageTypes } from '~/types/packagesTypes.ts'
-import type { DeployPackageMetadata /*DeployPackageOptions*/ } from '~/types/packagesTypes.ts'
+import type { DeployPackageMetadata } from '~/types/packagesTypes.ts'
 import Select from '~/components/general/Select'
 import ImageInput, { type OnLoaded } from '~/components/general/ImageInput'
 import fileToUint8Array from '~/utils/fileToUint8Array.ts'
 import { enqueueSnackbar } from 'notistack'
 import { useNavigate } from 'react-router-dom'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
+import Collapse from '~/components/general/Collapse'
+import Checkbox from '~/components/general/Checkbox'
 
 const packageTypes = Object.values(PackageTypes)
 const identifierTypes = Object.values(IdentifierTypes)
@@ -32,9 +34,11 @@ const DeployPackageForm: FC = () => {
   const [type, setType] = useState<PackageTypes>(PackageTypes.Public)
   const [identifierType, setIdentifierType] = useState<IdentifierTypes>(IdentifierTypes.Hash)
   const [imageFile, setImageFile] = useState<File | undefined>()
+  const [withOptions, setWithOptions] = useState(false)
 
   const onSelectType = useCallback((type: PackageTypes) => setType(type), [])
   const onSelectIdType = useCallback((type: IdentifierTypes) => setIdentifierType(type), [])
+  const toggleWithOptions = useCallback<ChangeEventHandler<HTMLInputElement>>(e => setWithOptions(e.target.checked), [])
 
   const imageOnLoaded = useCallback<OnLoaded>(({ file }) => {
     setImageFile(file)
@@ -53,7 +57,7 @@ const DeployPackageForm: FC = () => {
         const packageId = await packageService?.deployPackage(
           type,
           { name, description, logo },
-          { ...options, identifierType },
+          withOptions ? { ...options, identifierType } : undefined,
         )
 
         enqueueSnackbar(`${type} package has been deployed `, { variant: 'success' })
@@ -65,7 +69,7 @@ const DeployPackageForm: FC = () => {
         setLoading(false)
       }
     },
-    [imageFile, navigate, packageService, setLoading, type, identifierType],
+    [imageFile, navigate, packageService, setLoading, type, identifierType, withOptions],
   )
 
   const form = useFormik<FormValues>({
@@ -111,43 +115,48 @@ const DeployPackageForm: FC = () => {
             className={styles.input}
             rows={3}
           />
-          <div className={styles.options}>
-            <TextInput
-              name="maxSupply"
-              label="Max supply"
-              placeholder="Infinit"
-              value={form.values.maxSupply || ''}
-              onChange={form.handleChange}
-              error={form.errors.maxSupply}
-              type="number"
-            />
-            <TextInput
-              name="maxCreatorSupply"
-              label="Max creator supply"
-              placeholder="Infinit"
-              value={form.values.maxCreatorSupply || ''}
-              onChange={form.handleChange}
-              error={form.errors.maxCreatorSupply}
-              type="number"
-            />
-            <TextInput
-              name="maxTagSupply"
-              label="Max tag supply"
-              placeholder="Infinit"
-              value={form.values.maxTagSupply || ''}
-              onChange={form.handleChange}
-              error={form.errors.maxTagSupply}
-              type="number"
-            />
-            <Select<IdentifierTypes>
-              label="Chose ID type"
-              defaultValue={identifierType}
-              options={identifierTypes}
-              onSelect={onSelectIdType}
-            />
-          </div>
+          <Checkbox label="With options" className={styles.checkbox} onChange={toggleWithOptions} />
+          <Collapse open={withOptions} className={styles.collapse}>
+            <div className={styles.options}>
+              <TextInput
+                name="maxSupply"
+                label="Max supply"
+                placeholder="Infinit"
+                value={form.values.maxSupply || ''}
+                onChange={form.handleChange}
+                error={form.errors.maxSupply}
+                type="number"
+              />
+              <TextInput
+                name="maxCreatorSupply"
+                label="Max creator supply"
+                placeholder="Infinit"
+                value={form.values.maxCreatorSupply || ''}
+                onChange={form.handleChange}
+                error={form.errors.maxCreatorSupply}
+                type="number"
+              />
+              <TextInput
+                name="maxTagSupply"
+                label="Max tag supply"
+                placeholder="Infinit"
+                value={form.values.maxTagSupply || ''}
+                onChange={form.handleChange}
+                error={form.errors.maxTagSupply}
+                type="number"
+              />
+              <Select<IdentifierTypes>
+                label="Chose ID type"
+                defaultValue={identifierType}
+                options={identifierTypes}
+                onSelect={onSelectIdType}
+              />
+            </div>
+          </Collapse>
         </div>
-        <ImageInput maxSize={2097152} onLoaded={imageOnLoaded} className={styles.img} />
+        <div>
+          <ImageInput maxSize={2097152} onLoaded={imageOnLoaded} className={styles.img} />
+        </div>
       </div>
       <Button type="submit" text="Deploy" className={styles.btn} />
     </form>

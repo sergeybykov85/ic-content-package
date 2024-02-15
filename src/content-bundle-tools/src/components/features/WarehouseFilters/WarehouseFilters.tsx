@@ -1,5 +1,5 @@
 import { PackageTypes } from '~/types/packagesTypes.ts'
-import { FC } from 'react'
+import { type FC } from 'react'
 import Select from '~/components/general/Select'
 import styles from './WarehouseFilters.module.scss'
 

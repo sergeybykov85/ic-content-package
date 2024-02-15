@@ -20,8 +20,13 @@
 .btn {
   margin-top: 32px;
 }
-.options {
+.checkbox {
+  margin: 16px 0;
+}
+.collapse {
   margin-top: 16px;
+}
+.options {
   display: grid;
   grid-gap: 16px 32px;
   @include grid-columns(2);
