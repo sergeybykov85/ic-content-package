@@ -138,7 +138,7 @@ const DeployPackageForm: FC = () => {
               />
               <TextInput
                 name="maxCreatorSupply"
-                label="Max creator supply"
+                label="Max bundles for creator"
                 placeholder="Infinit"
                 value={form.values.maxCreatorSupply || ''}
                 onChange={form.handleChange}
@@ -147,8 +147,8 @@ const DeployPackageForm: FC = () => {
               />
               <TextInput
                 name="maxTagSupply"
-                label="Max tag supply"
-                placeholder="Infinit"
+                label="Max tags for a bundle"
+                placeholder="Default"
                 value={form.values.maxTagSupply || ''}
                 onChange={form.handleChange}
                 error={form.errors.maxTagSupply}

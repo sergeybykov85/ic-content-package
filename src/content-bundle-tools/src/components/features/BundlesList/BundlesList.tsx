@@ -21,7 +21,7 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
   const [totalPages, setTotalPages] = useState(0)
 
   useEffect(() => {
-    bundlePackageService?.getBundlesPaginatedList(page, 2).then(({ pagination, items }) => {
+    bundlePackageService?.getBundlesPaginatedList(page, 8).then(({ pagination, items }) => {
       setBundlesList(items)
       setTotalPages(pagination.totalPages)
     })
