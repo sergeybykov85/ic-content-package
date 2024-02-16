@@ -42,3 +42,10 @@ export interface DeployPackageOptions {
   identifierType?: IdentifierTypes
   maxSupply?: number
 }
+
+export interface DataSegmentationDto {
+  classifications: string[]
+  countries: string[]
+  tags: string[]
+  total_supply: bigint
+}

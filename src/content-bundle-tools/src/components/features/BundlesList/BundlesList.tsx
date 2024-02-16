@@ -17,7 +17,7 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
   const [bundlesList, setBundlesList] = useState<Bundle[]>([])
 
   useEffect(() => {
-    bundlePackageService?.getBundlesPaginatedList(0, 10).then(({ pagination, items }) => {
+    bundlePackageService?.getBundlesPaginatedList(0, 12).then(({ pagination, items }) => {
       setBundlesList(items)
       console.log(pagination)
     })

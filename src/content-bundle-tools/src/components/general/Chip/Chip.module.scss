@@ -1,0 +1,17 @@
+@import "src/styles/variables";
+
+.chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: $border-radius;
+  color: #FFFFFF;
+
+  &--black {
+    background: black;
+  }
+
+  &--blue {
+    border: 1px solid $primary-blue-color;
+    background: rgb(92, 109, 199);
+  }
+}

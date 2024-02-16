@@ -47,10 +47,14 @@
 }
 
 .submission {
-  padding: 4px 8px;
-  border-radius: $border-radius;
-  background: black;
   color: #FFFFFF!important;
+}
+
+.tags {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .img {

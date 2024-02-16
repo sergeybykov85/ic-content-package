@@ -4,6 +4,7 @@ import { enqueueSnackbar } from 'notistack'
 import styles from './PackageDetailsBlock.module.scss'
 import type PackageDetails from '~/models/PackageDetails.ts'
 import copyToClipboard from '~/utils/copyToClipboard.ts'
+import Chip from '~/components/general/Chip'
 
 interface PackageDetailsBlockProps {
   packageId: string
@@ -18,6 +19,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
 
   const [packageData, setPackageData] = useState<PackageDetails | null>(null)
   const [loading, setLoading] = useState(true)
+  const [tags, setTags] = useState<string[]>([])
 
   useEffect(() => {
     bundlePackageService
@@ -30,6 +32,12 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
         })
       })
       .finally(() => setLoading(false))
+  }, [bundlePackageService])
+
+  useEffect(() => {
+    bundlePackageService?.getDataSegmentation().then(response => {
+      setTags(response.tags)
+    })
   }, [bundlePackageService])
 
   const handleCopyId = useCallback((value: string) => {
@@ -54,7 +62,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
           <ul className={styles.details}>
             <li>
               Type:
-              <span className={styles.submission}>{packageData.submission}</span>
+              <Chip className={styles.submission} text={packageData.submission} />
             </li>
             <li>
               Created:
@@ -79,6 +87,11 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
               </span>
             </li>
           </ul>
+          <div className={styles.tags}>
+            {tags.map(tag => (
+              <Chip key={tag} text={tag} color="blue" />
+            ))}
+          </div>
         </div>
         <img className={styles.img} src={packageData.logoUrl || '/images/empty-image.svg'} alt="package image" />
       </div>
