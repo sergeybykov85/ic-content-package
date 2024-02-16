@@ -2,7 +2,7 @@ import CanisterService from '~/models/CanisterService.ts'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 import { idlFactory as idl } from '~/../../declarations/bundle_package'
-import { DataSegmentationDto, PackageDetailsDto } from '~/types/packagesTypes.ts'
+import type { DataSegmentationDto, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'
 import type { BundleDto } from '~/types/bundleTypes.ts'
@@ -25,10 +25,9 @@ export default class BundlePackageService extends CanisterService {
 
   public getBundlesPaginatedList = async (page: number, pageSize: number): Promise<PaginatedList<Bundle>> => {
     const startIndex = page * pageSize
-    const limit = startIndex + pageSize
     const { total_supply, items } = (await this.actor.get_bundle_refs_page(
       startIndex,
-      limit,
+      pageSize,
     )) as PaginatedListResponse<BundleDto>
     return new PaginatedList(
       { page, pageSize, totalItems: Number(total_supply) },
