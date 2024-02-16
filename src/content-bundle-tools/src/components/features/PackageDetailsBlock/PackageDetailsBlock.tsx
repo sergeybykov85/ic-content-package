@@ -16,10 +16,6 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
     [initBundlePackageService, packageId],
   )
 
-  useEffect(() => {
-    void bundlePackageService?.getBundlesPaginatedList(0, 10)
-  }, [bundlePackageService])
-
   const [packageData, setPackageData] = useState<PackageDetails | null>(null)
   const [loading, setLoading] = useState(true)
 

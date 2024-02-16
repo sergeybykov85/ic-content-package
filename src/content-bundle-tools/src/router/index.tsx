@@ -37,6 +37,10 @@ const router = createBrowserRouter([
     path: 'package/:packageId',
     element: <PackageDetailsPage />,
   },
+  {
+    path: 'package/:packageId/bundle/:bundleId',
+    element: <p>Work in progress...</p>,
+  },
 ])
 
 export default router

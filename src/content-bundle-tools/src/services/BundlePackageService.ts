@@ -26,7 +26,6 @@ export default class BundlePackageService extends CanisterService {
       startIndex,
       limit,
     )) as PaginatedListResponse<BundleDto>
-    console.log(items)
     return new PaginatedList(
       { page, pageSize, totalItems: Number(total_supply) },
       items.map(i => new Bundle(i)),

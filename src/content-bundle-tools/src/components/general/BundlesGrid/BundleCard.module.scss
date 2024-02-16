@@ -1,13 +1,16 @@
 @import "src/styles/variables";
 
-.created {
+.footer {
   width: 100%;
   font-size: 14px;
   color: $grey-text-color;
   margin-top: 16px;
-  display: flex;
-  span {
-    display: block;
-    margin-left: auto;
+  p {
+    display: flex;
+    span {
+      display: block;
+      margin-left: auto;
+    }
   }
+
 }

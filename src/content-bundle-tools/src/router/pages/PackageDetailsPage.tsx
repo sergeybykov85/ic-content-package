@@ -5,6 +5,7 @@ import If from '~/components/general/If'
 import Button from '~/components/general/Button'
 import PackageDetailsBlock from '~/components/features/PackageDetailsBlock'
 import { useAuth } from '~/context/AuthContext'
+import BundlesList from '~/components/features/BundlesList'
 
 const PackageDetailsPage: FC = () => {
   const { isAuthenticated } = useAuth()
@@ -18,7 +19,7 @@ const PackageDetailsPage: FC = () => {
   }
   return (
     <SectionLayout
-      title={`Package ID ${packageId}`}
+      title={`Package ID: ${packageId}`}
       rightElement={
         <If condition={state?.backToList && isAuthenticated}>
           <Button variant="text" onClick={goBack}>
@@ -28,6 +29,7 @@ const PackageDetailsPage: FC = () => {
       }
     >
       <PackageDetailsBlock packageId={packageId} />
+      <BundlesList packageId={packageId} />
     </SectionLayout>
   )
 }
