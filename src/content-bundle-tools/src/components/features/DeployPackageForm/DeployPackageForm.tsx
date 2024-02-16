@@ -19,6 +19,9 @@ import Checkbox from '~/components/general/Checkbox'
 const packageTypes = Object.values(PackageTypes)
 const identifierTypes = Object.values(IdentifierTypes)
 
+const NAME_MAX_LENGTH = 50
+const DESCRIPTION_MAX_LENGTH = 100
+
 interface FormValues {
   name: string
   description: string
@@ -82,8 +85,14 @@ const DeployPackageForm: FC = () => {
     },
     validateOnChange: false,
     validationSchema: Yup.object().shape({
-      name: Yup.string().min(2, 'Too Short!').max(50, 'Maximum length 100 characters').required('Required!'),
-      description: Yup.string().min(2, 'Too Short!').max(100, 'Maximum length 300 characters').required('Required!'),
+      name: Yup.string()
+        .min(2, 'Too Short!')
+        .max(NAME_MAX_LENGTH, `Maximum length ${NAME_MAX_LENGTH} characters`)
+        .required('Required!'),
+      description: Yup.string()
+        .min(2, 'Too Short!')
+        .max(DESCRIPTION_MAX_LENGTH, `Maximum length ${DESCRIPTION_MAX_LENGTH} characters`)
+        .required('Required!'),
       maxCreatorSupply: Yup.number(),
       maxSupply: Yup.number(),
       maxTagSupply: Yup.number(),
