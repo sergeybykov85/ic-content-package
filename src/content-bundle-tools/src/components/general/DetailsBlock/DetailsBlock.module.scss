@@ -1,0 +1,27 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.container {
+  display: grid;
+  @include grid-columns(1);
+  gap: 32px;
+
+  @media (min-width: $bp-md) {
+    @include grid-columns(2);
+  }
+
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+
+  padding: 32px;
+}
+
+.title {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.img {
+  border-radius: $border-radius;
+  width: 100%;
+}

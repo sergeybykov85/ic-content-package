@@ -14,3 +14,13 @@ export interface BundleDto {
   classification: string
   // data_path - not needed yet
 }
+
+export interface BundleDetailsDto extends Omit<BundleDto, 'tags' | 'classification'> {
+  description: string
+  index: {
+    tags: string[]
+    classification: string
+    // about
+    // location
+  }
+}
