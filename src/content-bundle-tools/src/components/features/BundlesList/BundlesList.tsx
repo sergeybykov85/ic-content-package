@@ -19,8 +19,8 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
   )
 
   const [bundlesList, setBundlesList] = useState<Bundle[]>([])
-  const [page, setPage] = useState(Number(searchParams.get('page') || '0'))
   const [totalPages, setTotalPages] = useState(0)
+  const page = useMemo(() => Number(searchParams.get('page') || '0'), [searchParams])
 
   useEffect(() => {
     bundlePackageService?.getBundlesPaginatedList(page, 8).then(({ pagination, items }) => {
@@ -29,14 +29,13 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
     })
   }, [bundlePackageService, page])
 
-  useEffect(() => {
-    if (Number(searchParams.get('page') || '0') !== page) {
-      searchParams.set('page', page.toString())
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      searchParams.set('page', newPage.toString())
       setSearchParams(searchParams)
-    }
-  }, [page])
-
-  const handlePageChange = useCallback((page: number) => setPage(page), [])
+    },
+    [searchParams, setSearchParams],
+  )
 
   return (
     <>
