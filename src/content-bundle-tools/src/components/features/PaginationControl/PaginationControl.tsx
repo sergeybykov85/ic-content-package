@@ -15,7 +15,7 @@ const PaginationControl: FC<PaginationProps> = ({ pagination, onPageChange, clas
   const pages = useMemo(() => {
     const { page, totalPages } = pagination
     if (totalPages <= 7) {
-      return [...Array(totalPages - 1).keys()]
+      return [...Array(totalPages).keys()]
     } else if (page < 4) {
       return [...Array(7).keys()]
     } else if (totalPages - page < 4) {
