@@ -6,6 +6,7 @@ import Button from '~/components/general/Button'
 import PackageDetailsBlock from '~/components/features/PackageDetailsBlock'
 import { useAuth } from '~/context/AuthContext'
 import BundlesList from '~/components/features/BundlesList'
+import CopyBtn from '~/components/general/CopyBtn'
 
 const PackageDetailsPage: FC = () => {
   const { isAuthenticated } = useAuth()
@@ -19,7 +20,11 @@ const PackageDetailsPage: FC = () => {
   }
   return (
     <SectionLayout
-      title={`Package ID: ${packageId}`}
+      title={
+        <>
+          Package ID: {packageId} <CopyBtn text={packageId} />
+        </>
+      }
       rightElement={
         <If condition={state?.backToList && isAuthenticated}>
           <Button variant="text" onClick={goBack}>

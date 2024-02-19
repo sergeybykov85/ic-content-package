@@ -30,8 +30,10 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
   }, [bundlePackageService, page])
 
   useEffect(() => {
-    searchParams.set('page', page.toString())
-    setSearchParams(searchParams)
+    if (Number(searchParams.get('page') || '0') !== page) {
+      searchParams.set('page', page.toString())
+      setSearchParams(searchParams)
+    }
   }, [page])
 
   const handlePageChange = useCallback((page: number) => setPage(page), [])

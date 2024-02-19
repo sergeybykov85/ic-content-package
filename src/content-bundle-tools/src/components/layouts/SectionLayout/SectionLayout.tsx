@@ -4,7 +4,7 @@ import MainLayout from '~/components/layouts/MainLayout'
 import styles from './SectionLayout.module.scss'
 
 interface SectionLayoutProps {
-  title: string
+  title: string | ReactNode
   rightElement?: ReactNode
   children: ReactNode
 }
