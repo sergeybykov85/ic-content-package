@@ -4,6 +4,7 @@ import Collapse from '~/components/general/Collapse'
 import styles from './PoiItem.module.scss'
 import clsx from 'clsx'
 import PoiItemGallery from '../PoiItemGallery/PoiItemGallery.tsx'
+import PoiItemDefault from '../PoiItemDefault/PoiItemDefault.tsx'
 
 interface PoiItemProps {
   item: PoiSection
@@ -13,17 +14,18 @@ interface PoiItemProps {
  * [+] Gallery
  * [ ] About
  * [ ] Location
+ * [+] default
  * */
 
 const PoiItem: FC<PoiItemProps> = ({ item }) => {
   const [open, setOpen] = useState(false)
 
-  const renderItem = useCallback((item: PoiSection) => {
-    switch (item.category) {
+  const renderItem = useCallback(({ category, dataList }: PoiSection) => {
+    switch (category) {
       case 'Gallery':
-        return <PoiItemGallery list={item.dataList} />
+        return <PoiItemGallery list={dataList} />
       default:
-        return item.dataList.map(i => i.url)
+        return <PoiItemDefault list={dataList} />
     }
   }, [])
 

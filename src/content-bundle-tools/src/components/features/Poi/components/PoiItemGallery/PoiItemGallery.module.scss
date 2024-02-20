@@ -3,6 +3,7 @@
 
 .gallery {
   img {
+    border-radius: $border-radius;
     transition: $transition-time;
     cursor: pointer;
     &:hover {
