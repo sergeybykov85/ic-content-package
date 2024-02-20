@@ -3,3 +3,15 @@
 .container {
   @include box
 }
+
+.title {
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 18px;
+}
+
+.grid {
+  display: grid;
+  @include grid-columns(1);
+  gap: 16px;
+}

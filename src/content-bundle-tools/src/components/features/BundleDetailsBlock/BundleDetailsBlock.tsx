@@ -54,17 +54,13 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
     }
   }, [bundlePackageService, dataGroups.length, bundleId])
 
-  useEffect(() => {
-    bundlePackageService?.getPoiSections(bundleId, DATA_GROUPS.POI).then(res => console.log(res))
-  }, [bundleId, bundlePackageService])
-
   if (bundleData) {
     return (
       <>
         <DetailsBlock data={{ ...bundleData, description: bundleData.description || '' }} />
         <If condition={dataGroups.includes(DATA_GROUPS.POI)}>
           <br />
-          <Poi />
+          <Poi {...{ bundleId, packageId }} />
         </If>
       </>
     )

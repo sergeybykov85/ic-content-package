@@ -10,8 +10,8 @@
   grid-template-columns: repeat($repeat, minmax(0, 1fr));
 }
 
-@mixin box() {
+@mixin box($padding: 32px) {
   border: 1px solid $border-color;
   border-radius: $border-radius;
-  padding: 32px;
+  padding: $padding;
 }

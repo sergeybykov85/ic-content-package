@@ -1,0 +1,31 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.item {
+  border-bottom: 1px solid $border-color;
+}
+
+.header {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 18px;
+  img {
+    margin-left: 1em;
+    transition: $transition-time;
+    transform: rotate(-90deg);
+  }
+
+  &:hover {
+    cursor: pointer;
+    color: $primary-blue-color;
+  }
+}
+
+.opened {
+  color: $primary-blue-color;
+  img {
+    transform: rotate(0);
+  }
+}
