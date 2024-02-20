@@ -4,7 +4,7 @@ import { useServices } from '~/context/ServicesContext'
 import PoiSection from '~/models/PoiSection.ts'
 import { DATA_GROUPS } from '~/types/bundleTypes.ts'
 import { enqueueSnackbar } from 'notistack'
-import PoiItem from './PoiItem.tsx'
+import PoiItem from './components/PoiItem/PoiItem.tsx'
 
 interface PoiProps {
   packageId: string
