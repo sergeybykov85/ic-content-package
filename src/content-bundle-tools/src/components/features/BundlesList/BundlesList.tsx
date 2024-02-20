@@ -5,13 +5,15 @@ import BundlesGrid from '~/components/general/BundlesGrid'
 import styles from './BundlesList.module.scss'
 import PaginationControl from '~/components/features/PaginationControl'
 import If from '~/components/general/If'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
 interface BundlesListProps {
   packageId: string
 }
 const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { state, pathname } = useLocation()
+  const [searchParams] = useSearchParams()
   const { initBundlePackageService } = useServices()
   const bundlePackageService = useMemo(
     () => initBundlePackageService?.(packageId),
@@ -32,9 +34,9 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
   const handlePageChange = useCallback(
     (newPage: number) => {
       searchParams.set('page', newPage.toString())
-      setSearchParams(searchParams)
+      navigate(`${pathname}?${searchParams.toString()}`, { state })
     },
-    [searchParams, setSearchParams],
+    [navigate, pathname, searchParams, state],
   )
 
   return (

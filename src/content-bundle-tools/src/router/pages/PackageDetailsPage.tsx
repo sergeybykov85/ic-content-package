@@ -4,16 +4,14 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import If from '~/components/general/If'
 import Button from '~/components/general/Button'
 import PackageDetailsBlock from '~/components/features/PackageDetailsBlock'
-import { useAuth } from '~/context/AuthContext'
 import BundlesList from '~/components/features/BundlesList'
 import CopyBtn from '~/components/general/CopyBtn'
 
 const PackageDetailsPage: FC = () => {
-  const { isAuthenticated } = useAuth()
   const { packageId } = useParams()
   const { state } = useLocation()
   const navigate = useNavigate()
-  const goBack = useCallback(() => navigate(-1), [navigate])
+  const goBack = useCallback(() => navigate(state?.backToListPath), [navigate, state?.backToListPath])
 
   if (!packageId) {
     return <Navigate to="/" replace />
@@ -26,7 +24,7 @@ const PackageDetailsPage: FC = () => {
         </>
       }
       rightElement={
-        <If condition={state?.backToList && isAuthenticated}>
+        <If condition={state?.backToListPath}>
           <Button variant="text" onClick={goBack}>
             Back to the list
           </Button>
