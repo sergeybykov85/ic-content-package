@@ -1,4 +1,5 @@
 import nanosecToSec from '~/utils/nanosecToSec.ts'
+import type { VariantType } from '~/types/globals.ts'
 
 export default class CanisterDTO {
   protected parseOptionParam = <T>(param: T[], defaultValue: T): T => {
@@ -11,5 +12,9 @@ export default class CanisterDTO {
       hour: '2-digit',
       minute: '2-digit',
     })}`
+  }
+
+  protected parseVariantType = <T>(data: VariantType<T>): T => {
+    return Object.keys(data)[0]
   }
 }

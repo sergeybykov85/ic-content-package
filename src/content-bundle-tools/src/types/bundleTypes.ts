@@ -1,4 +1,4 @@
-import type { IdentityRecord } from '~/types/globals.ts'
+import { IdentityRecord, VariantType, StorageData } from '~/types/globals.ts'
 
 export interface BundleDto {
   id: string
@@ -23,4 +23,21 @@ export interface BundleDetailsDto extends Omit<BundleDto, 'tags' | 'classificati
     // about
     // location
   }
+}
+
+export interface PoiSectionDto {
+  category: VariantType<string>
+  data: StorageData[]
+  data_path: StorageData
+}
+
+export interface PoiDataDto {
+  data_path: StorageData
+  sections: PoiSectionDto[]
+  // readonly
+}
+
+export enum DATA_GROUPS {
+  POI = 'POI',
+  Additions = 'Additions',
 }

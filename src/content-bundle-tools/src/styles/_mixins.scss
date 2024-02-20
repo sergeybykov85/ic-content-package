@@ -1,3 +1,5 @@
+@import "src/styles/variables";
+
 @mixin ellipsis {
   overflow: hidden;
   white-space: nowrap;
@@ -6,4 +8,10 @@
 
 @mixin grid-columns($repeat: 1) {
   grid-template-columns: repeat($repeat, minmax(0, 1fr));
+}
+
+@mixin box() {
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: 32px;
 }

@@ -5,9 +5,10 @@ import { idlFactory as idl } from '~/../../declarations/bundle_package'
 import type { DataSegmentationDto, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'
-import type { BundleDetailsDto, BundleDto } from '~/types/bundleTypes.ts'
+import { BundleDetailsDto, BundleDto, DATA_GROUPS, PoiDataDto } from '~/types/bundleTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
-import type { CanisterResponse, PaginatedListResponse } from '~/types/globals.ts'
+import { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
+import PoiSection from '~/models/PoiSection.ts'
 
 export default class BundlePackageService extends CanisterService {
   constructor(packageId: string, identity?: Identity | Secp256k1KeyIdentity) {
@@ -38,5 +39,20 @@ export default class BundlePackageService extends CanisterService {
   public getBundle = async (bundleId: string): Promise<Bundle> => {
     const response = (await this.actor.get_bundle(bundleId)) as CanisterResponse<BundleDetailsDto>
     return new Bundle(this.responseHandler(response))
+  }
+
+  public getBundleDataGroups = async (bundleId: string): Promise<DATA_GROUPS[]> => {
+    const response = (await this.actor.get_bundle_data_groups(bundleId)) as CanisterResponse<VariantType<DATA_GROUPS>[]>
+    return this.responseHandler(response).map(item => Object.keys(item)[0]) as DATA_GROUPS[]
+  }
+
+  private getBundleData = async (bundleId: string, dataGroup: DATA_GROUPS): Promise<unknown> => {
+    const response = (await this.actor.get_bundle_data(bundleId, { [dataGroup]: null })) as CanisterResponse<unknown>
+    return this.responseHandler(response)
+  }
+
+  public getPoiSections = async (bundleId: string): Promise<PoiSection[]> => {
+    const response = (await this.getBundleData(bundleId, DATA_GROUPS.POI)) as PoiDataDto
+    return response.sections.map(item => new PoiSection(item))
   }
 }

@@ -10,10 +10,7 @@
     @include grid-columns(2);
   }
 
-  border: 1px solid $border-color;
-  border-radius: $border-radius;
-
-  padding: 32px;
+  @include box
 }
 
 .title {

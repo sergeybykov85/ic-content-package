@@ -18,16 +18,12 @@ export class Package extends CanisterDTO {
     this.maxSupply = this.parseMaxSupply(packageDto.max_supply)
     this.name = packageDto.name
     // this.registered = this.toLocalDateString(packageDto.registered)
-    this.submission = this.parseSubmission(packageDto.submission)
+    this.submission = this.parseVariantType(packageDto.submission)
     this.logoUrl = this.parseOptionParam(packageDto.logo_url, '')
   }
 
   private parseMaxSupply = (value: PackageDto['max_supply']): Package['maxSupply'] => {
     const maxSupplyBigInt = this.parseOptionParam(value, 0n)
     return Number(maxSupplyBigInt) || 'unlimited'
-  }
-
-  private parseSubmission = (submission: PackageDto['submission']): PackageTypes => {
-    return Object.keys(submission)[0] as PackageTypes
   }
 }
