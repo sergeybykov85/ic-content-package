@@ -37,13 +37,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   }, [bundleId, bundlePackageService, setLoading])
 
   if (bundleData) {
-    return (
-      <DetailsBlock
-        title={bundleData.name}
-        description={bundleData.description || ''}
-        imgSrc={bundleData.logoUrl}
-      ></DetailsBlock>
-    )
+    return <DetailsBlock data={{ ...bundleData, description: bundleData.description || '' }} />
   }
 }
 

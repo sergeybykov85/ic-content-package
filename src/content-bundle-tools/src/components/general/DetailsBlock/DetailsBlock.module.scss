@@ -25,3 +25,40 @@
   border-radius: $border-radius;
   width: 100%;
 }
+
+.details {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    align-items: center;
+    color: $grey-text-color;
+  }
+  span {
+    display: block;
+    margin-left: auto;
+    color: black;
+    max-width: 250px;
+    @include ellipsis;
+  }
+}
+
+.label {
+  color: #FFFFFF!important;
+}
+
+.clickable-id {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tags {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
