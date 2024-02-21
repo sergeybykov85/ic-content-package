@@ -2,3 +2,4 @@
 .dfx*
 .mops*
 deps
+src/content-bundle-tools/src/declarations
