@@ -38,7 +38,7 @@ module {
 		// only from POI
 		location : ?CommonTypes.Location;
 		// only from POI
-		about : ?CommonTypes.AboutData;
+		about : [CommonTypes.AboutData];
 		tags : [Text];
 		classification : Text;
 	};
@@ -104,10 +104,10 @@ module {
 			description = info.description;
 			logo = info.logo;
 			index = {
-				tags = List.toArray (info.index.tags);
+				tags = List.toArray(info.index.tags);
 				classification = info.index.classification;
 				location = info.index.location;
-				about = info.index.about;
+				about = List.toArray(info.index.about);
 			};
 			creator = info.creator;
 			owner = info.owner;
