@@ -1,4 +1,5 @@
 import type { FC } from 'react'
+import styles from './GoogleMap.module.scss'
 
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
@@ -12,6 +13,9 @@ interface GoogleMapProps {
 
 const GoogleMap: FC<GoogleMapProps> = ({ location, height = 450 }) => {
   const { latitude, longitude } = location
+  if (!API_KEY) {
+    return <div className={styles['no-api-key']}>Please, add Google API key to render a map</div>
+  }
   return (
     <iframe
       width="100%"
