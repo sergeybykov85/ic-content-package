@@ -991,26 +991,27 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		let by_creator = switch (criteria.creator) {
 			case (?identity) {
 				switch (creator2bundle_get(identity)) {
-					case (?bundle_ids) { List.toArray(bundle_ids) };
-					case (null) { [] };
+					case (?bundle_ids) { ?List.toArray(bundle_ids) };
+					case (null) { ?[] };
 				};
 			};
-			case (null) {[]};
+			case (null) {null};
 		};		
 		let by_country = switch (criteria.country_code) {
-			case (?country_code) { _get_ids_for(country2bundle_get, country_code)};
-			case (null) {[]};
+			case (?country_code) {?_get_ids_for(country2bundle_get, country_code)};
+			case (null) {null};
 		};		
 		let by_tag = switch (criteria.tag) {
-			case (?tag) { _get_ids_for(tag2bundle_get, tag)};
-			case (null) {[]};
+			case (?tag) {?_get_ids_for(tag2bundle_get, tag)};
+			case (null) {null};
 		};
 		let by_class = switch (criteria.classification) {
-			case (?classification) {_get_ids_for(classification2bundle_get, classification)};
-			case (null) {[]};
+			case (?classification) {?_get_ids_for(classification2bundle_get, classification)};
+			case (null) {null};
 		};
-		if (criteria.intersect) {CommonUtils.build_intersect([by_creator, by_country, by_tag, by_class]);}
-		else {CommonUtils.build_uniq([by_creator, by_country, by_tag, by_class]);}
+		let id_arr = CommonUtils.flatten([by_creator, by_country, by_tag, by_class]);
+		if (criteria.intersect) {CommonUtils.build_intersect(id_arr);}
+		else {CommonUtils.build_uniq(id_arr);}
 	};
 
     private func _get_bundle_refs_by_ids(ids:[Text]) : [Conversion.BundleRefView] {

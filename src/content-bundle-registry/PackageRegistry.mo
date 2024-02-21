@@ -412,40 +412,42 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		let by_creator = switch (criteria.creator) {
 			case (?identity) {
 				switch (creator2package_get(identity)) {
-					case (?ids) { List.toArray(ids) };
-					case (null) { [] };
+					case (?ids) { ?List.toArray(ids) };
+					case (null) { ?[] };
 				}
 			};
-			case (null) {[]};
+			case (null) {null};
 		};
 
 		let by_type = switch (criteria.kind) {
 			case (?kind) {
 				let kind_key = Utils.resolve_submission_name(kind);
 				switch (type2package_get(kind_key)) {
-					case (?by_kind) {(List.toArray(by_kind)) };
-					case (null) {[]};
+					case (?by_kind) {?List.toArray(by_kind) };
+					case (null) {?[]};
 				};
 			};
-			case (null) {[]};
+			case (null) {null};
 		};		
 	
 		let by_country = switch (criteria.country_code) {
-			case (?country_code) { await index_service_actor.get_packages_by_country(country_code)};
-			case (null) {[]};
+			case (?country_code) { ?(await index_service_actor.get_packages_by_country(country_code))};
+			case (null) {null};
 		};		
 		let by_tag = switch (criteria.tag) {
-			case (?tag) { await index_service_actor.get_packages_by_tag(tag)};
-			case (null) {[]};
+			case (?tag) { ?(await index_service_actor.get_packages_by_tag(tag))};
+			case (null) {null};
 		};
 		let by_class = switch (criteria.classification) {
-			case (?classification) { await index_service_actor.get_packages_by_classification(classification)};
-			case (null) {[]};
+			case (?classification) { ?(await index_service_actor.get_packages_by_classification(classification))};
+			case (null) {null};
 		};
 
+		let id_arr = CommonUtils.flatten([by_creator, by_type, by_country, by_tag, by_class]);
+
 		var ids:[Text] = [];
-		if (criteria.intersect) {ids:=CommonUtils.build_intersect([by_creator, by_type, by_country, by_tag, by_class]);}
-		else { ids:=CommonUtils.build_uniq([by_creator, by_type, by_country, by_tag, by_class]);};
+		if (criteria.intersect) {ids:=CommonUtils.build_intersect(id_arr)}
+		else { ids:=CommonUtils.build_uniq(id_arr)};
 		_get_packages(ids);
 	};
 
