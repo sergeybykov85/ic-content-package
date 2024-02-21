@@ -54,6 +54,8 @@ export default class BundlePackageService extends CanisterService {
 
   public getPoiSections = async (bundleId: string): Promise<PoiSection[]> => {
     const response = (await this.getBundleData(bundleId, DATA_GROUPS.POI)) as PoiDataDto
+    const response2 = await this.getBundleData(bundleId, DATA_GROUPS.Additions)
+    console.log('ADDITIONS DATA ====>', response2)
     return response.sections.map(item => new PoiSection(item))
   }
 }
