@@ -33,7 +33,7 @@ function Select<T extends string = string>({
       setValue(newValue)
       onSelect && onSelect(newValue)
     },
-    [hideOptions],
+    [hideOptions, onSelect],
   )
 
   return (

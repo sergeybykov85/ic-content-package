@@ -1,13 +1,16 @@
-import type PoiSection from '~/models/PoiSection.ts'
 import { type FC, useCallback, useState } from 'react'
-import Collapse from '~/components/general/Collapse'
+import type PoiSection from '~/models/PoiSection.ts'
+import type Bundle from '~/models/Bundle.ts'
 import styles from './PoiItem.module.scss'
 import clsx from 'clsx'
+import Collapse from '~/components/general/Collapse'
 import PoiItemGallery from '../PoiItemGallery/PoiItemGallery.tsx'
 import PoiItemDefault from '../PoiItemDefault/PoiItemDefault.tsx'
+import PollItemLocation from '../PollItemLocation/PollItemLocation.tsx'
 
 interface PoiItemProps {
   item: PoiSection
+  bundle: Bundle
 }
 
 /*
@@ -17,17 +20,22 @@ interface PoiItemProps {
  * [+] default
  * */
 
-const PoiItem: FC<PoiItemProps> = ({ item }) => {
+const PoiItem: FC<PoiItemProps> = ({ item, bundle }) => {
   const [open, setOpen] = useState(false)
 
-  const renderItem = useCallback(({ category, dataList }: PoiSection) => {
-    switch (category) {
-      case 'Gallery':
-        return <PoiItemGallery list={dataList} />
-      default:
-        return <PoiItemDefault list={dataList} />
-    }
-  }, [])
+  const renderItem = useCallback(
+    ({ category, dataList }: PoiSection) => {
+      switch (category) {
+        case 'Gallery':
+          return <PoiItemGallery list={dataList} />
+        case 'Location':
+          return <PollItemLocation list={dataList} locations={bundle.locations} />
+        default:
+          return <PoiItemDefault list={dataList} />
+      }
+    },
+    [bundle.locations],
+  )
 
   return (
     <div>

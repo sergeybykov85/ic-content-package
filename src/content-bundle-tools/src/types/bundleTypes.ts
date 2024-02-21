@@ -1,4 +1,4 @@
-import { IdentityRecord, VariantType, StorageData } from '~/types/globals.ts'
+import type { IdentityRecord, VariantType, StorageData } from '~/types/globals.ts'
 
 export interface BundleDto {
   id: string
@@ -15,13 +15,30 @@ export interface BundleDto {
   // data_path - not needed yet
 }
 
+export interface LocationIndexDto {
+  city: string[]
+  coordinates: {
+    latitude: number
+    longitude: number
+  }
+  country_code2: string
+  region: string[]
+}
+
+export interface AboutIndexDto {
+  name: string
+  description: string
+  locale: string
+  attributes: string[]
+}
+
 export interface BundleDetailsDto extends Omit<BundleDto, 'tags' | 'classification'> {
   description: string
   index: {
     tags: string[]
     classification: string
-    // about
-    // location
+    location: LocationIndexDto[]
+    about: AboutIndexDto[]
   }
 }
 

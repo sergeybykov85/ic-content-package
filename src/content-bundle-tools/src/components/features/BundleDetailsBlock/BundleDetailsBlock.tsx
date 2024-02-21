@@ -21,7 +21,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
     [initBundlePackageService, packageId],
   )
 
-  const [bundleData, setBundleData] = useState<Bundle | null>(null)
+  const [bundle, setBundle] = useState<Bundle | null>(null)
   const [dataGroups, setDataGroups] = useState<DATA_GROUPS[]>([])
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
     bundlePackageService
       ?.getBundle(bundleId)
       .then(response => {
-        setBundleData(response)
+        setBundle(response)
       })
       .catch(error => {
         console.error(error)
@@ -54,13 +54,13 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
     }
   }, [bundlePackageService, dataGroups.length, bundleId])
 
-  if (bundleData) {
+  if (bundle) {
     return (
       <>
-        <DetailsBlock data={{ ...bundleData, description: bundleData.description || '' }} />
+        <DetailsBlock data={{ ...bundle, description: bundle.description || '' }} />
         <If condition={dataGroups.includes(DATA_GROUPS.POI)}>
           <br />
-          <Poi {...{ bundleId, packageId }} />
+          <Poi {...{ bundleId, packageId, bundle }} />
         </If>
       </>
     )

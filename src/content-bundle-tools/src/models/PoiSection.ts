@@ -1,7 +1,7 @@
 import type { PoiSectionDto } from '~/types/bundleTypes.ts'
 import CanisterDTO from '~/models/CanisterDTO.ts'
 
-interface DataListItem {
+export interface DataListItem {
   id: string
   url: string
 }

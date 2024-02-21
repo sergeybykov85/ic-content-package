@@ -14,7 +14,7 @@ export default class CanisterDTO {
     })}`
   }
 
-  protected parseVariantType = <T>(data: VariantType<T>): T => {
-    return Object.keys(data)[0]
+  protected parseVariantType = <T extends string>(data: VariantType<T>): T => {
+    return Object.keys(data)[0] as T
   }
 }

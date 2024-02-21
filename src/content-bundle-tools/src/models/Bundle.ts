@@ -1,5 +1,6 @@
 import CanisterDTO from '~/models/CanisterDTO.ts'
-import type { BundleDetailsDto, BundleDto } from '~/types/bundleTypes.ts'
+import type { AboutIndexDto, BundleDetailsDto, BundleDto } from '~/types/bundleTypes.ts'
+import BundleLocation from '~/models/BundleLocation.ts'
 
 export default class Bundle extends CanisterDTO {
   public id: string
@@ -11,6 +12,8 @@ export default class Bundle extends CanisterDTO {
   public logoUrl: string
   public tags: string[]
   public classification: string
+  public locations: BundleLocation[]
+  public about: AboutIndexDto[]
 
   constructor(bundleDto: BundleDto | BundleDetailsDto) {
     super()
@@ -23,6 +26,8 @@ export default class Bundle extends CanisterDTO {
     this.logoUrl = bundleDto.logo[0].url || ''
     this.tags = this.parseTags(bundleDto)
     this.classification = this.parseClassification(bundleDto)
+    this.locations = this.parseLocations(bundleDto)
+    this.about = this.parseAbout(bundleDto)
   }
 
   private parseDescription = (bundle: BundleDto | BundleDetailsDto): string | undefined => {
@@ -35,5 +40,17 @@ export default class Bundle extends CanisterDTO {
 
   private parseClassification = (bundle: BundleDto | BundleDetailsDto): string => {
     return 'index' in bundle ? bundle.index.classification : bundle.classification
+  }
+
+  private parseLocations = (bundle: BundleDto | BundleDetailsDto): BundleLocation[] => {
+    if ('index' in bundle) {
+      return bundle.index.location.map(item => new BundleLocation(item))
+    } else {
+      return []
+    }
+  }
+
+  private parseAbout = (bundle: BundleDto | BundleDetailsDto): AboutIndexDto[] => {
+    return 'index' in bundle ? bundle.index.about : []
   }
 }

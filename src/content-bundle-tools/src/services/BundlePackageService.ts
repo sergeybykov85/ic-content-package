@@ -5,9 +5,10 @@ import { idlFactory as idl } from '~/../../declarations/bundle_package'
 import type { DataSegmentationDto, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'
-import { BundleDetailsDto, BundleDto, DATA_GROUPS, PoiDataDto } from '~/types/bundleTypes.ts'
+import type { BundleDetailsDto, BundleDto, PoiDataDto } from '~/types/bundleTypes.ts'
+import { DATA_GROUPS } from '~/types/bundleTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
-import { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
+import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import PoiSection from '~/models/PoiSection.ts'
 
 export default class BundlePackageService extends CanisterService {

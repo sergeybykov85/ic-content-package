@@ -1,17 +1,18 @@
-import { FC, useEffect, useMemo, useState } from 'react'
+import { type FC, useEffect, useMemo, useState } from 'react'
 import styles from './Poi.module.scss'
 import { useServices } from '~/context/ServicesContext'
-import PoiSection from '~/models/PoiSection.ts'
-import { DATA_GROUPS } from '~/types/bundleTypes.ts'
+import type PoiSection from '~/models/PoiSection.ts'
 import { enqueueSnackbar } from 'notistack'
 import PoiItem from './components/PoiItem/PoiItem.tsx'
+import type Bundle from '~/models/Bundle.ts'
 
 interface PoiProps {
   packageId: string
   bundleId: string
+  bundle: Bundle
 }
 
-const Poi: FC<PoiProps> = ({ bundleId, packageId }) => {
+const Poi: FC<PoiProps> = ({ bundleId, packageId, bundle }) => {
   const { initBundlePackageService } = useServices()
   const bundlePackageService = useMemo(
     () => initBundlePackageService?.(packageId),
@@ -22,7 +23,7 @@ const Poi: FC<PoiProps> = ({ bundleId, packageId }) => {
 
   useEffect(() => {
     bundlePackageService
-      ?.getPoiSections(bundleId, DATA_GROUPS.POI)
+      ?.getPoiSections(bundleId)
       .then(res => setSections(res))
       .catch(error => {
         console.error(error)
@@ -37,7 +38,7 @@ const Poi: FC<PoiProps> = ({ bundleId, packageId }) => {
       <h3 className={styles.title}>POI</h3>
       <div className={styles.grid}>
         {sections.map(item => (
-          <PoiItem item={item} key={item.category} />
+          <PoiItem item={item} bundle={bundle} key={item.category} />
         ))}
       </div>
     </div>

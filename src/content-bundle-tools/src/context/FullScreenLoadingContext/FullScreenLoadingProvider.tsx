@@ -1,4 +1,4 @@
-import { FC, ReactNode, useCallback, useEffect, useState } from 'react'
+import { type FC, type ReactNode, useCallback, useEffect, useState } from 'react'
 import { FullScreenLoadingContext } from '~/context/FullScreenLoadingContext/index.ts'
 import Loader from '~/components/general/Loader'
 import If from '~/components/general/If'
