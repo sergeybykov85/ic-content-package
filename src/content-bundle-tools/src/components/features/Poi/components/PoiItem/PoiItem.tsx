@@ -7,18 +7,12 @@ import Collapse from '~/components/general/Collapse'
 import PoiItemGallery from '../PoiItemGallery/PoiItemGallery.tsx'
 import PoiItemDefault from '../PoiItemDefault/PoiItemDefault.tsx'
 import PollItemLocation from '../PollItemLocation/PollItemLocation.tsx'
+import PoiItemAbout from '../PoiItemAbout/PoiItemAbout.tsx'
 
 interface PoiItemProps {
   item: PoiSection
   bundle: Bundle
 }
-
-/*
- * [+] Gallery
- * [ ] About
- * [ ] Location
- * [+] default
- * */
 
 const PoiItem: FC<PoiItemProps> = ({ item, bundle }) => {
   const [open, setOpen] = useState(false)
@@ -30,11 +24,13 @@ const PoiItem: FC<PoiItemProps> = ({ item, bundle }) => {
           return <PoiItemGallery list={dataList} />
         case 'Location':
           return <PollItemLocation list={dataList} locations={bundle.locations} />
+        case 'About':
+          return <PoiItemAbout list={dataList} about={bundle.about} />
         default:
           return <PoiItemDefault list={dataList} />
       }
     },
-    [bundle.locations],
+    [bundle.about, bundle.locations],
   )
 
   return (

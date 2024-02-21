@@ -39,6 +39,7 @@ export default class BundlePackageService extends CanisterService {
 
   public getBundle = async (bundleId: string): Promise<Bundle> => {
     const response = (await this.actor.get_bundle(bundleId)) as CanisterResponse<BundleDetailsDto>
+    console.log(response)
     return new Bundle(this.responseHandler(response))
   }
 
@@ -54,6 +55,7 @@ export default class BundlePackageService extends CanisterService {
 
   public getPoiSections = async (bundleId: string): Promise<PoiSection[]> => {
     const response = (await this.getBundleData(bundleId, DATA_GROUPS.POI)) as PoiDataDto
+    console.log(response)
     return response.sections.map(item => new PoiSection(item))
   }
 }
