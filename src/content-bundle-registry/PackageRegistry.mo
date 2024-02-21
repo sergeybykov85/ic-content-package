@@ -337,6 +337,28 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (null) {[]};
 		};
     };	
+	/**
+	* Returns packages for the type and creator (optional)
+	*/
+    public query func get_packages_by_type_and_creator(kind:Types.Submission, identity:?CommonTypes.Identity) : async [Conversion.BundlePackageView] {
+		let kind_key = Utils.resolve_submission_name(kind);
+		switch (type2package_get(kind_key)) {
+			case (?by_kind) {  
+				// identity given?
+				let id_res = switch (identity) {
+					case (?i) {
+						switch (creator2package_get(i)) {
+							case (?ids) {CommonUtils.build_intersect([List.toArray(by_kind), List.toArray(ids)])};
+							case (null) { [] };
+						}
+					};
+					case (null) { List.toArray(by_kind)};
+				};
+				_get_packages(id_res);
+			};
+			case (null) {[]};
+		};
+    };	
 
     public query func get_package_ids () : async [Text] {
 		List.toArray(all_packages);
@@ -386,7 +408,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 
 	public composite query func get_packages_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundlePackageView] {
 		let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
-
+		
 		let by_creator = switch (criteria.creator) {
 			case (?identity) {
 				switch (creator2package_get(identity)) {

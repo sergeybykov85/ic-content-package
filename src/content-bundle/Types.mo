@@ -204,7 +204,7 @@ module {
 		// only from POI
 		var location : ?CommonTypes.Location;
 		// only from POI
-		var about : ?CommonTypes.AboutData;
+		var about : List.List<CommonTypes.AboutData>;
 		var tags : List.List<Text>;
 		var classification : Text;
 	};

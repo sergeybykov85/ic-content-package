@@ -439,7 +439,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 															bundle.index.location:=null;
 														};															
 													};
-													case (#About) {	bundle.index.about:=null;};
+													case (#About) {	bundle.index.about:=List.nil();};
 													case (_) {};
 												};
 												_exclude_section(group, category);
@@ -540,7 +540,21 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 									};
 								};
 								if (args.category == #About) {
-									bundle.index.about:=args.payload.about;
+
+									switch (args.payload.about) {
+										case (?about) {
+											if (List.size(bundle.index.about) > 0) {
+												// filter by locale	
+												let f_about = List.mapFilter<CommonTypes.AboutData, CommonTypes.AboutData>(bundle.index.about,
+													func(b:CommonTypes.AboutData) : ?CommonTypes.AboutData { if (b.locale == about.locale) { return null; } else { return ?b; }}
+												);
+												bundle.index.about:= List.push(about, f_about);
+											} else {
+												bundle.index.about:= List.push(about, List.nil());
+											};
+										};
+										case (null) {};
+									};
 								};								
 							};
 							case (#Additions) {};
