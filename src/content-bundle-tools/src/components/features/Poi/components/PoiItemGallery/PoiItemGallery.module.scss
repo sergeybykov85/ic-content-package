@@ -2,12 +2,26 @@
 @import "src/styles/mixins";
 
 .gallery {
-  img {
-    border-radius: $border-radius;
+  a {
+    position: relative;
     transition: $transition-time;
     cursor: pointer;
     &:hover {
       transform: scale(1.1);
     }
   }
+  img {
+    border-radius: $border-radius;
+  }
+}
+
+.name {
+  width: 100%;
+  bottom: 0;
+  position: absolute;
+  margin-top: 8px;
+  text-align: center;
+  color: #FFFFFF;
+  height: 24px;
+  background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(255,255,255,0) 100%);
 }

@@ -4,6 +4,7 @@ import CanisterDTO from '~/models/CanisterDTO.ts'
 export interface DataListItem {
   id: string
   url: string
+  name?: string
 }
 
 export default class PoiSection extends CanisterDTO {
@@ -17,6 +18,10 @@ export default class PoiSection extends CanisterDTO {
   }
 
   private getDataList = (list: PoiSectionDto['data']): DataListItem[] => {
-    return list.map(item => ({ id: item.resource_id, url: item.url }))
+    return list.map(item => ({
+      id: item.resource_id,
+      url: item.url,
+      name: this.parseOptionParam(item.name, undefined),
+    }))
   }
 }
