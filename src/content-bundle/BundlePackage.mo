@@ -933,14 +933,22 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Returns bundle refs by portions
 	*/
     public query func get_bundle_refs_page(start: Nat, limit: Nat): async CommonTypes.DataSlice<Conversion.BundleRefView> {
-        _get_page(start, limit, Conversion.convert_bundle_ref_view);
+        _get_page(List.toArray(all_bundles), start, limit, Conversion.convert_bundle_ref_view);
     };
 
 	/**
 	* Returns bundle refs by portions
 	*/
+    public query func get_bundle_refs_by_tag_page(tag:Text, start: Nat, limit: Nat): async CommonTypes.DataSlice<Conversion.BundleRefView> {
+        let ids = _get_ids_for(tag2bundle_get, tag);
+		_get_page(ids, start, limit, Conversion.convert_bundle_ref_view);
+    };	
+
+	/**
+	* Returns bundle refs by portions
+	*/
     public query func get_bundles_page(start: Nat, limit: Nat): async CommonTypes.DataSlice<Conversion.BundleDetailsView> {
-        _get_page(start, limit, Conversion.convert_bundle_details_view);
+        _get_page(List.toArray(all_bundles), start, limit, Conversion.convert_bundle_details_view);
     };	
 
 	/**
@@ -1027,19 +1035,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		Buffer.toArray(res);
     };	
 
-	private func _get_page <T>(start: Nat, limit: Nat, conversion : (Types.Bundle, Text) -> T):  CommonTypes.DataSlice<T> {
+	private func _get_page <T>(ids:[Text], start: Nat, limit: Nat, conversion : (Types.Bundle, Text) -> T):  CommonTypes.DataSlice<T> {
         let res = Buffer.Buffer<T>(limit);
         var i = start;
-		let all = List.toArray(all_bundles);
-        while (i < start + limit and i < all.size()) {
-			let id = all[i];
+        while (i < start + limit and i < ids.size()) {
+			let id = ids[i];
 			switch (bundle_get(id)) {
 				case (?bundle) { res.add(conversion(bundle, id)); };
 				case (null) {  };
 			};
             i += 1;
         };
-        return {items = Buffer.toArray(res); total_supply = Trie.size(bundles); };
+        return {items = Buffer.toArray(res); total_supply = Array.size(ids); };
     };
 
 				
