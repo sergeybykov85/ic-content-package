@@ -5,8 +5,7 @@ import { idlFactory as idl } from '~/../../declarations/bundle_package'
 import type { DataSegmentationDto, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'
-import type { BundleDetailsDto, BundleDto, AdditionalDataDto } from '~/types/bundleTypes.ts'
-import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
+import type { BundleDetailsDto, BundleDto, AdditionalDataDto, ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
@@ -64,7 +63,7 @@ export default class BundlePackageService extends CanisterService {
     type: ADDITIONAL_DATA_TYPES,
   ): Promise<AdditionalDataSection[]> => {
     const response = await this.getBundleAdditionalData(bundleId, type)
-    console.log(`${type} ===>`, response)
+    // console.log(`${type} ===>`, response)
     return response.sections.map(item => new AdditionalDataSection(item))
   }
 }

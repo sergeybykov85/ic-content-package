@@ -8,6 +8,7 @@ import DataItemGallery from '../DataItemGallery/DataItemGallery.tsx'
 import DataItemDefault from '../DataItemDefault/DataItemDefault.tsx'
 import DataItemLocation from '../DataItemLocation/DataItemLocation.tsx'
 import DataItemAbout from '../DataItemAbout/DataItemAbout.tsx'
+import DataItemAudio from '../DataItemAudio/DataItemAudio.tsx'
 
 interface DataItemProps {
   item: AdditionalDataSection
@@ -26,6 +27,9 @@ const DataItem: FC<DataItemProps> = ({ item, bundle }) => {
           return <DataItemLocation list={dataList} locations={bundle.locations} />
         case 'About':
           return <DataItemAbout list={dataList} about={bundle.about} />
+        case 'Audio':
+        case 'AudioGuide':
+          return <DataItemAudio list={dataList} />
         default:
           return <DataItemDefault list={dataList} />
       }

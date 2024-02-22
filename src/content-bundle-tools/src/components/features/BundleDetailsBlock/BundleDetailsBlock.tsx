@@ -6,7 +6,7 @@ import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
 import If from '~/components/general/If'
 import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
-import { Poi } from '~/components/features/AdditionalData'
+import { Additions, Poi } from '~/components/features/AdditionalData'
 
 interface BundleDetailsBlockProps {
   packageId: string
@@ -61,6 +61,10 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
         <If condition={dataGroups.includes(ADDITIONAL_DATA_TYPES.POI)}>
           <br />
           <Poi {...{ bundleId, packageId, bundle }} />
+        </If>
+        <If condition={dataGroups.includes(ADDITIONAL_DATA_TYPES.Additions)}>
+          <br />
+          <Additions {...{ bundleId, packageId, bundle }} />
         </If>
       </>
     )

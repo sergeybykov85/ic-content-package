@@ -1,1 +1,1 @@
-export { default } from './CardsGrid.module.scss'
+export { default } from './CardsGrid.tsx'
