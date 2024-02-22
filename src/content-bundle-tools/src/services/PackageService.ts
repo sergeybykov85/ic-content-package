@@ -2,7 +2,7 @@ import { idlFactory as idl } from '~/../../declarations/package_service'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 import type { DeployPackageOptions, DeployPackageMetadata, PackageTypes } from '~/types/packagesTypes.ts'
-import type { CanisterResponse } from '~/types/globals.ts'
+import { CanisterResponse, IdentityTypes } from '~/types/globals.ts'
 import CanisterService from '~/models/CanisterService.ts'
 
 const PACKAGE_SERVICE_CANISTER_ID = import.meta.env.VITE_PACKAGE_SERVICE_CANISTER_ID
@@ -43,5 +43,15 @@ export default class PackageService extends CanisterService {
     )) as CanisterResponse<string>
 
     return this.responseHandler(response)
+  }
+
+  public checkPackageDeployAllowance = async (identityId: string): Promise<boolean> => {
+    const { allowance, deployed_packages } = (await this.actor.activity_by({
+      identity_type: {
+        [IdentityTypes.ICP]: null,
+      },
+      identity_id: identityId,
+    })) as { allowance: bigint; deployed_packages: string[] }
+    return deployed_packages.length < Number(allowance)
   }
 }

@@ -39,7 +39,7 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
     [navigate, pathname, searchParams, state],
   )
 
-  return (
+  return bundlesList.length ? (
     <>
       <h2 className={styles.title}>Bundles</h2>
       <BundlesGrid bundles={bundlesList} />
@@ -51,7 +51,7 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
         />
       </If>
     </>
-  )
+  ) : null
 }
 
 export default BundlesList
