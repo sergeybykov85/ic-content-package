@@ -1,16 +1,17 @@
-@import "src/styles/mixins";
+@import "src/styles/variables";
 
 .list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 
+  span {
+    margin-right: .5em;
+  }
+
   a {
-    display: block;
-    @include ellipsis;
-    &:hover {
-      text-decoration: underline;
-      cursor: pointer;
-    }
+    color: $primary-blue-color;
+    text-decoration: underline;
+    cursor: pointer;
   }
 }

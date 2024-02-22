@@ -7,7 +7,7 @@ const DataItemDefault: FC<{ list: DataListItem[] }> = ({ list }) => (
   <ul className={styles.list}>
     {list.map(item => (
       <li key={item.id}>
-        <ExternalLink href={item.url}>{item.url}</ExternalLink>
+        <span>{item.name}</span>[<ExternalLink href={item.url}>open file</ExternalLink>]
       </li>
     ))}
   </ul>
