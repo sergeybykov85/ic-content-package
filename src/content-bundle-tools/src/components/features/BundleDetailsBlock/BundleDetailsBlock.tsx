@@ -5,8 +5,8 @@ import DetailsBlock from '~/components/general/DetailsBlock'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
 import If from '~/components/general/If'
-import { DATA_GROUPS } from '~/types/bundleTypes.ts'
-import Poi from '~/components/features/Poi'
+import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
+import { Poi } from '~/components/features/AdditionalData'
 
 interface BundleDetailsBlockProps {
   packageId: string
@@ -22,7 +22,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   )
 
   const [bundle, setBundle] = useState<Bundle | null>(null)
-  const [dataGroups, setDataGroups] = useState<DATA_GROUPS[]>([])
+  const [dataGroups, setDataGroups] = useState<ADDITIONAL_DATA_TYPES[]>([])
 
   useEffect(() => {
     setLoading(true)
@@ -58,7 +58,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
     return (
       <>
         <DetailsBlock data={{ ...bundle, description: bundle.description || '' }} />
-        <If condition={dataGroups.includes(DATA_GROUPS.POI)}>
+        <If condition={dataGroups.includes(ADDITIONAL_DATA_TYPES.POI)}>
           <br />
           <Poi {...{ bundleId, packageId, bundle }} />
         </If>

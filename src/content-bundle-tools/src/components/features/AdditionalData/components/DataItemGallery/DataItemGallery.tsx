@@ -1,11 +1,11 @@
 import { type FC } from 'react'
-import styles from './PoiItemGallery.module.scss'
+import styles from './DataItemGallery.module.scss'
 import ExternalLink from '~/components/general/ExternalLink'
 import CardsGrid from '~/components/general/CardsGrid/CardsGrid.tsx'
-import type { DataListItem } from '~/models/PoiSection.ts'
+import type { DataListItem } from '~/models/AdditionalDataSection.ts'
 import If from '~/components/general/If'
 
-const PoiItemGallery: FC<{ list: DataListItem[] }> = ({ list }) => (
+const DataItemGallery: FC<{ list: DataListItem[] }> = ({ list }) => (
   <CardsGrid className={styles.gallery}>
     {list.map(item => (
       <ExternalLink href={item.url} key={item.id}>
@@ -18,4 +18,4 @@ const PoiItemGallery: FC<{ list: DataListItem[] }> = ({ list }) => (
   </CardsGrid>
 )
 
-export default PoiItemGallery
+export default DataItemGallery

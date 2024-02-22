@@ -5,11 +5,11 @@ import { idlFactory as idl } from '~/../../declarations/bundle_package'
 import type { DataSegmentationDto, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'
-import type { BundleDetailsDto, BundleDto, PoiDataDto } from '~/types/bundleTypes.ts'
-import { DATA_GROUPS } from '~/types/bundleTypes.ts'
+import type { BundleDetailsDto, BundleDto, AdditionalDataDto } from '~/types/bundleTypes.ts'
+import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
-import PoiSection from '~/models/PoiSection.ts'
+import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
 
 export default class BundlePackageService extends CanisterService {
   constructor(packageId: string, identity?: Identity | Secp256k1KeyIdentity) {
@@ -42,20 +42,29 @@ export default class BundlePackageService extends CanisterService {
     return new Bundle(this.responseHandler(response))
   }
 
-  public getBundleDataGroups = async (bundleId: string): Promise<DATA_GROUPS[]> => {
-    const response = (await this.actor.get_bundle_data_groups(bundleId)) as CanisterResponse<VariantType<DATA_GROUPS>[]>
-    return this.responseHandler(response).map(item => Object.keys(item)[0]) as DATA_GROUPS[]
+  public getBundleDataGroups = async (bundleId: string): Promise<ADDITIONAL_DATA_TYPES[]> => {
+    const response = (await this.actor.get_bundle_data_groups(bundleId)) as CanisterResponse<
+      VariantType<ADDITIONAL_DATA_TYPES>[]
+    >
+    return this.responseHandler(response).map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
   }
 
-  private getBundleData = async (bundleId: string, dataGroup: DATA_GROUPS): Promise<unknown> => {
-    const response = (await this.actor.get_bundle_data(bundleId, { [dataGroup]: null })) as CanisterResponse<unknown>
+  private getBundleAdditionalData = async (
+    bundleId: string,
+    type: ADDITIONAL_DATA_TYPES,
+  ): Promise<AdditionalDataDto> => {
+    const response = (await this.actor.get_bundle_data(bundleId, {
+      [type]: null,
+    })) as CanisterResponse<AdditionalDataDto>
     return this.responseHandler(response)
   }
 
-  public getPoiSections = async (bundleId: string): Promise<PoiSection[]> => {
-    const response = (await this.getBundleData(bundleId, DATA_GROUPS.POI)) as PoiDataDto
-    const response2 = await this.getBundleData(bundleId, DATA_GROUPS.Additions)
-    console.log('ADDITIONS DATA ====>', response2)
-    return response.sections.map(item => new PoiSection(item))
+  public getAdditionalDataSections = async (
+    bundleId: string,
+    type: ADDITIONAL_DATA_TYPES,
+  ): Promise<AdditionalDataSection[]> => {
+    const response = await this.getBundleAdditionalData(bundleId, type)
+    console.log(`${type} ===>`, response)
+    return response.sections.map(item => new AdditionalDataSection(item))
   }
 }

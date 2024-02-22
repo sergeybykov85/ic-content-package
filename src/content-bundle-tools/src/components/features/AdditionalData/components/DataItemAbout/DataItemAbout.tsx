@@ -1,15 +1,15 @@
-import type { DataListItem } from '~/models/PoiSection.ts'
+import type { DataListItem } from '~/models/AdditionalDataSection.ts'
 import type Bundle from '~/models/Bundle.ts'
 import type { FC } from 'react'
-import PoiItemDefault from '../PoiItemDefault/PoiItemDefault.tsx'
-import styles from './PoiItemAbout.module.scss'
+import DataItemDefault from '../DataItemDefault/DataItemDefault.tsx'
+import styles from './DataItemAbout.module.scss'
 
-interface PoiItemAboutProps {
+interface DataItemAboutProps {
   list: DataListItem[]
   about: Bundle['about']
 }
 
-const PoiItemAbout: FC<PoiItemAboutProps> = ({ list, about }) => {
+const DataItemAbout: FC<DataItemAboutProps> = ({ list, about }) => {
   if (about.length) {
     return (
       <div className={styles.container}>
@@ -27,7 +27,7 @@ const PoiItemAbout: FC<PoiItemAboutProps> = ({ list, about }) => {
     )
   }
 
-  return <PoiItemDefault list={list} />
+  return <DataItemDefault list={list} />
 }
 
-export default PoiItemAbout
+export default DataItemAbout

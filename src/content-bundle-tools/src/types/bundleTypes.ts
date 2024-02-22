@@ -42,19 +42,19 @@ export interface BundleDetailsDto extends Omit<BundleDto, 'tags' | 'classificati
   }
 }
 
-export interface PoiSectionDto {
+export interface AdditionalDataSectionDto {
   category: VariantType<string>
   data: StorageData[]
   data_path: StorageData
 }
 
-export interface PoiDataDto {
+export interface AdditionalDataDto {
   data_path: StorageData
-  sections: PoiSectionDto[]
+  sections: AdditionalDataSectionDto[]
   // readonly
 }
 
-export enum DATA_GROUPS {
+export enum ADDITIONAL_DATA_TYPES {
   POI = 'POI',
   Additions = 'Additions',
 }

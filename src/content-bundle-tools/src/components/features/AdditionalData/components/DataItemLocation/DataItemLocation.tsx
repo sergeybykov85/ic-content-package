@@ -1,17 +1,17 @@
 import { type FC } from 'react'
-import type { DataListItem } from '~/models/PoiSection.ts'
+import type { DataListItem } from '~/models/AdditionalDataSection.ts'
 import type BundleLocation from '~/models/BundleLocation.ts'
 import GoogleMap from '~/components/features/GoogleMap/GoogleMap.tsx'
-import PoiItemDefault from '../PoiItemDefault/PoiItemDefault.tsx'
+import DataItemDefault from '../DataItemDefault/DataItemDefault.tsx'
 import If from '~/components/general/If'
-import styles from './PollItemLocation.module.scss'
+import styles from './DataItemLocation.module.scss'
 
-interface PollItemLocationProps {
+interface DataItemLocationProps {
   list: DataListItem[]
   locations: BundleLocation[]
 }
 
-const PollItemLocation: FC<PollItemLocationProps> = ({ list, locations }) => {
+const DataItemLocation: FC<DataItemLocationProps> = ({ list, locations }) => {
   if (locations.length) {
     return (
       <>
@@ -47,7 +47,7 @@ const PollItemLocation: FC<PollItemLocationProps> = ({ list, locations }) => {
       </>
     )
   }
-  return <PoiItemDefault list={list} />
+  return <DataItemDefault list={list} />
 }
 
-export default PollItemLocation
+export default DataItemLocation
