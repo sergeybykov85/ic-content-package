@@ -26,6 +26,11 @@ module {
 		submitter : CommonTypes.Identity;		
 	};
 
+	public type Package2BundlesView = {
+		package : BundlePackageView;
+		bundles : CommonTypes.DataSlice<Types.Actor.BundleRefView>;
+	};
+
 	public type SubmitterView = {
 		identity : CommonTypes.Identity;
 		name : Text;
@@ -58,6 +63,24 @@ module {
 			packages = List.toArray (info.packages);
 			created = info.created;
         };
+    };
+
+	public func convert_package2bundles_view (id: Text, package: Types.BundlePackage, slice : CommonTypes.DataSlice<Types.Actor.BundleRefView>) : Package2BundlesView {
+        return {
+			package = {
+				id = id;
+				submission = package.submission;
+				max_supply = package.max_supply;
+				name = package.name;
+				description = package.description;
+				logo_url = package.logo_url;
+				created = package.created;
+				creator = package.creator;
+				submitted = package.submitted;
+				submitter = package.submitter;
+        	};
+			bundles = slice;
+		}
     };	
 
   

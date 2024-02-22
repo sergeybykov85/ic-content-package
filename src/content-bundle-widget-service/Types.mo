@@ -9,7 +9,6 @@ import Trie "mo:base/Trie";
 import Nat8 "mo:base/Nat8";
 
 import CommonTypes "../shared/CommonTypes";
-import BundlePackage "../content-bundle/BundlePackage";
 
 module {
 
@@ -116,7 +115,7 @@ module {
 			// only from POI
 			location : ?CommonTypes.Location;
 			// only from POI
-			about : ?CommonTypes.AboutData;
+			about : [CommonTypes.AboutData];
 			tags : [Text];
 			classification : Text;
 		};
@@ -150,6 +149,13 @@ module {
 		public type PackageRegistryActor = actor {
 			get_packages: shared query (ids:[Text]) -> async [PackageView];
 			get_packages_by_criteria: shared query (criteria: {
+				intersect : Bool;
+				kind : ?{
+					#Private; 
+					#Public;
+					#Shared;
+				};
+				creator : ?CommonTypes.Identity;
 				country_code : ?Text;
 				tag : ?Text;
 				classification : ?Text;
@@ -158,7 +164,7 @@ module {
 		};
 
 		public type BundlePackageActor = actor {
-			get_bundles_page : shared query (start: Nat, limit: Nat) -> async [BundleDetailsView];
+			get_bundles_page : shared query (start: Nat, limit: Nat) -> async CommonTypes.DataSlice<BundleDetailsView>;
 			get_refs_by_ids : shared query (ids:[Text]) -> async [Text];
 			get_bundles_by_ids : shared query (ids:[Text]) -> async [BundleDetailsView];
 		};				

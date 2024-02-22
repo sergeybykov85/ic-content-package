@@ -269,12 +269,18 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 								switch (criteria.package) {
 									case (?package) {
 										let package_actor : Types.Actor.BundlePackageActor = actor (package);
-										await package_actor.get_bundles_page(0, 1000);
+										let slice = await package_actor.get_bundles_page(0, 1000);
+										slice.items;
 									};
 									case (null) {
 										let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
 		
 										let packages = await registry_actor.get_packages_by_criteria({
+											intersect = true;
+											// no filter by type
+											kind = null;
+											// no filter by ceator
+											creator = null;
 											country_code = criteria.by_country_code;
 											tag = criteria.by_tag;
 											classification = criteria.by_classification;
@@ -284,8 +290,8 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 										for (id in p_ids.vals()) {
 											let package_actor : Types.Actor.BundlePackageActor = actor (id);
 											// todo : in fact we have to filter bundles by tag/country/classification
-											let bundles = await package_actor.get_bundles_page(0, 1000);
-											for (bundle in bundles.vals()) {
+											let slice = await package_actor.get_bundles_page(0, 1000);
+											for (bundle in slice.items.vals()) {
 												res.add(bundle);
 											};
 										};

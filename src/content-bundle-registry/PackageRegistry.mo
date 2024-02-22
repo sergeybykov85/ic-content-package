@@ -25,6 +25,9 @@ import ICS2Http "mo:ics2-core/Http";
 
 shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegistryArgs) = this {
 
+	let RECENT_PACKAGES_CAPACITY = 5;
+	let RECENT_BUNDLES_CAPACITY = 10;
+
 	// immutable field
 	let CREATOR:CommonTypes.Identity = {
 		identity_type = #ICP;
@@ -406,6 +409,38 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		await index_service_actor.get_data_segmentation();
 	};
 
+	/**
+	* Returns recent packages with included budnles.
+	* The argument of recent_packages can't be greather than RECENT_PACKAGES_CAPACITY.
+	* The argument of recent_bundles can't be greather than RECENT_BUNDLES_CAPACITY.
+	* If passed argument exceeds the limit, then def value is taken for that argument
+	*/
+	public composite query func get_recent_packages(recent_packages: ?Nat, recent_bundles: ?Nat) : async [Conversion.Package2BundlesView] {
+		var _pack_limit = Option.get(recent_packages,RECENT_PACKAGES_CAPACITY);
+		var _bund_limit = Option.get(recent_bundles, RECENT_BUNDLES_CAPACITY);
+
+		if (_pack_limit > RECENT_PACKAGES_CAPACITY) {_pack_limit:=RECENT_PACKAGES_CAPACITY};
+		if (_bund_limit > RECENT_BUNDLES_CAPACITY) {_bund_limit:=RECENT_BUNDLES_CAPACITY};
+		
+		let res = Buffer.Buffer<Conversion.Package2BundlesView>(_pack_limit);
+        var i = 0;
+		let all = List.toArray(all_packages);
+        while (i < _pack_limit and i < all.size()) {
+			let id = all[i];
+			switch (package_get(id)) {
+				case (?package) {
+					// load budnles
+					let package_actor : Types.Actor.BundlePackageActor = actor (id);
+					let bundles = await package_actor.get_bundle_refs_page(0, _bund_limit);
+					res.add(Conversion.convert_package2bundles_view(id, package, bundles));
+				};
+				case (null) {  };
+			};
+            i += 1;
+        };		
+		Buffer.toArray(res);
+	};
+
 	public composite query func get_packages_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundlePackageView] {
 		let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
 		
@@ -464,7 +499,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			};
 		};
 		Buffer.toArray(res);
-    };	
+    };
 
 	private func _build_identity (caller : Principal) : CommonTypes.Identity {
 		// right now we return always ICP, but it will be extended in case of ethereum authentication

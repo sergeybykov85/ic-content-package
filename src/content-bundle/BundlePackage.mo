@@ -737,13 +737,12 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Check a contribute opportunity on the package level for the identity
 	*/
-	public query func contribute_opportunity_for (to:Principal) : async Bool {
-		if (Principal.isAnonymous(to)) return false;
+	public query func contribute_opportunity_for (identity:CommonTypes.Identity) : async Bool {
+		//if (Principal.isAnonymous(to)) return false;
         switch (MODE.submission) {
-            case (#Private) { CommonUtils.identity_equals(_build_identity(to), owner)};
+            case (#Private) { CommonUtils.identity_equals(identity, owner)};
             case (#Public) { true };
             case (#Shared) {
-				let identity = _build_identity(to);
 				CommonUtils.identity_equals(identity, owner)
 					or  Option.isSome(List.find(contributors , CommonUtils.find_identity(identity))) ;
             };			
@@ -752,10 +751,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	/**
 	* Check a contribute opportunity on the bundle level for the identity
 	*/
-	public query func bundle_contribute_opportunity_for (bundle_id: Text, to:Principal) : async Bool {
-		if (Principal.isAnonymous(to)) return false;
+	public query func bundle_contribute_opportunity_for (bundle_id: Text, identity:CommonTypes.Identity) : async Bool {
+		//if (Principal.isAnonymous(to)) return false;
 		switch (bundle_get(bundle_id)) {
-			case (?bundle) {_access_allowed (bundle, _build_identity(to), null)};
+			case (?bundle) {_access_allowed (bundle, identity, null)};
 			case (null) {false};
 		};
 	};	
@@ -911,7 +910,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Returns bundles by their ids
 	*/
     public query func get_bundle_refs_by_ids(ids:[Text]) : async [Conversion.BundleRefView] {
-		_get_bundle_refs_by_ids(ids);
+		_get_items_by_ids(ids, Conversion.convert_bundle_ref_view);
     };
 
 	/**
@@ -919,26 +918,29 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
 	public query func get_bundle_refs_by_criteria (criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundleRefView] {
 		let ids = _get_ids_for_criteria(criteria);
-		_get_bundle_refs_by_ids(ids);
+		_get_items_by_ids(ids, Conversion.convert_bundle_ref_view);
 	};
 
+	/**
+	* Returns bundles by the search criteria
+	*/
+	public query func get_bundles_by_criteria (criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundleDetailsView] {
+		let ids = _get_ids_for_criteria(criteria);
+		_get_items_by_ids(ids, Conversion.convert_bundle_details_view);
+	};
 
 	/**
 	* Returns bundle refs by portions
 	*/
     public query func get_bundle_refs_page(start: Nat, limit: Nat): async CommonTypes.DataSlice<Conversion.BundleRefView> {
-        let res = Buffer.Buffer<Conversion.BundleRefView>(limit);
-        var i = start;
-		let all = List.toArray(all_bundles);
-        while (i < start + limit and i < all.size()) {
-			let id = all[i];
-			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle, id)); };
-				case (null) {  };
-			};
-            i += 1;
-        };
-        return {items = Buffer.toArray(res); total_supply = Trie.size(bundles); };
+        _get_page(start, limit, Conversion.convert_bundle_ref_view);
+    };
+
+	/**
+	* Returns bundle refs by portions
+	*/
+    public query func get_bundles_page(start: Nat, limit: Nat): async CommonTypes.DataSlice<Conversion.BundleDetailsView> {
+        _get_page(start, limit, Conversion.convert_bundle_details_view);
     };	
 
 	/**
@@ -1014,16 +1016,33 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		else {CommonUtils.build_uniq(id_arr);}
 	};
 
-    private func _get_bundle_refs_by_ids(ids:[Text]) : [Conversion.BundleRefView] {
-		let res = Buffer.Buffer<Conversion.BundleRefView>(Array.size(ids));
+    private func _get_items_by_ids <T>(ids:[Text],  conversion : (Types.Bundle, Text) -> T) : [T] {
+		let res = Buffer.Buffer<T>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (bundle_get(id)) {
-				case (?bundle) { res.add(Conversion.convert_bundle_ref_view(bundle, id)); };
+				case (?bundle) { res.add(conversion(bundle, id)); };
 				case (null) {  };
 			};
 		};
 		Buffer.toArray(res);
-    };						
+    };	
+
+	private func _get_page <T>(start: Nat, limit: Nat, conversion : (Types.Bundle, Text) -> T):  CommonTypes.DataSlice<T> {
+        let res = Buffer.Buffer<T>(limit);
+        var i = start;
+		let all = List.toArray(all_bundles);
+        while (i < start + limit and i < all.size()) {
+			let id = all[i];
+			switch (bundle_get(id)) {
+				case (?bundle) { res.add(conversion(bundle, id)); };
+				case (null) {  };
+			};
+            i += 1;
+        };
+        return {items = Buffer.toArray(res); total_supply = Trie.size(bundles); };
+    };
+
+				
 
 	private func _get_classifications () : [Text] {
 		let class_buff = Buffer.Buffer<Text>(Trie.size(classification2bundle));
