@@ -48,22 +48,17 @@ export default class BundlePackageService extends CanisterService {
     return this.responseHandler(response).map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
   }
 
-  private getBundleAdditionalData = async (
+  public getBundleAdditionalData = async (
     bundleId: string,
     type: ADDITIONAL_DATA_TYPES,
-  ): Promise<AdditionalDataDto> => {
+  ): Promise<{ url: string; sections: AdditionalDataSection[] }> => {
     const response = (await this.actor.get_bundle_data(bundleId, {
       [type]: null,
     })) as CanisterResponse<AdditionalDataDto>
-    return this.responseHandler(response)
-  }
-
-  public getAdditionalDataSections = async (
-    bundleId: string,
-    type: ADDITIONAL_DATA_TYPES,
-  ): Promise<AdditionalDataSection[]> => {
-    const response = await this.getBundleAdditionalData(bundleId, type)
-    // console.log(`${type} ===>`, response)
-    return response.sections.map(item => new AdditionalDataSection(item))
+    const data = this.responseHandler(response)
+    return {
+      url: data.data_path.url,
+      sections: data.sections.map(item => new AdditionalDataSection(item)),
+    }
   }
 }

@@ -19,13 +19,16 @@ const Poi: FC<PoiProps> = ({ bundleId, packageId, bundle }) => {
     () => initBundlePackageService?.(packageId),
     [initBundlePackageService, packageId],
   )
-
+  const [sourceUrl, setSourceUrl] = useState('')
   const [sections, setSections] = useState<AdditionalDataSection[]>([])
 
   useEffect(() => {
     bundlePackageService
-      ?.getAdditionalDataSections(bundleId, ADDITIONAL_DATA_TYPES.POI)
-      .then(res => setSections(res))
+      ?.getBundleAdditionalData(bundleId, ADDITIONAL_DATA_TYPES.POI)
+      .then(({ sections, url }) => {
+        setSourceUrl(url)
+        setSections(sections)
+      })
       .catch(error => {
         console.error(error)
         enqueueSnackbar(error.message, {
@@ -35,7 +38,7 @@ const Poi: FC<PoiProps> = ({ bundleId, packageId, bundle }) => {
   }, [bundleId, bundlePackageService])
 
   return (
-    <DataBlock title="POI">
+    <DataBlock title="POI" sourceUrl={sourceUrl}>
       {sections.map(item => (
         <DataItem item={item} bundle={bundle} key={item.category} />
       ))}

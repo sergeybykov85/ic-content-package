@@ -5,6 +5,7 @@
 }
 
 .title {
+  display: flex;
   font-size: 24px;
   font-weight: 500;
   margin-bottom: 18px;
@@ -14,4 +15,15 @@
   display: grid;
   @include grid-columns(1);
   gap: 16px;
+}
+
+.link {
+  margin-left: auto;
+  img {
+    width: 24px;
+    height: 24px;
+    &:hover {
+      filter: invert(29%) sepia(67%) saturate(7453%) hue-rotate(233deg) brightness(88%) contrast(93%);
+    }
+  }
 }

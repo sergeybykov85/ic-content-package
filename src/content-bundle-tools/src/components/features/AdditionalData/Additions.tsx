@@ -20,12 +20,16 @@ const Additions: FC<AdditionsProps> = ({ bundleId, packageId, bundle }) => {
     [initBundlePackageService, packageId],
   )
 
+  const [sourceUrl, setSourceUrl] = useState('')
   const [sections, setSections] = useState<AdditionalDataSection[]>([])
 
   useEffect(() => {
     bundlePackageService
-      ?.getAdditionalDataSections(bundleId, ADDITIONAL_DATA_TYPES.Additions)
-      .then(res => setSections(res))
+      ?.getBundleAdditionalData(bundleId, ADDITIONAL_DATA_TYPES.Additions)
+      .then(({ sections, url }) => {
+        setSourceUrl(url)
+        setSections(sections)
+      })
       .catch(error => {
         console.error(error)
         enqueueSnackbar(error.message, {
@@ -35,7 +39,7 @@ const Additions: FC<AdditionsProps> = ({ bundleId, packageId, bundle }) => {
   }, [bundleId, bundlePackageService])
 
   return (
-    <DataBlock title="Additions">
+    <DataBlock title="Additions" sourceUrl={sourceUrl}>
       {sections.map(item => (
         <DataItem item={item} bundle={bundle} key={item.category} />
       ))}
