@@ -39,7 +39,7 @@ const Additions: FC<AdditionsProps> = ({ bundleId, packageId, bundle }) => {
   }, [bundleId, bundlePackageService])
 
   return (
-    <DataBlock title="Additions" sourceUrl={sourceUrl}>
+    <DataBlock title="Additional informartion" sourceUrl={sourceUrl}>
       {sections.map(item => (
         <DataItem item={item} bundle={bundle} key={item.category} />
       ))}

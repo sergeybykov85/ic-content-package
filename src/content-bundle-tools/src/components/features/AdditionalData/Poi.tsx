@@ -38,7 +38,7 @@ const Poi: FC<PoiProps> = ({ bundleId, packageId, bundle }) => {
   }, [bundleId, bundlePackageService])
 
   return (
-    <DataBlock title="POI" sourceUrl={sourceUrl}>
+    <DataBlock title="Point of interest" sourceUrl={sourceUrl}>
       {sections.map(item => (
         <DataItem item={item} bundle={bundle} key={item.category} />
       ))}
