@@ -1,8 +1,7 @@
 import { type FC, type ReactNode, useCallback, useEffect, useState } from 'react'
 import { FullScreenLoadingContext } from '~/context/FullScreenLoadingContext/index.ts'
-import Loader from '~/components/general/Loader'
 import If from '~/components/general/If'
-import styles from './FullScreenLoadingProvider.module.scss'
+import { FullScreenLoader } from '~/components/general/Loaders'
 
 const FullScreenLoadingProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [loading, setLoadingState] = useState(false)
@@ -23,9 +22,7 @@ const FullScreenLoadingProvider: FC<{ children: ReactNode }> = ({ children }) =>
     <>
       <FullScreenLoadingContext.Provider value={{ setLoading, loading }}>{children}</FullScreenLoadingContext.Provider>
       <If condition={loading}>
-        <div className={styles.loader}>
-          <Loader />
-        </div>
+        <FullScreenLoader />
       </If>
     </>
   )
