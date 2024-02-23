@@ -11,6 +11,7 @@ import CopyBtn from '~/components/general/CopyBtn'
 import styles from './BundleDetailsBlock.module.scss'
 import DeleteBundle from '~/components/features/DeleteBundle'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '~/context/AuthContext'
 
 interface BundleDetailsBlockProps {
   packageId: string
@@ -18,13 +19,20 @@ interface BundleDetailsBlockProps {
 }
 
 const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }) => {
+  const { principal } = useAuth()
   const { setLoading } = useFullScreenLoading()
   const navigate = useNavigate()
+
   const { initBundlePackageService } = useServices()
   const service = useMemo(() => initBundlePackageService?.(packageId), [initBundlePackageService, packageId])
 
   const [bundle, setBundle] = useState<Bundle | null>(null)
   const [dataGroups, setDataGroups] = useState<ADDITIONAL_DATA_TYPES[]>([])
+
+  const isPossibleToDelete = useMemo(
+    () => !dataGroups.length && principal === bundle?.owner,
+    [bundle?.owner, dataGroups.length, principal],
+  )
 
   useEffect(() => {
     setLoading(true)
@@ -67,7 +75,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           Package ID: {packageId} <CopyBtn text={packageId} />
         </h3>
         <DetailsBlock data={{ ...bundle, description: bundle.description || '' }} />
-        <If condition={Boolean(!dataGroups.length)}>
+        <If condition={isPossibleToDelete}>
           <DeleteBundle btnClassName={styles['remove-btn']} onSuccess={onDeleteSuccess} {...{ bundleId, service }} />
         </If>
         <If condition={dataGroups.includes(ADDITIONAL_DATA_TYPES.POI)}>

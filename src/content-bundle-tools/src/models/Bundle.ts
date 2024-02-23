@@ -23,7 +23,7 @@ export default class Bundle extends CanisterDTO {
     this.description = this.parseDescription(bundleDto)
     this.creator = bundleDto.creator.identity_id
     this.owner = bundleDto.owner.identity_id
-    this.logoUrl = bundleDto.logo[0].url || ''
+    this.logoUrl = bundleDto.logo[0]?.url || ''
     this.tags = this.parseTags(bundleDto)
     this.classification = this.parseClassification(bundleDto)
     this.locations = this.parseLocations(bundleDto)
