@@ -7,6 +7,8 @@ import { enqueueSnackbar } from 'notistack'
 import If from '~/components/general/If'
 import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
 import { Additions, Poi } from '~/components/features/AdditionalData'
+import CopyBtn from '~/components/general/CopyBtn'
+import styles from './BundleDetailsBlock.module.scss'
 
 interface BundleDetailsBlockProps {
   packageId: string
@@ -57,6 +59,9 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   if (bundle) {
     return (
       <>
+        <h3 className={styles['sub-title']}>
+          Package ID: {packageId} <CopyBtn text={packageId} />
+        </h3>
         <DetailsBlock data={{ ...bundle, description: bundle.description || '' }} />
         <If condition={dataGroups.includes(ADDITIONAL_DATA_TYPES.POI)}>
           <br />
