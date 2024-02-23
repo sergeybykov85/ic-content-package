@@ -1,21 +1,16 @@
-import { type FC, useEffect, useMemo, useState } from 'react'
-import { useServices } from '~/context/ServicesContext'
+import { type FC, useEffect, useState } from 'react'
 import { enqueueSnackbar } from 'notistack'
 import type PackageDetails from '~/models/PackageDetails.ts'
 import DetailsBlock from '~/components/general/DetailsBlock'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
+import type BundlePackageService from '~/services/BundlePackageService.ts'
 
 interface PackageDetailsBlockProps {
-  packageId: string
+  bundlePackageService: BundlePackageService
 }
 
-const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
+const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageService }) => {
   const { setLoading } = useFullScreenLoading()
-  const { initBundlePackageService } = useServices()
-  const bundlePackageService = useMemo(
-    () => initBundlePackageService?.(packageId),
-    [initBundlePackageService, packageId],
-  )
 
   const [packageData, setPackageData] = useState<PackageDetails | null>(null)
   const [tags, setTags] = useState<string[]>([])
@@ -23,7 +18,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
   useEffect(() => {
     setLoading(true)
     bundlePackageService
-      ?.getPackageDetails()
+      .getPackageDetails()
       .then(data => setPackageData(data))
       .catch(error => {
         console.error(error)
@@ -35,7 +30,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ packageId }) => {
   }, [bundlePackageService, setLoading])
 
   useEffect(() => {
-    bundlePackageService?.getDataSegmentation().then(response => {
+    bundlePackageService.getDataSegmentation().then(response => {
       setTags(response.tags)
     })
   }, [bundlePackageService])

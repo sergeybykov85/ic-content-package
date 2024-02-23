@@ -1,31 +1,27 @@
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
-import { useServices } from '~/context/ServicesContext'
 import type Bundle from '~/models/Bundle.ts'
 import BundlesGrid from '~/components/general/BundlesGrid'
 import styles from './BundlesList.module.scss'
 import PaginationControl from '~/components/features/PaginationControl'
 import If from '~/components/general/If'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import type BundlePackageService from '~/services/BundlePackageService.ts'
+import CreateBundleBtn from '~/components/features/CreateBundleBtn'
 
 interface BundlesListProps {
-  packageId: string
+  bundlePackageService: BundlePackageService
 }
-const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
+const BundlesList: FC<BundlesListProps> = ({ bundlePackageService }) => {
   const navigate = useNavigate()
   const { state, pathname } = useLocation()
   const [searchParams] = useSearchParams()
-  const { initBundlePackageService } = useServices()
-  const bundlePackageService = useMemo(
-    () => initBundlePackageService?.(packageId),
-    [initBundlePackageService, packageId],
-  )
 
   const [bundlesList, setBundlesList] = useState<Bundle[]>([])
   const [totalPages, setTotalPages] = useState(0)
   const page = useMemo(() => Number(searchParams.get('page') || '0'), [searchParams])
 
   useEffect(() => {
-    bundlePackageService?.getBundlesPaginatedList(page, 8).then(({ pagination, items }) => {
+    bundlePackageService.getBundlesPaginatedList(page, 8).then(({ pagination, items }) => {
       setBundlesList(items)
       setTotalPages(pagination.totalPages)
     })
@@ -39,9 +35,14 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
     [navigate, pathname, searchParams, state],
   )
 
-  return bundlesList.length ? (
+  return (
     <>
-      <h2 className={styles.title}>Bundles</h2>
+      <div className={styles.header}>
+        <If condition={Boolean(bundlesList.length)}>
+          <h2 className={styles.title}>Bundles</h2>
+          <CreateBundleBtn service={bundlePackageService} />
+        </If>
+      </div>
       <BundlesGrid bundles={bundlesList} />
       <If condition={totalPages > 1}>
         <PaginationControl
@@ -51,7 +52,7 @@ const BundlesList: FC<BundlesListProps> = ({ packageId }) => {
         />
       </If>
     </>
-  ) : null
+  )
 }
 
 export default BundlesList

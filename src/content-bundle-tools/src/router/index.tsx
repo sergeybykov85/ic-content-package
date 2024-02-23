@@ -40,6 +40,10 @@ const router = createBrowserRouter([
         path: 'package/:packageId/bundle/:bundleId',
         element: <BundleDetailsPage />,
       },
+      {
+        path: 'package/:packageId/deploy-bundle',
+        element: <h1>Deploy bundle</h1>,
+      },
     ],
   },
 ])

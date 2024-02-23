@@ -1,7 +1,13 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 32px 0 16px 0;
+
+}
 .title {
   font-size: 32px;
   font-weight: 500;
-  margin: 32px 0 16px 0;
 }
 .paginator {
   margin: 16px 0;
