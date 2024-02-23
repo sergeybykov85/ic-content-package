@@ -1,30 +1,25 @@
-import { type FC, useEffect, useMemo, useState } from 'react'
-import { useServices } from '~/context/ServicesContext'
+import { type FC, useEffect, useState } from 'react'
 import type AdditionalDataSection from '~/models/AdditionalDataSection.ts'
 import { enqueueSnackbar } from 'notistack'
 import DataItem from '~/components/features/AdditionalData/components/DataItem/DataItem.tsx'
 import type Bundle from '~/models/Bundle.ts'
 import DataBlock from '~/components/features/AdditionalData/components/DataBlock/DataBlock.tsx'
 import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
+import type BundlePackageService from '~/services/BundlePackageService.ts'
 
 interface PoiProps {
-  packageId: string
+  service: BundlePackageService
   bundleId: string
   bundle: Bundle
 }
 
-const Poi: FC<PoiProps> = ({ bundleId, packageId, bundle }) => {
-  const { initBundlePackageService } = useServices()
-  const bundlePackageService = useMemo(
-    () => initBundlePackageService?.(packageId),
-    [initBundlePackageService, packageId],
-  )
+const Poi: FC<PoiProps> = ({ bundleId, service, bundle }) => {
   const [sourceUrl, setSourceUrl] = useState('')
   const [sections, setSections] = useState<AdditionalDataSection[]>([])
 
   useEffect(() => {
-    bundlePackageService
-      ?.getBundleAdditionalData(bundleId, ADDITIONAL_DATA_TYPES.POI)
+    service
+      .getBundleAdditionalData(bundleId, ADDITIONAL_DATA_TYPES.POI)
       .then(({ sections, url }) => {
         setSourceUrl(url)
         setSections(sections)
@@ -35,7 +30,7 @@ const Poi: FC<PoiProps> = ({ bundleId, packageId, bundle }) => {
           variant: 'error',
         })
       })
-  }, [bundleId, bundlePackageService])
+  }, [bundleId, service])
 
   return (
     <DataBlock title="Point of interest" sourceUrl={sourceUrl}>

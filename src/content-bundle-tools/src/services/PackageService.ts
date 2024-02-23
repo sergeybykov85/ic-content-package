@@ -2,7 +2,8 @@ import { idlFactory as idl } from '~/../../declarations/package_service'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 import type { DeployPackageOptions, DeployPackageMetadata, PackageTypes } from '~/types/packagesTypes.ts'
-import { CanisterResponse, IdentityTypes } from '~/types/globals.ts'
+import type { CanisterResponse } from '~/types/globals.ts'
+import { IdentityTypes } from '~/types/globals.ts'
 import CanisterService from '~/models/CanisterService.ts'
 
 const PACKAGE_SERVICE_CANISTER_ID = import.meta.env.VITE_PACKAGE_SERVICE_CANISTER_ID

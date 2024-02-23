@@ -5,24 +5,24 @@ import If from '~/components/general/If'
 import styles from './FullScreenLoadingProvider.module.scss'
 
 const FullScreenLoadingProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [loadingState, setLoadingState] = useState(false)
+  const [loading, setLoadingState] = useState(false)
 
   const setLoading = useCallback((value: boolean) => {
     setLoadingState(value)
   }, [])
 
   useEffect(() => {
-    if (loadingState) {
+    if (loading) {
       document.body.classList.add('disable-scroll')
     } else {
       document.body.classList.contains('disable-scroll') && document.body.classList.remove('disable-scroll')
     }
-  }, [loadingState])
+  }, [loading])
 
   return (
     <>
-      <FullScreenLoadingContext.Provider value={{ setLoading }}>{children}</FullScreenLoadingContext.Provider>
-      <If condition={loadingState}>
+      <FullScreenLoadingContext.Provider value={{ setLoading, loading }}>{children}</FullScreenLoadingContext.Provider>
+      <If condition={loading}>
         <div className={styles.loader}>
           <Loader />
         </div>

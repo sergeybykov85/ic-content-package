@@ -61,4 +61,8 @@ export default class BundlePackageService extends CanisterService {
       sections: data.sections.map(item => new AdditionalDataSection(item)),
     }
   }
+
+  public deleteEmptyBundle = async (bundleId: string): Promise<void> => {
+    await this.actor.remove_empty_bundle(bundleId)
+  }
 }

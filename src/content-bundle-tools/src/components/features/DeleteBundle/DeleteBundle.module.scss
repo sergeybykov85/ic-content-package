@@ -1,0 +1,26 @@
+@import "src/styles/variables";
+
+.dialog {
+  max-width: 500px;
+}
+.title {
+  font-size: 32px;
+  font-weight: 400;
+  text-align: center;
+}
+.id {
+  font-size: 24px;
+  margin: 16px 0 32px 0;
+  text-align: center;
+  color: $grey-text-color;
+}
+.btn-group {
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  button {
+    width: 100%;
+    text-align: center;
+  }
+}
