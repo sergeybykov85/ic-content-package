@@ -1177,6 +1177,16 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		if (Option.isNull(Array.find(SUPPORTED_CLASSIFICATION, CommonUtils.find_text(args.classification)))){
 			 return #err(#InvalidRequest);
 		};
+        // validate supply per a creator
+		switch (MODE.max_creator_supply) {
+			case (?max_creator_supply) { 
+				switch (creator2bundle_get(owner)) {
+					case (?ids) {if (List.size(ids) >= max_creator_supply) return #err(#LimitExceeded); };
+					case (null) {};
+				};
+			};
+			case (null) {};
+		};		
 		// increment counter
 		_bundle_counter  := _bundle_counter + 1;
         let canister_id = Principal.toText(Principal.fromActor(this));

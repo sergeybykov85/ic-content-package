@@ -28,8 +28,6 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 	// management actor
 	let IC : Types.Actor.ICActor = actor "aaaaa-aa";
 
-	// Max tag supply per a bundle
-	let MAX_TAG_SUPPLY = 5;
 
 	// immutable field
 	let CREATOR:CommonTypes.Identity = {
@@ -155,7 +153,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 				};
 				max_tag_supply = switch (options) {
 					case (?opt) {opt.max_tag_supply};
-					case (null) {?MAX_TAG_SUPPLY};
+					case (null) {null};
 				}
 			};
 			caller = identity;
@@ -190,7 +188,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 				max_creator_supply = null;
 				max_tag_supply = switch (options) {
 					case (?opt) {opt.max_tag_supply};
-					case (null) {?MAX_TAG_SUPPLY};
+					case (null) {null};
 				}
 			};
 			owner = identity;
@@ -224,7 +222,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 				max_creator_supply = null;
 				max_tag_supply = switch (options) {
 					case (?opt) {opt.max_tag_supply};
-					case (null) {?MAX_TAG_SUPPLY};
+					case (null) {null};
 				}
 			};
 			owner = identity;
