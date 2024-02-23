@@ -43,12 +43,10 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
       })
       .catch(error => {
         console.error(error)
-        enqueueSnackbar(error.message, {
-          variant: 'error',
-        })
+        navigate('/404')
       })
       .finally(() => setLoading(false))
-  }, [bundleId, service, setLoading])
+  }, [bundleId, navigate, service, setLoading])
 
   useEffect(() => {
     if (!dataGroups.length) {

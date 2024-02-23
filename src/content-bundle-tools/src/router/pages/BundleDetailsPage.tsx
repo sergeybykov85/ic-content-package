@@ -9,6 +9,7 @@ const BundleDetailsPage: FC = () => {
   const { bundleId = '', packageId } = useParams()
   const { state } = useLocation()
   const navigate = useNavigate()
+
   const goBack = useCallback(() => {
     state?.backToList ? navigate(-1) : navigate(`/package/${packageId}/`)
   }, [navigate, packageId, state?.backToList])

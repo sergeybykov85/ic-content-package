@@ -1,0 +1,23 @@
+@import "src/styles/variables";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  min-height: 100%;
+  width: 100%;
+}
+
+.title {
+  font-weight: 400;
+  font-size: 100px;
+  color: $grey-text-color;
+}
+
+.sub-title {
+  font-weight: 400;
+  font-size: 32px;
+  margin: 24px 0;
+}

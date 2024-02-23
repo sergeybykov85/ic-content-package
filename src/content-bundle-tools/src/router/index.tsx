@@ -7,6 +7,7 @@ import DeployPackagePage from '~/router/pages/DeployPackagePage.tsx'
 import PackageDetailsPage from '~/router/pages/PackageDetailsPage.tsx'
 import BundleDetailsPage from '~/router/pages/BundleDetailsPage.tsx'
 import DeployBundlePage from '~/router/pages/DeployBundlePage.tsx'
+import ErrorPage from '~/components/features/ErrorPage'
 
 const router = createBrowserRouter([
   {
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <ProtectedRoute />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: '',
@@ -40,6 +42,7 @@ const router = createBrowserRouter([
       {
         path: 'package/:packageId/bundle/:bundleId',
         element: <BundleDetailsPage />,
+        errorElement: <ErrorPage />,
       },
       {
         path: 'package/:packageId/deploy-bundle',

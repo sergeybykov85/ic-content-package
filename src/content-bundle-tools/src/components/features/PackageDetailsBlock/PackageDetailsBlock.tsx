@@ -1,5 +1,4 @@
 import { type FC, useEffect, useState } from 'react'
-import { enqueueSnackbar } from 'notistack'
 import type PackageDetails from '~/models/PackageDetails.ts'
 import DetailsBlock from '~/components/general/DetailsBlock'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
@@ -20,12 +19,6 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageServic
     bundlePackageService
       .getPackageDetails()
       .then(data => setPackageData(data))
-      .catch(error => {
-        console.error(error)
-        enqueueSnackbar(error.message, {
-          variant: 'error',
-        })
-      })
       .finally(() => setLoading(false))
   }, [bundlePackageService, setLoading])
 
