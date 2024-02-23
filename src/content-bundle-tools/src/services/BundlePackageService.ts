@@ -5,7 +5,13 @@ import { idlFactory as idl } from '~/../../declarations/bundle_package'
 import type { DataSegmentationDto, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'
-import type { BundleDetailsDto, BundleDto, AdditionalDataDto, ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
+import type {
+  BundleDetailsDto,
+  BundleDto,
+  AdditionalDataDto,
+  ADDITIONAL_DATA_TYPES,
+  CreateBundleParams,
+} from '~/types/bundleTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
@@ -64,5 +70,24 @@ export default class BundlePackageService extends CanisterService {
 
   public deleteEmptyBundle = async (bundleId: string): Promise<void> => {
     await this.actor.remove_empty_bundle(bundleId)
+  }
+
+  public createBundle = async (bundleData: CreateBundleParams): Promise<string> => {
+    const { logo: imgData, ...data } = bundleData
+
+    const logo = []
+    if (imgData) {
+      logo.push({
+        value: [...imgData.value],
+        content_type: this.createOptionalParam(imgData.type),
+      })
+    }
+
+    const response = (await this.actor.register_bundle({ ...data, logo })) as CanisterResponse<string>
+    return this.responseHandler(response)
+  }
+
+  public getSupportedClassifications = async (): Promise<string[]> => {
+    return (await this.actor.get_classifications()) as string[]
   }
 }

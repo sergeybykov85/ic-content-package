@@ -6,6 +6,7 @@ import WarehousePage from '~/router/pages/WarehousePage.tsx'
 import DeployPackagePage from '~/router/pages/DeployPackagePage.tsx'
 import PackageDetailsPage from '~/router/pages/PackageDetailsPage.tsx'
 import BundleDetailsPage from '~/router/pages/BundleDetailsPage.tsx'
+import DeployBundlePage from '~/router/pages/DeployBundlePage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -42,7 +43,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'package/:packageId/deploy-bundle',
-        element: <h1>Deploy bundle</h1>,
+        element: <DeployBundlePage />,
       },
     ],
   },

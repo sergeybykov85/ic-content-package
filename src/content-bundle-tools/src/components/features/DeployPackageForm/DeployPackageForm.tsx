@@ -19,8 +19,8 @@ import Checkbox from '~/components/general/Checkbox'
 const packageTypes = Object.values(PackageTypes)
 const identifierTypes = Object.values(IdentifierTypes)
 
-const NAME_MAX_LENGTH = 50
-const DESCRIPTION_MAX_LENGTH = 100
+const NAME_MAX_LENGTH = 100
+const DESCRIPTION_MAX_LENGTH = 300
 
 interface FormValues {
   name: string

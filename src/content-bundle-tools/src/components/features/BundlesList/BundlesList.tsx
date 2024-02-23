@@ -38,10 +38,8 @@ const BundlesList: FC<BundlesListProps> = ({ bundlePackageService }) => {
   return (
     <>
       <div className={styles.header}>
-        <If condition={Boolean(bundlesList.length)}>
-          <h2 className={styles.title}>Bundles</h2>
-          <CreateBundleBtn service={bundlePackageService} />
-        </If>
+        <h2 className={styles.title}>{bundlesList.length ? 'Bundles' : ''}</h2>
+        <CreateBundleBtn service={bundlePackageService} />
       </div>
       <BundlesGrid bundles={bundlesList} />
       <If condition={totalPages > 1}>

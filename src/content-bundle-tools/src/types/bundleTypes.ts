@@ -58,3 +58,11 @@ export enum ADDITIONAL_DATA_TYPES {
   POI = 'POI',
   Additions = 'Additions',
 }
+
+export interface CreateBundleParams {
+  name: string
+  description: string
+  logo?: { value: Uint8Array; type?: string }
+  classification: string
+  tags: string[]
+}
