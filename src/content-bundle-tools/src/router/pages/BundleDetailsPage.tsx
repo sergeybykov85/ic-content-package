@@ -11,7 +11,7 @@ const BundleDetailsPage: FC = () => {
   const navigate = useNavigate()
   const goBack = useCallback(() => {
     state?.backToList ? navigate(-1) : navigate(`/package/${packageId}/`)
-  }, [navigate])
+  }, [navigate, packageId, state?.backToList])
 
   const bundleIdToRender = useMemo(() => {
     return bundleId?.length > 30 ? `${bundleId?.slice(0, 20)}...` : bundleId
