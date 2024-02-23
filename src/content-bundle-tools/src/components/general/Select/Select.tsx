@@ -3,6 +3,7 @@ import { TextInput } from '~/components/general/Inputs'
 import useClickAway from '~/hooks/useClickAway.ts'
 import styles from './Select.module.scss'
 import clsx from 'clsx'
+import If from '~/components/general/If'
 
 interface SelectProps<T> {
   defaultValue: T
@@ -42,7 +43,10 @@ function Select<T extends string = string>({
     <div ref={ref} className={clsx(styles.select, className, visible && styles.opened)}>
       <label>
         <span className={clsx(styles.label, !label && styles['no-label'])}>{label}</span>
-        <TextInput readOnly {...{ value, onFocus, error }} className={styles.input} />
+        <TextInput readOnly {...{ value, onFocus }} className={styles.input} />
+        <If condition={Boolean(error)}>
+          <div className={styles.error}>{error}</div>
+        </If>
       </label>
       <ul className={clsx(styles.options)}>
         {options.map(item => (
