@@ -88,6 +88,6 @@ export default class BundlePackageService extends CanisterService {
   }
 
   public getSupportedClassifications = async (): Promise<string[]> => {
-    return (await this.actor.get_classifications()) as string[]
+    return (await this.actor.get_supported_classifications()) as string[]
   }
 }

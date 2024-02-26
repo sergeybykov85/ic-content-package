@@ -1,4 +1,4 @@
-import { type FC, useCallback, useState } from 'react'
+import { type FC, useCallback, useMemo, useState } from 'react'
 import type AdditionalDataSection from '~/models/AdditionalDataSection.ts'
 import type Bundle from '~/models/Bundle.ts'
 import styles from './DataItem.module.scss'
@@ -37,10 +37,12 @@ const DataItem: FC<DataItemProps> = ({ item, bundle }) => {
     [bundle.about, bundle.locations],
   )
 
+  const category = useMemo(() => (item.category === 'AudioGuide' ? 'Audio Guide' : item.category), [item.category])
+
   return (
     <div>
       <div className={clsx(styles.header, open && styles.opened)} onClick={() => setOpen(prevState => !prevState)}>
-        {item.category}
+        {category}
         <img src="/images/arrow-down.svg" alt="arrow" />
       </div>
       <Collapse open={open}>
