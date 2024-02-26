@@ -3,7 +3,7 @@ import ExternalLink from './ExternalLink'
 import { describe, expect, test } from 'vitest'
 
 describe('ExternalLink component', () => {
-  render(<ExternalLink>Link</ExternalLink>)
+  render(<ExternalLink href={''}>Link</ExternalLink>)
   test('anchor tag leads to the new tab', () => {
     const anchorTag = screen.getByText('Link')
     expect(anchorTag).toHaveAttribute('target', '_blank')

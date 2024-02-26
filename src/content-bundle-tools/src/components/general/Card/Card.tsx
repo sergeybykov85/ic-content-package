@@ -20,7 +20,7 @@ const Card: FC<CardProps> = ({ logoUrl, title, label, children, className }) => 
     <div className={clsx(styles.card, className)}>
       <img src={imgSrc} alt={`Picture for: ${title}`} />
       <If condition={Boolean(label)}>
-        <Chip text={label} className={styles.label} />
+        <Chip text={label!} className={styles.label} />
       </If>
       <h3 className={styles.title}>{title}</h3>
       <div>{children}</div>
