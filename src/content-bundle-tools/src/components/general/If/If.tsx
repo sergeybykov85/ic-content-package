@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react'
 
 interface IfProps {
-  condition: boolean
+  condition: boolean | null | undefined
   children: ReactNode
 }
 

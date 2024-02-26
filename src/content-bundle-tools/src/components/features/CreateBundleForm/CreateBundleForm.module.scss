@@ -1,0 +1,57 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.grid {
+  display: grid;
+  @include grid-columns(1);
+  grid-gap: 32px;
+  @media (min-width: $bp-md) {
+    @include grid-columns(2);
+  }
+}
+.input {
+  display: block;
+  width: 100%;
+  max-width: 600px;
+  margin-top: 16px;
+
+  &--short {
+    max-width: 250px;
+  }
+}
+.img {
+  min-height: 250px;
+}
+.tag-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+
+  button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 53px;
+    width: 53px;
+    border-radius: 50%;
+    padding: 0;
+    opacity: 0;
+    transition: $transition-time;
+  }
+
+  img {
+    height: 24px;
+  }
+}
+.show-plus {
+  opacity: 1!important;
+}
+.tags {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn {
+  margin-top: 32px;
+}

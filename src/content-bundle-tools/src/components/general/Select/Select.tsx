@@ -11,6 +11,7 @@ interface SelectProps<T> {
   onSelect?: (value: T) => void
   className?: string
   label?: string
+  placeholder?: string
   error?: string
 }
 
@@ -20,6 +21,7 @@ function Select<T extends string = string>({
   defaultValue,
   className,
   label,
+  placeholder,
   error,
 }: SelectProps<T>): ReactNode {
   const [value, setValue] = useState(defaultValue)
@@ -43,7 +45,7 @@ function Select<T extends string = string>({
     <div ref={ref} className={clsx(styles.select, className, visible && styles.opened)}>
       <label>
         <span className={clsx(styles.label, !label && styles['no-label'])}>{label}</span>
-        <TextInput readOnly {...{ value, onFocus }} className={styles.input} />
+        <TextInput readOnly {...{ value, placeholder, onFocus }} className={styles.input} />
         <If condition={Boolean(error)}>
           <div className={styles.error}>{error}</div>
         </If>

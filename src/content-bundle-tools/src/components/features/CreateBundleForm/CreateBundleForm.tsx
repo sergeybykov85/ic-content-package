@@ -1,18 +1,19 @@
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { enqueueSnackbar } from 'notistack'
 import { useFormik } from 'formik'
+import * as Yup from 'yup'
+import type { DeployPackageMetadata } from '~/types/packagesTypes.ts'
+import { useServices } from '~/context/ServicesContext'
+import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
+import fileToUint8Array from '~/utils/fileToUint8Array.ts'
 import { TextArea, TextInput } from '~/components/general/Inputs'
-import styles from './DeployBundleForm.module.scss'
 import ImageInput, { type OnLoaded } from '~/components/general/ImageInput'
 import Button from '~/components/general/Button'
-import * as Yup from 'yup'
 import Select from '~/components/general/Select'
-import { useServices } from '~/context/ServicesContext'
-import { enqueueSnackbar } from 'notistack'
 import clsx from 'clsx'
-import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
-import type { DeployPackageMetadata } from '~/types/packagesTypes.ts'
-import fileToUint8Array from '~/utils/fileToUint8Array.ts'
-import { useNavigate } from 'react-router-dom'
+import styles from './CreateBundleForm.module.scss'
+import TagsForm from '~/components/features/CreateBundleForm/TagsForm.tsx'
 
 const NAME_MAX_LENGTH = 100
 const DESCRIPTION_MAX_LENGTH = 300
@@ -23,10 +24,10 @@ interface FormValues {
   classification: string
 }
 
-interface DeployBundleFormProps {
+interface CreateBundleFormProps {
   packageId: string
 }
-const DeployBundleForm: FC<DeployBundleFormProps> = ({ packageId }) => {
+const CreateBundleForm: FC<CreateBundleFormProps> = ({ packageId }) => {
   const { initBundlePackageService } = useServices()
   const service = useMemo(() => initBundlePackageService?.(packageId), [initBundlePackageService, packageId])
 
@@ -35,6 +36,7 @@ const DeployBundleForm: FC<DeployBundleFormProps> = ({ packageId }) => {
 
   const [imageFile, setImageFile] = useState<File | undefined>()
   const [supportedClassifications, setSupportedClassifications] = useState<string[]>([])
+  const [tags, setTags] = useState<string[]>([])
 
   const imageOnLoaded = useCallback<OnLoaded>(({ file }) => {
     setImageFile(file)
@@ -65,7 +67,7 @@ const DeployBundleForm: FC<DeployBundleFormProps> = ({ packageId }) => {
           ? { type: imageFile.type, value: await fileToUint8Array(imageFile) }
           : undefined
 
-        const bundleId = await service.createBundle({ tags: [], logo, ...values })
+        const bundleId = await service.createBundle({ tags, logo, ...values })
         enqueueSnackbar('Bundle has been created ', { variant: 'success' })
         setLoading(false)
         navigate(`/package/${packageId}/bundle/${bundleId}`)
@@ -75,7 +77,7 @@ const DeployBundleForm: FC<DeployBundleFormProps> = ({ packageId }) => {
         setLoading(false)
       }
     },
-    [imageFile, navigate, packageId, service, setLoading],
+    [imageFile, navigate, packageId, service, setLoading, tags],
   )
 
   const form = useFormik<FormValues>({
@@ -106,45 +108,53 @@ const DeployBundleForm: FC<DeployBundleFormProps> = ({ packageId }) => {
     [form],
   )
 
+  const handleTagsChange = useCallback((newTags: string[]) => {
+    setTags(newTags)
+  }, [])
+
   return (
-    <form onSubmit={form.handleSubmit}>
+    <div>
       <div className={styles.grid}>
         <div>
-          <TextInput
-            name="name"
-            label="Name"
-            placeholder="Set bundle name"
-            value={form.values.name}
-            onChange={form.handleChange}
-            error={form.errors.name}
-            className={styles.input}
-          />
-          <TextArea
-            name="description"
-            label="Description"
-            placeholder="Set bundle description"
-            value={form.values.description}
-            onChange={form.handleChange}
-            error={form.errors.description}
-            className={styles.input}
-            rows={3}
-          />
-          <Select
-            className={clsx(styles.input, styles['input--short'])}
-            label="Classification"
-            defaultValue={form.initialValues.classification}
-            options={supportedClassifications}
-            onSelect={handleClassificationChanged}
-            error={form.errors.classification}
-          />
+          <form onSubmit={form.handleSubmit} id="create-bundle-form">
+            <TextInput
+              name="name"
+              label="Name"
+              placeholder="Set bundle name"
+              value={form.values.name}
+              onChange={form.handleChange}
+              error={form.errors.name}
+              className={styles.input}
+            />
+            <TextArea
+              name="description"
+              label="Description"
+              placeholder="Set bundle description"
+              value={form.values.description}
+              onChange={form.handleChange}
+              error={form.errors.description}
+              className={styles.input}
+              rows={3}
+            />
+            <Select
+              className={clsx(styles.input, styles['input--short'])}
+              placeholder="Select classification"
+              label="Classification"
+              defaultValue={form.initialValues.classification}
+              options={supportedClassifications}
+              onSelect={handleClassificationChanged}
+              error={form.errors.classification}
+            />
+          </form>
+          <TagsForm onChange={handleTagsChange} />
         </div>
         <div>
           <ImageInput maxSize={2097152} onLoaded={imageOnLoaded} className={styles.img} />
         </div>
       </div>
-      <Button type="submit" text="Deploy" className={styles.btn} />
-    </form>
+      <Button type="submit" form="create-bundle-form" text="Create" className={styles.btn} />
+    </div>
   )
 }
 
-export default DeployBundleForm
+export default CreateBundleForm

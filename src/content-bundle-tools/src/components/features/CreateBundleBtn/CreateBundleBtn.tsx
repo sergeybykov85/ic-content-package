@@ -22,7 +22,7 @@ const CreateBundleBtn: FC<CreateBundleBtnProps> = ({ service }) => {
   }, [principal, service])
 
   return possibleToCreate ? (
-    <Link to={'deploy-bundle'}>
+    <Link to={'create-bundle'}>
       <Button text="Create new bundle" />
     </Link>
   ) : null

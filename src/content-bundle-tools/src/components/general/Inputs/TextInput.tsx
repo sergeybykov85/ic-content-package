@@ -8,8 +8,8 @@ type TextInputProps = InputWrapperProps &
     type?: 'text' | 'number'
   }
 
-const TextInput: FC<TextInputProps> = ({ className, label, error, type = 'text', ...props }) => (
-  <InputWrapper {...{ className, label, error }}>
+const TextInput: FC<TextInputProps> = ({ className, label, error, type = 'text', id, ...props }) => (
+  <InputWrapper {...{ className, label, error, id }}>
     <input type={type} className={clsx(styles.input)} {...props} />
   </InputWrapper>
 )

@@ -8,14 +8,15 @@ export interface InputWrapperProps {
   label?: string
   error?: string
   className?: string
+  id?: string
 }
 
 interface Props extends InputWrapperProps {
   children: ReactNode
 }
 
-const InputWrapper: FC<Props> = ({ children, label, error, className }) => {
-  const id = useId()
+const InputWrapper: FC<Props> = ({ children, label, error, className, id }) => {
+  const generatedId = useId()
   return (
     <div className={clsx(styles.wrapper, className)}>
       <If condition={Boolean(label)}>
@@ -25,7 +26,7 @@ const InputWrapper: FC<Props> = ({ children, label, error, className }) => {
       </If>
       {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
       {/* @ts-expect-error */}
-      {Children.map(children, child => isValidElement(child) && cloneElement(child, { id }))}
+      {Children.map(children, child => isValidElement(child) && cloneElement(child, { id: id || generatedId }))}
       <If condition={Boolean(error)}>
         <div className={styles.error}>{error}</div>
       </If>

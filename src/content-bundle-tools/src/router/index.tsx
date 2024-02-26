@@ -45,7 +45,7 @@ const router = createBrowserRouter([
         errorElement: <ErrorPage />,
       },
       {
-        path: 'package/:packageId/deploy-bundle',
+        path: 'package/:packageId/create-bundle',
         element: <DeployBundlePage />,
       },
     ],
