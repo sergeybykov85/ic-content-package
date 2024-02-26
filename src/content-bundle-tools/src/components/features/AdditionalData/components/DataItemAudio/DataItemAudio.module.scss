@@ -5,12 +5,12 @@
   flex-direction: column;
   gap: 16px;
 
+  p {
+    margin-bottom: 8px;
+  }
+
   span {
     color: $grey-text-color;
     margin-right: .5em;
-  }
-
-  audio {
-    margin-top: 8px;
   }
 }

@@ -9,6 +9,7 @@ import DataItemDefault from '../DataItemDefault/DataItemDefault.tsx'
 import DataItemLocation from '../DataItemLocation/DataItemLocation.tsx'
 import DataItemAbout from '../DataItemAbout/DataItemAbout.tsx'
 import DataItemAudio from '../DataItemAudio/DataItemAudio.tsx'
+import DataItemArticle from '~/components/features/AdditionalData/components/DataItemArticle/DataItemArticle.tsx'
 
 interface DataItemProps {
   item: AdditionalDataSection
@@ -19,7 +20,7 @@ const DataItem: FC<DataItemProps> = ({ item, bundle }) => {
   const [open, setOpen] = useState(false)
 
   const renderItem = useCallback(
-    ({ category, dataList }: AdditionalDataSection) => {
+    ({ category, dataList, dataPathUrl }: AdditionalDataSection) => {
       switch (category) {
         case 'Gallery':
           return <DataItemGallery list={dataList} />
@@ -30,6 +31,8 @@ const DataItem: FC<DataItemProps> = ({ item, bundle }) => {
         case 'Audio':
         case 'AudioGuide':
           return <DataItemAudio list={dataList} />
+        case 'Article':
+          return <DataItemArticle list={dataList} dataPathUrl={dataPathUrl} />
         default:
           return <DataItemDefault list={dataList} />
       }

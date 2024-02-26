@@ -10,6 +10,10 @@ const DataItemAudio: FC<{ list: DataListItem[] }> = ({ list }) => (
           <span>Name:</span>
           {item.name}
         </p>
+        <p>
+          <span>Locale:</span>
+          {item.locale?.toUpperCase()}
+        </p>
         <audio controls src={item.url} />
       </div>
     ))}
