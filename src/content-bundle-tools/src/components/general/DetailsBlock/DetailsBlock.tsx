@@ -1,4 +1,4 @@
-import { type FC, useCallback, useMemo } from 'react'
+import { type FC, type ReactNode, useCallback, useMemo } from 'react'
 import styles from './DetailsBlock.module.scss'
 import clsx from 'clsx'
 import Chip from '~/components/general/Chip'
@@ -22,9 +22,10 @@ interface DetailsBlockProps {
     totalBundles?: number
     maxSupply?: PackageDetails['maxSupply']
   }
+  editButton?: ReactNode
 }
 
-const DetailsBlock: FC<DetailsBlockProps> = ({ data, className }) => {
+const DetailsBlock: FC<DetailsBlockProps> = ({ data, className, editButton = null }) => {
   const { tags = [] } = data
 
   const blackLabel = useMemo(
@@ -85,6 +86,7 @@ const DetailsBlock: FC<DetailsBlockProps> = ({ data, className }) => {
             <Chip key={tag} text={tag} color="blue" />
           ))}
         </div>
+        {editButton}
       </div>
       <img
         src={data.logoUrl || '/images/empty-image.svg'}

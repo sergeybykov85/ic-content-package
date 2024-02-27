@@ -3,7 +3,7 @@ import clsx from 'clsx'
 import styles from './Button.module.scss'
 
 interface ButtonProps extends ComponentPropsWithoutRef<'button'> {
-  variant?: 'contained' | 'text'
+  variant?: 'contained' | 'text' | 'outlined'
   color?: 'blue' | 'red'
   text?: string
 }

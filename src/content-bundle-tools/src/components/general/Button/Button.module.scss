@@ -47,3 +47,21 @@
     }
   }
 }
+
+.outlined {
+  background: none;
+  &.blue {
+    color: $primary-blue-color;
+    border: 1px solid $primary-blue-color;
+    &:hover {
+      background-color: rgba(44, 68, 218, .2);
+    }
+  }
+  &.red {
+    color: $red-color;
+    border: 1px solid $red-color;
+    &:hover {
+      background-color: rgba(218, 44, 44, 0.2);
+    }
+  }
+}
