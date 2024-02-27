@@ -3,3 +3,4 @@
 .mops*
 deps
 src/content-bundle-tools/src/declarations
+src/declarations
