@@ -2,6 +2,7 @@
 
 .button {
   display: inline-flex;
+  justify-content: center;
   padding: 16px;
   border-radius: $border-radius;
   transition: $transition-time;
@@ -19,16 +20,48 @@
 }
 
 .contained:not(:disabled) {
-  background-color: $primary-blue-color;
+  &.blue {
+    background-color: $primary-blue-color;
+  }
+  &.red {
+    background-color: $red-color;
+  }
   color: #FFF;
   &:hover {
     opacity: .7;
   }
 }
+
 .text {
   background: none;
-  color: $primary-blue-color;
-  &:hover {
-    background-color: rgba(44, 68, 218, .2);
+  &.blue {
+    color: $primary-blue-color;
+    &:hover {
+      background-color: rgba(44, 68, 218, .2);
+    }
+  }
+  &.red {
+    color: $red-color;
+    &:hover {
+      background-color: rgba(218, 44, 44, 0.2);
+    }
+  }
+}
+
+.outlined {
+  background: none;
+  &.blue {
+    color: $primary-blue-color;
+    border: 1px solid $primary-blue-color;
+    &:hover {
+      background-color: rgba(44, 68, 218, .2);
+    }
+  }
+  &.red {
+    color: $red-color;
+    border: 1px solid $red-color;
+    &:hover {
+      background-color: rgba(218, 44, 44, 0.2);
+    }
   }
 }

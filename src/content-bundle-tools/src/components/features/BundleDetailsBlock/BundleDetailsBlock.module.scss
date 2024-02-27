@@ -1,0 +1,11 @@
+@import "src/styles/variables";
+
+.sub-title {
+  font-weight: 400;
+  color: $grey-text-color;
+  margin-top: -25px;
+}
+.remove-btn {
+  margin-top: 16px;
+  float: right;
+}

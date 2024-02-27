@@ -1,0 +1,20 @@
+@import "src/styles/variables";
+
+.btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+
+  &:active:not(:disabled) {
+    transform: scale(.9);
+  }
+
+  &:hover {
+    background: $grey-background-color;
+    color: $primary-blue-color;
+  }
+}

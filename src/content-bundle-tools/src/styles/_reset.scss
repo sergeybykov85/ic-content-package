@@ -18,6 +18,8 @@ img, picture, video, canvas, svg {
 }
 input, button, textarea, select {
   font: inherit;
+  outline: none;
+  background: initial;
 }
 p, h1, h2, h3, h4, h5, h6 {
   overflow-wrap: break-word;
@@ -28,4 +30,8 @@ a {
 }
 button, dialog {
   border: 0;
+}
+ul, ol {
+  list-style-type: none;
+  padding-left: initial;
 }

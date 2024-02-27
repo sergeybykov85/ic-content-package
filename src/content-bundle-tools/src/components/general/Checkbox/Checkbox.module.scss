@@ -1,0 +1,60 @@
+@import "src/styles/variables";
+
+.container {
+  display: block;
+  position: relative;
+  height: 25px;
+  min-width: 25px;
+  border-radius: $border-radius;
+
+  padding-left: 30px;
+  line-height: 25px;
+  cursor: pointer;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  input {
+    position: absolute;
+    height: 0;
+    width: 0;
+  }
+}
+
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 25px;
+  width: 25px;
+  background-color: #FFFFFF;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+}
+
+.container:hover input ~ .checkmark {
+  background-color: $grey-background-color;
+}
+
+.container input:checked ~ .checkmark {
+  background-color: $primary-blue-color;
+  border: none;
+}
+
+.checkmark:after {
+  content: "\2714";
+  position: absolute;
+  display: none;
+  color: #FFFFFF;
+  width: 25px;
+}
+
+.container input:checked ~ .checkmark:after {
+  display: block;
+  -webkit-transform: translateX(25%);
+  -ms-transform: translateX(25%);
+  transform: translateX(25%);
+}

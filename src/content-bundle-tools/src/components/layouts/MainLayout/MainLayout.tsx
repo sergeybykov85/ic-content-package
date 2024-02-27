@@ -10,7 +10,9 @@ interface MainLayoutProps {
 const MainLayout: FC<MainLayoutProps> = ({ children }) => (
   <>
     <Header />
-    <main className={styles.main}>{children}</main>
+    <main className={styles.main}>
+      <div className={styles.container}>{children}</div>
+    </main>
     <Footer />
   </>
 )

@@ -2,23 +2,22 @@ import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
 import copyToClipboard from '~/utils/copyToClipboard'
 import styles from './Login.module.scss'
 import Button from '~/components/general/Button'
+import shortenPrincipal from '~/utils/shortenPrincipal.ts'
 
-interface PrincipalProps {
+interface PrincipalBtnProps {
   principal: string
 }
 
-const Principal: FC<PrincipalProps> = ({ principal }) => {
+const PrincipalBtn: FC<PrincipalBtnProps> = ({ principal }) => {
   const [copied, setCopied] = useState(false)
 
-  const shortPrincipal = useMemo(() => {
-    return `${principal.slice(0, 5)}...${principal.slice(principal.length - 3)}`
-  }, [principal])
+  const shortPrincipal = useMemo(() => shortenPrincipal(principal), [principal])
 
   const handleCLick = useCallback((): void => {
-    copyToClipboard(shortPrincipal, () => {
+    copyToClipboard(principal, () => {
       setCopied(true)
     })
-  }, [shortPrincipal])
+  }, [principal])
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
@@ -40,4 +39,4 @@ const Principal: FC<PrincipalProps> = ({ principal }) => {
   )
 }
 
-export default Principal
+export default PrincipalBtn

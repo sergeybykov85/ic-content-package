@@ -1,0 +1,36 @@
+@import "src/styles/variables";
+
+.wrapper {
+  display: inline-block;
+}
+
+.label {
+  cursor: pointer;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.error {
+  margin-top: 8px;
+  color: darkred;
+  font-size: 14px;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  transition: $transition-time;
+  background: transparent;
+
+  &:active, &:focus-visible {
+    border-color: $primary-blue-color;
+  }
+
+  font-size: 16px;
+}
+.textarea {
+  resize: none;
+}

@@ -1,0 +1,22 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.grid {
+  display: grid;
+  @include grid-columns(1);
+  grid-gap: 32px;
+  @media (min-width: $bp-md) {
+    @include grid-columns(2);
+  }
+}
+.input {
+  display: block;
+  max-width: 600px;
+  margin-top: 16px;
+}
+.img {
+  min-height: 250px;
+}
+.btn {
+  margin-top: 32px;
+}

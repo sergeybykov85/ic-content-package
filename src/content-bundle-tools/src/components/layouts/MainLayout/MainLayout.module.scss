@@ -10,11 +10,15 @@ $footer-height: 100px;
   padding: 16px;
 }
 .container {
+  min-height: inherit;
   max-width: $max-content-width;
   margin: 0 auto;
   display: flex;
-  align-items: center;
   height: 100%;
+
+  &--header, &--footer {
+    align-items: center;
+  }
 
   &--footer {
     gap: 32px;
@@ -55,6 +59,7 @@ $footer-height: 100px;
   }
 }
 .main {
+  padding: 0 16px;
   min-height: calc(100vh - $header-height - $mob-footer-height);
   @media (min-width: $bp-md) {
     min-height: calc(100vh - $header-height - $footer-height);

@@ -3,17 +3,23 @@ import ReactDOM from 'react-dom/client'
 import './styles/main.scss'
 import router from './router'
 import { RouterProvider } from 'react-router-dom'
-import AuthContextProvider from '~/context/AuthContext/AuthContextProvider'
 import { SnackbarProvider } from 'notistack'
+import AuthProvider from '~/context/AuthContext'
+import ServicesProvider from '~/context/ServicesContext'
+import FullScreenLoadingProvider from '~/context/FullScreenLoadingContext'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
 root.render(
   <React.StrictMode>
-    <SnackbarProvider preventDuplicate>
-      <AuthContextProvider>
-        <RouterProvider router={router} />
-      </AuthContextProvider>
+    <SnackbarProvider preventDuplicate style={{ whiteSpace: 'pre-line' }}>
+      <FullScreenLoadingProvider>
+        <AuthProvider>
+          <ServicesProvider>
+            <RouterProvider router={router} />
+          </ServicesProvider>
+        </AuthProvider>
+      </FullScreenLoadingProvider>
     </SnackbarProvider>
   </React.StrictMode>,
 )

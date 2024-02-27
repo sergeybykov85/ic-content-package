@@ -1,0 +1,38 @@
+@import 'src/styles/variables';
+
+.container {
+  border: 1px dashed $border-color;
+  border-radius: $border-radius;
+  background: url('/images/empty-image.svg') no-repeat center;
+  overflow: hidden;
+
+  cursor: pointer;
+
+  position: relative;
+}
+.img {
+  object-fit: contain;
+  width: 100%;
+}
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+
+  border-radius: $border-radius;
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: $transition-time;
+  opacity: 0;
+  &:hover {
+    opacity: 1;
+  }
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #FFFFFF;
+
+  font-size: 24px;
+}

@@ -1,0 +1,13 @@
+@import "src/styles/variables";
+
+.created {
+  width: 100%;
+  font-size: 14px;
+  color: $grey-text-color;
+  margin-top: 16px;
+  display: flex;
+  span {
+    display: block;
+    margin-left: auto;
+  }
+}

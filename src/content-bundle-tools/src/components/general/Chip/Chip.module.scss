@@ -1,0 +1,28 @@
+@import "src/styles/variables";
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: $border-radius;
+  color: #FFFFFF;
+
+  &--black {
+    background: black;
+  }
+
+  &--blue {
+    border: 1px solid $primary-blue-color;
+    background: rgb(92, 109, 199);
+  }
+
+  img {
+    height: 1em;
+    margin-left: 6px;
+
+    transform: rotate(45deg);
+    cursor: pointer;
+
+    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(354deg) brightness(109%) contrast(102%);
+  }
+}
