@@ -63,6 +63,17 @@ module {
          TrieSet.toArray(set);
     }; 
 
+    public func flatten (to : [?[Text]]) : [[Text]] {
+        var r = Buffer.Buffer<[Text]>(Array.size(to));
+        for (a in to.vals()) {
+            switch (a) {
+                case (?i) { r.add(i); };
+                case (null) {};
+            }
+        };
+        Buffer.toArray(r);
+    };
+
     public func build_intersect(arrays : [[Text]]) : [Text] {
         if (arrays.size() == 0) return [];
         // take 1st array

@@ -25,6 +25,9 @@ import ICS2Http "mo:ics2-core/Http";
 
 shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegistryArgs) = this {
 
+	let RECENT_PACKAGES_CAPACITY = 5;
+	let RECENT_BUNDLES_CAPACITY = 10;
+
 	// immutable field
 	let CREATOR:CommonTypes.Identity = {
 		identity_type = #ICP;
@@ -104,20 +107,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	*/
 	public shared ({ caller }) func register_submitter (args : Types.CommonArgs) : async Result.Result<(), CommonTypes.Errors> {
 		if (not can_manage(caller)) return #err(#AccessDenied);
-		switch (submitter_get(args.identity)) {
-			case (?customer) { return #err(#DuplicateRecord); };
-			case (null) {
-				let submitter : Types.Submitter = {
-					var name = args.name;
-					var description = args.description;
-					identity = args.identity;
-					var packages = List.nil();
-					created = Time.now();
-				};
-				submitters := Trie.put(submitters, CommonUtils.identity_key(args.identity), Text.equal, submitter).0;
-				#ok();
-			}
-		};
+		_register_submitter(args);
 	};
 	/**
 	* Removes an existing package provider (who is authorized to add new packages)
@@ -406,46 +396,80 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		await index_service_actor.get_data_segmentation();
 	};
 
+	/**
+	* Returns recent packages with included budnles.
+	* The argument of recent_packages can't be greather than RECENT_PACKAGES_CAPACITY.
+	* The argument of recent_bundles can't be greather than RECENT_BUNDLES_CAPACITY.
+	* If passed argument exceeds the limit, then def value is taken for that argument
+	*/
+	public composite query func get_recent_packages(recent_packages: ?Nat, recent_bundles: ?Nat) : async [Conversion.Package2BundlesView] {
+		var _pack_limit = Option.get(recent_packages,RECENT_PACKAGES_CAPACITY);
+		var _bund_limit = Option.get(recent_bundles, RECENT_BUNDLES_CAPACITY);
+
+		if (_pack_limit > RECENT_PACKAGES_CAPACITY) {_pack_limit:=RECENT_PACKAGES_CAPACITY};
+		if (_bund_limit > RECENT_BUNDLES_CAPACITY) {_bund_limit:=RECENT_BUNDLES_CAPACITY};
+		
+		let res = Buffer.Buffer<Conversion.Package2BundlesView>(_pack_limit);
+        var i = 0;
+		let all = List.toArray(all_packages);
+        while (i < _pack_limit and i < all.size()) {
+			let id = all[i];
+			switch (package_get(id)) {
+				case (?package) {
+					// load budnles
+					let package_actor : Types.Actor.BundlePackageActor = actor (id);
+					let bundles = await package_actor.get_bundle_refs_page(0, _bund_limit);
+					res.add(Conversion.convert_package2bundles_view(id, package, bundles));
+				};
+				case (null) {  };
+			};
+            i += 1;
+        };		
+		Buffer.toArray(res);
+	};
+
 	public composite query func get_packages_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundlePackageView] {
 		let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
 		
 		let by_creator = switch (criteria.creator) {
 			case (?identity) {
 				switch (creator2package_get(identity)) {
-					case (?ids) { List.toArray(ids) };
-					case (null) { [] };
+					case (?ids) { ?List.toArray(ids) };
+					case (null) { ?[] };
 				}
 			};
-			case (null) {[]};
+			case (null) {null};
 		};
 
 		let by_type = switch (criteria.kind) {
 			case (?kind) {
 				let kind_key = Utils.resolve_submission_name(kind);
 				switch (type2package_get(kind_key)) {
-					case (?by_kind) {(List.toArray(by_kind)) };
-					case (null) {[]};
+					case (?by_kind) {?List.toArray(by_kind) };
+					case (null) {?[]};
 				};
 			};
-			case (null) {[]};
+			case (null) {null};
 		};		
 	
 		let by_country = switch (criteria.country_code) {
-			case (?country_code) { await index_service_actor.get_packages_by_country(country_code)};
-			case (null) {[]};
+			case (?country_code) { ?(await index_service_actor.get_packages_by_country(country_code))};
+			case (null) {null};
 		};		
 		let by_tag = switch (criteria.tag) {
-			case (?tag) { await index_service_actor.get_packages_by_tag(tag)};
-			case (null) {[]};
+			case (?tag) { ?(await index_service_actor.get_packages_by_tag(tag))};
+			case (null) {null};
 		};
 		let by_class = switch (criteria.classification) {
-			case (?classification) { await index_service_actor.get_packages_by_classification(classification)};
-			case (null) {[]};
+			case (?classification) { ?(await index_service_actor.get_packages_by_classification(classification))};
+			case (null) {null};
 		};
 
+		let id_arr = CommonUtils.flatten([by_creator, by_type, by_country, by_tag, by_class]);
+
 		var ids:[Text] = [];
-		if (criteria.intersect) {ids:=CommonUtils.build_intersect([by_creator, by_type, by_country, by_tag, by_class]);}
-		else { ids:=CommonUtils.build_uniq([by_creator, by_type, by_country, by_tag, by_class]);};
+		if (criteria.intersect) {ids:=CommonUtils.build_intersect(id_arr)}
+		else { ids:=CommonUtils.build_uniq(id_arr)};
 		_get_packages(ids);
 	};
 
@@ -462,7 +486,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			};
 		};
 		Buffer.toArray(res);
-    };	
+    };
 
 	private func _build_identity (caller : Principal) : CommonTypes.Identity {
 		// right now we return always ICP, but it will be extended in case of ethereum authentication
@@ -474,6 +498,22 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		};
 	};	
 
+	private func _register_submitter (args : Types.CommonArgs) : Result.Result<(), CommonTypes.Errors> {
+		switch (submitter_get(args.identity)) {
+			case (?customer) { return #err(#DuplicateRecord); };
+			case (null) {
+				let submitter : Types.Submitter = {
+					var name = args.name;
+					var description = args.description;
+					identity = args.identity;
+					var packages = List.nil();
+					created = Time.now();
+				};
+				submitters := Trie.put(submitters, CommonUtils.identity_key(args.identity), Text.equal, submitter).0;
+				#ok();
+			}
+		};
+	};
 
 	private func can_manage (caller : Principal) : Bool {
 		let identity = {identity_type = #ICP; identity_id = Principal.toText(caller)};

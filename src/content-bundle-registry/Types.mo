@@ -106,6 +106,19 @@ module {
 			logo_url : ?Text;
 		};
 
+		public type BundleRefView = {
+			id : Text;
+			data_path : CommonTypes.ResourcePath;
+			name : Text;
+			// simple light weigh logo
+			logo : ?CommonTypes.ResourcePath;
+			tags : [Text];
+			classification : Text;		
+			creator : CommonTypes.Identity;
+			owner : CommonTypes.Identity;
+			created : Time.Time;
+		};		
+
 		public type IndexServiceActor = actor {
 			register_package : shared (package : Principal)  -> async Result.Result<(Text), CommonTypes.Errors>;
 			get_packages_by_tag : shared query (tag : Text) -> async [Text];
@@ -117,6 +130,7 @@ module {
 		public type BundlePackageActor = actor {
 			get_creator : shared query() -> async CommonTypes.Identity;
 			get_details : shared query() -> async PackageDetails;
+			get_bundle_refs_page : shared query(start: Nat, limit: Nat) -> async CommonTypes.DataSlice<BundleRefView>
 		};
 
 	};
