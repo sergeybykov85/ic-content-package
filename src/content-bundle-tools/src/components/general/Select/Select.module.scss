@@ -26,7 +26,7 @@
 .input {
   width: 100%;
   position: relative;
-  &:after {
+  &:after:not([disabled]) {
     position: absolute;
     content: "";
     background: url("/images/arrow-down.svg") no-repeat center;

@@ -8,6 +8,7 @@ import PackageDetailsPage from '~/router/pages/PackageDetailsPage.tsx'
 import BundleDetailsPage from '~/router/pages/BundleDetailsPage.tsx'
 import DeployBundlePage from '~/router/pages/DeployBundlePage.tsx'
 import ErrorPage from '~/components/features/ErrorPage'
+import PackageEditPage from '~/router/pages/PackageEditPage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -36,8 +37,12 @@ const router = createBrowserRouter([
         element: <WarehousePage />,
       },
       {
-        path: 'package/:packageId',
+        path: 'package/:packageId/',
         element: <PackageDetailsPage />,
+      },
+      {
+        path: 'package/:packageId/edit',
+        element: <PackageEditPage />,
       },
       {
         path: 'package/:packageId/bundle/:bundleId',

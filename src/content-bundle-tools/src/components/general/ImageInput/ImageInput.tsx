@@ -33,7 +33,7 @@ const ImageInput: FC<ImageInputProps> = ({ src, onLoaded, maxSize, className }) 
 
   return (
     <FileInput accept="image/*" getAs="base64" onLoaded={onFileLoaded} className={clsx(styles.container, className)}>
-      <img src={imgSrc} alt="" />
+      <img src={imgSrc} alt="" className={styles.img} />
       <div className={styles.overlay}>
         <p>Upload image</p>
       </div>

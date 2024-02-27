@@ -5,7 +5,7 @@ import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
 import If from '~/components/general/If'
 import { useAuth } from '~/context/AuthContext'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Button from '~/components/general/Button'
 import styles from './PackageDetailsBlock.module.scss'
 
@@ -15,6 +15,7 @@ interface PackageDetailsBlockProps {
 
 const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageService }) => {
   const { setLoading } = useFullScreenLoading()
+  const { state } = useLocation()
   const { principal } = useAuth()
 
   const [packageData, setPackageData] = useState<PackageDetails | null>(null)
@@ -36,13 +37,21 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageServic
 
   const bundleEditable = useMemo(() => packageData?.owner === principal, [packageData?.owner, principal])
 
+  const dataToEdit = useMemo(() => {
+    if (packageData) {
+      const { name, description, logoUrl, submission } = packageData
+      return { name, description, logoUrl, submission }
+    }
+    return null
+  }, [packageData])
+
   if (packageData) {
     return (
       <DetailsBlock
         data={{ ...packageData, tags }}
         editButton={
           <If condition={bundleEditable}>
-            <Link to="">
+            <Link to={`edit`} state={{ ...state, dataToEdit }}>
               <Button text="Edit package" variant="outlined" className={styles['edit-bundle']} />
             </Link>
           </If>

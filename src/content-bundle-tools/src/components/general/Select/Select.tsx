@@ -13,6 +13,7 @@ interface SelectProps<T> {
   label?: string
   placeholder?: string
   error?: string
+  disabled?: boolean
 }
 
 function Select<T extends string = string>({
@@ -23,29 +24,32 @@ function Select<T extends string = string>({
   label,
   placeholder,
   error,
+  disabled,
 }: SelectProps<T>): ReactNode {
   const [value, setValue] = useState(defaultValue)
   const [visible, setVisible] = useState(false)
 
-  const onFocus = useCallback(() => setVisible(true), [])
+  const onFocus = useCallback(() => !disabled && setVisible(true), [disabled])
   const hideOptions = useCallback(() => setVisible(false), [])
 
   const ref = useClickAway<HTMLDivElement>(hideOptions)
 
   const onClick = useCallback(
     (newValue: T) => {
-      hideOptions()
-      setValue(newValue)
-      onSelect && onSelect(newValue)
+      if (!disabled) {
+        hideOptions()
+        setValue(newValue)
+        onSelect && onSelect(newValue)
+      }
     },
-    [hideOptions, onSelect],
+    [hideOptions, onSelect, disabled],
   )
 
   return (
     <div ref={ref} className={clsx(styles.select, className, visible && styles.opened)}>
       <label>
         <span className={clsx(styles.label, !label && styles['no-label'])}>{label}</span>
-        <TextInput readOnly {...{ value, placeholder, onFocus }} className={styles.input} />
+        <TextInput readOnly {...{ value, placeholder, onFocus, disabled }} className={styles.input} />
         <If condition={Boolean(error)}>
           <div className={styles.error}>{error}</div>
         </If>

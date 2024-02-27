@@ -4,6 +4,8 @@ import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 import { Package } from '~/models/Package.ts'
 import CanisterService from '~/models/CanisterService.ts'
+import type { CanisterResponse } from '~/types/globals.ts'
+import { Principal } from '@dfinity/principal'
 
 const PACKAGE_REGISTRY_CANISTER_ID = import.meta.env.VITE_PACKAGE_REGISTRY_CANISTER_ID
 
@@ -24,8 +26,9 @@ export default class PackageRegistryService extends CanisterService {
     return rawPackages.map(i => new Package(i))
   }
 
-  // public getPackageById = async (packageId: string): Promise<Package> => {
-  //   const response = (await this.actor.get_package(packageId)) as CanisterResponse<PackageDto>
-  //   return new Package(this.responseHandler(response))
-  // }
+  public refreshPackage = async (packageId: string): Promise<void> => {
+    const principal = Principal.fromText(packageId)
+    const response = (await this.actor.refresh_package(principal)) as CanisterResponse<void>
+    this.responseHandler(response)
+  }
 }

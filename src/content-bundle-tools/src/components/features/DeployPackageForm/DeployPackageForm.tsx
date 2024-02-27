@@ -19,8 +19,8 @@ import Checkbox from '~/components/general/Checkbox'
 const packageTypes = Object.values(PackageTypes)
 const identifierTypes = Object.values(IdentifierTypes)
 
-const NAME_MAX_LENGTH = 100
-const DESCRIPTION_MAX_LENGTH = 300
+const NAME_MAX_LENGTH = import.meta.env.VITE_BUNDLE_NAME_MAX_LENGTH
+const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_BUNDLE_DESCRIPTION_MAX_LENGTH
 
 interface FormValues {
   name: string
