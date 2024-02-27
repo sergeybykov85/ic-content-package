@@ -269,7 +269,8 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 								switch (criteria.package) {
 									case (?package) {
 										let package_actor : Types.Actor.BundlePackageActor = actor (package);
-										let slice = await package_actor.get_bundles_page(0, 1000);
+										//add bundle criteria for this package
+										let slice = await package_actor.get_bundles_page(0, 1000, _bundle_search_criteria(criteria));
 										slice.items;
 									};
 									case (null) {
@@ -287,10 +288,13 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 										});
 										let p_ids = Array.map<Types.Actor.BundlePackageView, Text> (packages, func x = x.id);
 										let res = Buffer.Buffer<Types.Actor.BundleDetailsView>(Array.size(p_ids));
+										//extra filter for any package
+										let bundle_criteria = _bundle_search_criteria(criteria)
 										for (id in p_ids.vals()) {
 											let package_actor : Types.Actor.BundlePackageActor = actor (id);
 											// todo : in fact we have to filter bundles by tag/country/classification
-											let slice = await package_actor.get_bundles_page(0, 1000);
+											let slice = await package_actor.get_bundles_page(0, 1000, bundle_criteria
+											);
 											for (bundle in slice.items.vals()) {
 												res.add(bundle);
 											};
@@ -470,6 +474,20 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		Buffer.toArray(res);
     };
 
+	private func _bundle_search_criteria (widget_crriteria:Criteria) : ?BundleSearchCriteria {
+		if (Option.isSome(widget_crriteria.by_country_code) or
+			Option.isSome(widget_crriteria.by_tag) or
+			Option.isSome(widget_crriteria.by_classification)) {
+			return ?{
+				intersect = true;
+				creator = null;
+				country_code = widget_crriteria.by_country_code;
+				tag = widget_crriteria.by_tag;
+				classification = widget_crriteria.by_classification;
+			}
+		}
+		return null;
+	}
 
 	private func _resolve_widget_type (widget_type: Types.WidgetType) : Text {
         switch (widget_type) {
@@ -478,7 +496,6 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
         };
     };
 	
-
 	private func _build_identity (caller : Principal) : CommonTypes.Identity {
 		// right now we return always ICP, but it will be extended in case of ethereum authentication
 		// in case of Ethereum support, then we have to call other authentication service to find a session-based principal

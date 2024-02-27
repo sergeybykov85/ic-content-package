@@ -64,7 +64,7 @@ module {
 	public type Criteria = {
 		// if entity, then other parametrs are ignored
 		// principle is simple : either BY ids or by other criteria
-		// priority : ids, packages, tags, classifications
+		// priority : entity, package, tags, classifications
 		var entity : ?IdsRef;
 		var package : ?Text;
 		var by_country_code : ?Text;
@@ -86,6 +86,15 @@ module {
 		var options : ?Options;
 		creator : CommonTypes.Identity;
 		created : Time.Time;
+	};
+
+	public type BundleSearchCriteria = {
+		// true -- AND for all filters; false --> OR for all filters
+		intersect : Bool;
+		country_code :?Text;
+		creator : ?CommonTypes.Identity;
+		tag : ?Text;
+		classification : ?Text;
 	};
 
 	public type SearchCriteriaArgs = {
@@ -145,7 +154,7 @@ module {
 			created: Time.Time;
 			submitted: Time.Time;
 		};
-	
+
 		public type PackageRegistryActor = actor {
 			get_packages: shared query (ids:[Text]) -> async [PackageView];
 			get_packages_by_criteria: shared query (criteria: {
@@ -164,7 +173,7 @@ module {
 		};
 
 		public type BundlePackageActor = actor {
-			get_bundles_page : shared query (start: Nat, limit: Nat) -> async CommonTypes.DataSlice<BundleDetailsView>;
+			get_bundles_page : shared query (start: Nat, limit: Nat, criteria: ?BundleSearchCriteria) -> async CommonTypes.DataSlice<BundleDetailsView>;
 			get_refs_by_ids : shared query (ids:[Text]) -> async [Text];
 			get_bundles_by_ids : shared query (ids:[Text]) -> async [BundleDetailsView];
 		};				

@@ -930,25 +930,25 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	};
 
 	/**
-	* Returns bundle refs by portions
+	* Returns bundle refs. Request for pagination
 	*/
-    public query func get_bundle_refs_page(start: Nat, limit: Nat): async CommonTypes.DataSlice<Conversion.BundleRefView> {
-        _get_page(List.toArray(all_bundles), start, limit, Conversion.convert_bundle_ref_view);
+    public query func get_bundle_refs_page(start: Nat, limit: Nat, criteria: ?Types.SearchCriteriaArgs): async CommonTypes.DataSlice<Conversion.BundleRefView> {
+        let ids_to_process = switch (criteria) {
+			case (?c) {_get_ids_for_criteria(c)};
+			case (null) {List.toArray(all_bundles)};
+		};
+		_get_page(ids_to_process, start, limit, Conversion.convert_bundle_ref_view);
     };
 
 	/**
-	* Returns bundle refs by portions
+	* Returns bundle details. Request for pagination
 	*/
-    public query func get_bundle_refs_by_tag_page(tag:Text, start: Nat, limit: Nat): async CommonTypes.DataSlice<Conversion.BundleRefView> {
-        let ids = _get_ids_for(tag2bundle_get, tag);
-		_get_page(ids, start, limit, Conversion.convert_bundle_ref_view);
-    };	
-
-	/**
-	* Returns bundle refs by portions
-	*/
-    public query func get_bundles_page(start: Nat, limit: Nat): async CommonTypes.DataSlice<Conversion.BundleDetailsView> {
-        _get_page(List.toArray(all_bundles), start, limit, Conversion.convert_bundle_details_view);
+    public query func get_bundles_page(start: Nat, limit: Nat, criteria: ?Types.SearchCriteriaArgs): async CommonTypes.DataSlice<Conversion.BundleDetailsView> {
+        let ids_to_process = switch (criteria) {
+			case (?c) {_get_ids_for_criteria(c)};
+			case (null) {List.toArray(all_bundles)};
+		};
+		_get_page(ids_to_process, start, limit, Conversion.convert_bundle_details_view);
     };	
 
 	/**

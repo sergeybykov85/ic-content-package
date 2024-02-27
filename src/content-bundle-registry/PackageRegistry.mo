@@ -107,20 +107,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	*/
 	public shared ({ caller }) func register_submitter (args : Types.CommonArgs) : async Result.Result<(), CommonTypes.Errors> {
 		if (not can_manage(caller)) return #err(#AccessDenied);
-		switch (submitter_get(args.identity)) {
-			case (?customer) { return #err(#DuplicateRecord); };
-			case (null) {
-				let submitter : Types.Submitter = {
-					var name = args.name;
-					var description = args.description;
-					identity = args.identity;
-					var packages = List.nil();
-					created = Time.now();
-				};
-				submitters := Trie.put(submitters, CommonUtils.identity_key(args.identity), Text.equal, submitter).0;
-				#ok();
-			}
-		};
+		_register_submitter(args);
 	};
 	/**
 	* Removes an existing package provider (who is authorized to add new packages)
@@ -511,6 +498,22 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		};
 	};	
 
+	private func _register_submitter (args : Types.CommonArgs) : Result.Result<(), CommonTypes.Errors> {
+		switch (submitter_get(args.identity)) {
+			case (?customer) { return #err(#DuplicateRecord); };
+			case (null) {
+				let submitter : Types.Submitter = {
+					var name = args.name;
+					var description = args.description;
+					identity = args.identity;
+					var packages = List.nil();
+					created = Time.now();
+				};
+				submitters := Trie.put(submitters, CommonUtils.identity_key(args.identity), Text.equal, submitter).0;
+				#ok();
+			}
+		};
+	};
 
 	private func can_manage (caller : Principal) : Bool {
 		let identity = {identity_type = #ICP; identity_id = Principal.toText(caller)};
