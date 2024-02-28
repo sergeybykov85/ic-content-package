@@ -427,9 +427,25 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 							case (?category) {
 								switch (_find_section(group,  category)) {
 									case (?section) {
+										// reject if resource is specified but doesn't belong to the section
+										let path_to_remove = switch (args.resource_id) {
+											case (?target_resource) {
+												let ex_resource = List.find(section.data , func (k:CommonTypes.ResourcePath):Bool { target_resource == k.resource_id;});
+												// there is no resource for the specified
+												switch (ex_resource) {
+													case (?res) {res};
+													case (null) {return #err(#NotFound);};
+												};
+											};
+											// remove entire section
+											case (null) {section.data_path};
+
+										};
+										
 										// remove sections
+										// all resouces from the same categorry belong to the same bucket!
 										let bucket_actor : Types.Actor.DataBucketActor = actor (section.data_path.bucket_id);
-										switch (await bucket_actor.delete_resource(section.data_path.resource_id)){
+										switch (await bucket_actor.delete_resource(path_to_remove.resource_id)){
 											// update model
 											case (#ok(_)) {	
 												switch (category) {
@@ -439,10 +455,24 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 															bundle.index.location:=null;
 														};															
 													};
-													case (#About) {	bundle.index.about:=List.nil();};
+													case (#About) {	
+														// path_to_remove points to the resource, not to the entire section
+														if (Option.isSome(path_to_remove.locale) and List.size(bundle.index.about) > 0) {
+															// filter by locale	
+															let loc = CommonUtils.unwrap(path_to_remove.locale);
+															let f_about = List.mapFilter<CommonTypes.AboutData, CommonTypes.AboutData>(bundle.index.about,
+																func(b:CommonTypes.AboutData) : ?CommonTypes.AboutData { if (b.locale == loc) { return null; } else { return ?b; }}
+															);
+															bundle.index.about:= f_about;
+														} else {
+															// clean section
+															bundle.index.about:=List.nil();
+														};
+													};
 													case (_) {};
 												};
-												_exclude_section(group, category);
+												// if resource is not specified, then exclude entire category/section
+												_exclude_section(group, category, args.resource_id);
 											};
 											case (#err(e)) {return #err(e)};
 										};
@@ -1641,8 +1671,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		return List.find(data_group.sections , func (k:Types.DataSection):Bool { k.category == category});
 	};
 
-	private func _exclude_section (data_group: Types.DataGroup, category: CommonTypes.CategoryId) : () {
-		data_group.sections := List.mapFilter<Types.DataSection, Types.DataSection>(data_group.sections,  func (k:Types.DataSection) = if (k.category == category) { null } else { ?k });	
+	private func _exclude_section (data_group: Types.DataGroup, category: CommonTypes.CategoryId, resource_id:?Text) : () {
+		switch (resource_id) {
+			case (?res_id) {
+				// exclude only resource
+				switch (List.find(data_group.sections , func (k:Types.DataSection):Bool { category == k.category})){
+					case (?section) {section.data := List.mapFilter<CommonTypes.ResourcePath, CommonTypes.ResourcePath>(section.data,  func (k:CommonTypes.ResourcePath) = if (k.resource_id == res_id) { null } else { ?k })};
+					case (null) {};
+				};
+			};
+			case (null) {data_group.sections := List.mapFilter<Types.DataSection, Types.DataSection>(data_group.sections,  func (k:Types.DataSection) = if (k.category == category) { null } else { ?k })};
+		}
+			
 	};
 
 	private func _register_bucket(name:Text, operators : [Principal], cycles : Nat): async Text {

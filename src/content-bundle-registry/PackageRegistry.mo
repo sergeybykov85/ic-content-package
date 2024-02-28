@@ -416,10 +416,14 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			let id = all[i];
 			switch (package_get(id)) {
 				case (?package) {
-					// load budnles
-					let package_actor : Types.Actor.BundlePackageActor = actor (id);
-					let bundles = await package_actor.get_bundle_refs_page(0, _bund_limit);
-					res.add(Conversion.convert_package2bundles_view(id, package, bundles));
+					// load budnles ONLY if required
+					if (_bund_limit > 0) {
+						let package_actor : Types.Actor.BundlePackageActor = actor (id);
+						let bundles = await package_actor.get_bundle_refs_page(0, _bund_limit);
+						res.add(Conversion.convert_package2bundles_view(id, package, bundles));
+					} else {
+						res.add(Conversion.convert_package2bundles_view(id, package, {total_supply = 0; items = [];}: CommonTypes.DataSlice<Types.Actor.BundleRefView>));
+					}
 				};
 				case (null) {  };
 			};
