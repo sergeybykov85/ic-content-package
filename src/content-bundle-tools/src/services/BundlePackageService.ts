@@ -35,6 +35,7 @@ export default class BundlePackageService extends CanisterService {
     const { total_supply, items } = (await this.actor.get_bundle_refs_page(
       startIndex,
       pageSize,
+      [], // search criteria
     )) as PaginatedListResponse<BundleDto>
     return new PaginatedList(
       { page, pageSize, totalItems: Number(total_supply) },
