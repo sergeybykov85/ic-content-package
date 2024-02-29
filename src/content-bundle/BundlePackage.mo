@@ -769,7 +769,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
 	public query func contribute_opportunity_for (identity:CommonTypes.Identity) : async Bool {
 		//if (Principal.isAnonymous(to)) return false;
-        switch (MODE.submission) {
+        let access_allowance = switch (MODE.submission) {
             case (#Private) { CommonUtils.identity_equals(identity, owner)};
             case (#Public) { true };
             case (#Shared) {
@@ -777,6 +777,21 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					or  Option.isSome(List.find(contributors , CommonUtils.find_identity(identity))) ;
             };			
         };
+		let max_supply_allowance = switch (MODE.max_supply) {
+			case (?max_supply) { (Trie.size(bundles) < max_supply) };
+			case (null) {true};
+		};
+        // validate supply per a creator
+		let max_supply_creator_allowance = switch (MODE.max_creator_supply) {
+			case (?max_creator_supply) { 
+				switch (creator2bundle_get(owner)) {
+					case (?ids) { (List.size(ids) < max_creator_supply) };
+					case (null) {true};
+				};
+			};
+			case (null) {true};
+		};		
+		access_allowance and max_supply_allowance and max_supply_creator_allowance;
     };	
 	/**
 	* Check a contribute opportunity on the bundle level for the identity
@@ -1189,7 +1204,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 	};
 
-    private func _register_bundle(args : Types.BundleArgs, owner : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
+    private func _register_bundle(args : Types.BundleArgs, to_owner : CommonTypes.Identity) : async Result.Result<Text, CommonTypes.Errors> {
         // validate supply
 		switch (MODE.max_supply) {
 			case (?max_supply) { if (Trie.size(bundles) > max_supply) return #err(#LimitExceeded); };
@@ -1210,7 +1225,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         // validate supply per a creator
 		switch (MODE.max_creator_supply) {
 			case (?max_creator_supply) { 
-				switch (creator2bundle_get(owner)) {
+				switch (creator2bundle_get(to_owner)) {
 					case (?ids) {if (List.size(ids) >= max_creator_supply) return #err(#LimitExceeded); };
 					case (null) {};
 				};
@@ -1251,8 +1266,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
             		var logo = null;
             		var payload = { var poi_group = null; var additions_group = null; };
 					var index = { var classification = args.classification; var tags = List.fromArray(args.tags); var location = null; var about = null; };					
-					creator = owner;
-            		var owner = owner;
+					creator = to_owner;
+            		var owner = to_owner;
             		created = Time.now();
 					var access_list = List.nil();
         		};
@@ -1272,8 +1287,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (null) { };
 				};
 				// save references between creator/owner	
-				_track_creator(owner, bundle_id);
-				_track_owner (owner, bundle_id);
+				_track_creator(to_owner, bundle_id);
+				_track_owner (to_owner, bundle_id);
 
         		return #ok(bundle_id);				
 
