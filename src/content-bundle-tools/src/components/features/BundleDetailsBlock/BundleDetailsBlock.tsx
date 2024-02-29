@@ -9,7 +9,7 @@ import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
 import { Additions, Poi } from '~/components/features/AdditionalData'
 import CopyBtn from '~/components/general/CopyBtn'
 import styles from './BundleDetailsBlock.module.scss'
-import DeleteBundle from '~/components/features/DeleteBundle'
+import BundleControls from '~/components/features/BundleControls'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '~/context/AuthContext'
 
@@ -29,10 +29,8 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   const [bundle, setBundle] = useState<Bundle | null>(null)
   const [dataGroups, setDataGroups] = useState<ADDITIONAL_DATA_TYPES[]>([])
 
-  const isPossibleToDelete = useMemo(
-    () => !dataGroups.length && principal === bundle?.owner,
-    [bundle?.owner, dataGroups.length, principal],
-  )
+  const isShowControls = useMemo(() => principal === bundle?.owner, [bundle?.owner, principal])
+  const isEmptyBundle = useMemo(() => !dataGroups.length, [dataGroups.length])
 
   useEffect(() => {
     setLoading(true)
@@ -72,10 +70,17 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
         <h3 className={styles['sub-title']}>
           Package ID: {packageId} <CopyBtn text={packageId} />
         </h3>
-        <DetailsBlock data={{ ...bundle, description: bundle.description || '' }} />
-        <If condition={isPossibleToDelete}>
-          <DeleteBundle btnClassName={styles['remove-btn']} onSuccess={onDeleteSuccess} {...{ bundleId, service }} />
-        </If>
+        <DetailsBlock
+          data={{ ...bundle, description: bundle.description || '' }}
+          footer={
+            <If condition={isShowControls}>
+              <BundleControls
+                btnClassName={styles['remove-btn']}
+                {...{ bundleId, service, onDeleteSuccess, isEmptyBundle }}
+              />
+            </If>
+          }
+        />
         <If condition={dataGroups.includes(ADDITIONAL_DATA_TYPES.POI)}>
           <br />
           <Poi {...{ bundleId, service, bundle }} />

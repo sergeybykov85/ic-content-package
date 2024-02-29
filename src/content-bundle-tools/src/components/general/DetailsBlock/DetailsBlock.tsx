@@ -22,10 +22,10 @@ interface DetailsBlockProps {
     totalBundles?: number
     maxSupply?: PackageDetails['maxSupply']
   }
-  editButton?: ReactNode
+  footer?: ReactNode
 }
 
-const DetailsBlock: FC<DetailsBlockProps> = ({ data, className, editButton = null }) => {
+const DetailsBlock: FC<DetailsBlockProps> = ({ data, className, footer = null }) => {
   const { tags = [] } = data
 
   const blackLabel = useMemo(
@@ -50,43 +50,45 @@ const DetailsBlock: FC<DetailsBlockProps> = ({ data, className, editButton = nul
 
   return (
     <div className={clsx(styles.container, className)}>
-      <div>
-        <h3 className={styles.title}>{data.name}</h3>
-        <p>{data.description}</p>
-        <ul className={styles.details}>
-          <li>
-            Type:
-            <Chip className={styles.label} text={blackLabel} />
-          </li>
-          <li>
-            Created:
-            <span>{data.created}</span>
-          </li>
-          <li>
-            Creator:
-            <span className={styles['clickable-id']} onClick={() => handleCopyId(data.creator)}>
-              {data.creator}
-            </span>
-          </li>
-          <li>
-            Owner:
-            <span className={styles['clickable-id']} onClick={() => handleCopyId(data.owner)}>
-              {data.owner}
-            </span>
-          </li>
-          <If condition={Boolean(supply)}>
+      <div className={styles.info}>
+        <div>
+          <h3 className={styles.title}>{data.name}</h3>
+          <p>{data.description}</p>
+          <ul className={styles.details}>
             <li>
-              Supply:
-              <span>{supply}</span>
+              Type:
+              <Chip className={styles.label} text={blackLabel} />
             </li>
-          </If>
-        </ul>
-        <div className={styles.tags}>
-          {tags.map(tag => (
-            <Chip key={tag} text={tag} color="blue" />
-          ))}
+            <li>
+              Created:
+              <span>{data.created}</span>
+            </li>
+            <li>
+              Creator:
+              <span className={styles['clickable-id']} onClick={() => handleCopyId(data.creator)}>
+                {data.creator}
+              </span>
+            </li>
+            <li>
+              Owner:
+              <span className={styles['clickable-id']} onClick={() => handleCopyId(data.owner)}>
+                {data.owner}
+              </span>
+            </li>
+            <If condition={Boolean(supply)}>
+              <li>
+                Supply:
+                <span>{supply}</span>
+              </li>
+            </If>
+          </ul>
+          <div className={styles.tags}>
+            {tags.map(tag => (
+              <Chip key={tag} text={tag} color="blue" />
+            ))}
+          </div>
         </div>
-        {editButton}
+        <div className={styles.footer}>{footer}</div>
       </div>
       <img
         src={data.logoUrl || '/images/empty-image.svg'}
