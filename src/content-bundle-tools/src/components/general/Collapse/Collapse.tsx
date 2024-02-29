@@ -1,4 +1,4 @@
-import { type FC, type ReactNode, useEffect, useRef, useState } from 'react'
+import { type FC, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 
 interface CollapseProps {
@@ -10,9 +10,28 @@ interface CollapseProps {
 const TRANSITION_DURATION = 300 // milliseconds
 
 const Collapse: FC<CollapseProps> = ({ open, children, className }) => {
+  const id = useId()
   const ref = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState(0)
   const [overflowHidden, setOverflowHidden] = useState(true)
+
+  const observer = useMemo(
+    () =>
+      new ResizeObserver(entries => {
+        const element = entries.find(item => item.target.id === id)
+        if (element && element.target.clientHeight !== height) {
+          setHeight(element.target.clientHeight)
+        }
+      }),
+    [id],
+  )
+
+  useEffect(() => {
+    ref.current && observer.observe(ref.current)
+    return () => {
+      ref.current && observer.unobserve(ref.current)
+    }
+  }, [])
 
   useEffect(() => {
     const clientHeight = ref.current?.clientHeight
@@ -38,7 +57,9 @@ const Collapse: FC<CollapseProps> = ({ open, children, className }) => {
         transition: `height ${TRANSITION_DURATION}ms ease-in-out`,
       }}
     >
-      <div ref={ref}>{children}</div>
+      <div id={id} ref={ref}>
+        {children}
+      </div>
     </div>
   )
 }
