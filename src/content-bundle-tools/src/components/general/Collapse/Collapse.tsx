@@ -23,22 +23,16 @@ const Collapse: FC<CollapseProps> = ({ open, children, className }) => {
           setHeight(element.target.clientHeight)
         }
       }),
-    [id],
+    [height, id],
   )
 
   useEffect(() => {
-    ref.current && observer.observe(ref.current)
+    const divElement = ref.current
+    divElement && observer.observe(divElement)
     return () => {
-      ref.current && observer.unobserve(ref.current)
+      divElement && observer.unobserve(divElement)
     }
-  }, [])
-
-  useEffect(() => {
-    const clientHeight = ref.current?.clientHeight
-    if (open && clientHeight && height !== clientHeight) {
-      setHeight(ref.current?.clientHeight)
-    }
-  }, [height, open, children])
+  }, [observer])
 
   useEffect(() => {
     if (open) {
