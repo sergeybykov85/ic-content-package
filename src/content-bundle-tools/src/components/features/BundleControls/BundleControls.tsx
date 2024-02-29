@@ -1,4 +1,4 @@
-import { type FC, type MouseEventHandler, useCallback, useState } from 'react'
+import { type FC, type MouseEventHandler, useCallback, useEffect, useState } from 'react'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
 import { enqueueSnackbar } from 'notistack'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
@@ -11,13 +11,27 @@ interface BundleControlsProps {
   service: BundlePackageService
   bundleId: string
   onDeleteSuccess?: () => void
-  isEmptyBundle: boolean
 }
 
-const BundleControls: FC<BundleControlsProps> = ({ service, bundleId, onDeleteSuccess, isEmptyBundle }) => {
+const BundleControls: FC<BundleControlsProps> = ({ service, bundleId, onDeleteSuccess }) => {
   const { loading, setLoading } = useFullScreenLoading()
 
   const [open, setOpen] = useState(false)
+  const [isEmptyBundle, setIsEmptyBundle] = useState(false)
+
+  useEffect(() => {
+    service
+      .getBundleDataGroups(bundleId)
+      .then(response => {
+        setIsEmptyBundle(!response.length)
+      })
+      .catch(error => {
+        console.error(error)
+        enqueueSnackbar(error.message, {
+          variant: 'error',
+        })
+      })
+  }, [service, bundleId])
 
   const onOpen = useCallback<MouseEventHandler<HTMLButtonElement>>(event => {
     event.stopPropagation()

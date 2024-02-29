@@ -15,7 +15,6 @@ import type {
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
-import { Principal } from '@dfinity/principal'
 
 export default class BundlePackageService extends CanisterService {
   constructor(packageId: string, identity?: Identity | Secp256k1KeyIdentity) {
@@ -54,6 +53,11 @@ export default class BundlePackageService extends CanisterService {
       VariantType<ADDITIONAL_DATA_TYPES>[]
     >
     return this.responseHandler(response).map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
+  }
+
+  public getBundleSupportedDataGroups = async (): Promise<ADDITIONAL_DATA_TYPES[]> => {
+    const response = (await this.actor.get_supported_groups()) as VariantType<ADDITIONAL_DATA_TYPES>[]
+    return response.map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
   }
 
   public getBundleAdditionalData = async (
@@ -114,8 +118,11 @@ export default class BundlePackageService extends CanisterService {
     this.responseHandler(response)
   }
 
-  public checkPossibilityToCreateBundle = async (principalString: string): Promise<boolean> => {
-    const principal = Principal.fromText(principalString)
-    return (await this.actor.contribute_opportunity_for(principal)) as boolean
+  public checkPossibilityToCreateBundle = async (principal: string): Promise<boolean> => {
+    console.log(principal)
+    return (await this.actor.contribute_opportunity_for({
+      identity_type: { ICP: null },
+      identity_id: principal,
+    })) as boolean
   }
 }
