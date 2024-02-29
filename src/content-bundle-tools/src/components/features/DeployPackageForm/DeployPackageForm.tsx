@@ -21,6 +21,7 @@ const identifierTypes = Object.values(IdentifierTypes)
 
 const NAME_MAX_LENGTH = import.meta.env.VITE_BUNDLE_NAME_MAX_LENGTH
 const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_BUNDLE_DESCRIPTION_MAX_LENGTH
+const IMAGE_MAX_SIZE = import.meta.env.VITE_FILE_MAX_SIZE
 
 interface FormValues {
   name: string
@@ -164,7 +165,7 @@ const DeployPackageForm: FC = () => {
           </Collapse>
         </div>
         <div>
-          <ImageInput maxSize={2097152} onLoaded={imageOnLoaded} className={styles.img} />
+          <ImageInput maxSize={IMAGE_MAX_SIZE} onLoaded={imageOnLoaded} className={styles.img} />
         </div>
       </div>
       <Button type="submit" text="Deploy" className={styles.btn} />

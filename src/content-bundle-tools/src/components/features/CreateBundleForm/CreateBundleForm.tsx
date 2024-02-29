@@ -17,6 +17,7 @@ import TagsForm from '~/components/features/CreateBundleForm/TagsForm.tsx'
 
 const NAME_MAX_LENGTH = 100
 const DESCRIPTION_MAX_LENGTH = 300
+const IMAGE_MAX_SIZE = import.meta.env.VITE_FILE_MAX_SIZE
 
 interface FormValues {
   name: string
@@ -149,7 +150,7 @@ const CreateBundleForm: FC<CreateBundleFormProps> = ({ packageId }) => {
           <TagsForm onChange={handleTagsChange} />
         </div>
         <div>
-          <ImageInput maxSize={2097152} onLoaded={imageOnLoaded} className={styles.img} />
+          <ImageInput maxSize={IMAGE_MAX_SIZE} onLoaded={imageOnLoaded} className={styles.img} />
         </div>
       </div>
       <Button type="submit" form="create-bundle-form" text="Create" className={styles.btn} />

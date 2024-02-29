@@ -23,6 +23,7 @@ type FormValues = Pick<PackageDetails, 'name' | 'description'>
 
 const NAME_MAX_LENGTH = import.meta.env.VITE_BUNDLE_NAME_MAX_LENGTH
 const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_BUNDLE_DESCRIPTION_MAX_LENGTH
+const IMAGE_MAX_SIZE = import.meta.env.VITE_FILE_MAX_SIZE
 
 const PackageEditForm: FC<PackageEditFormProps> = ({ initValues, packageId }) => {
   const navigate = useNavigate()
@@ -107,7 +108,12 @@ const PackageEditForm: FC<PackageEditFormProps> = ({ initValues, packageId }) =>
           />
         </div>
         <div>
-          <ImageInput src={initValues.logoUrl} maxSize={2097152} onLoaded={imageOnLoaded} className={styles.img} />
+          <ImageInput
+            src={initValues.logoUrl}
+            maxSize={IMAGE_MAX_SIZE}
+            onLoaded={imageOnLoaded}
+            className={styles.img}
+          />
         </div>
       </div>
 
