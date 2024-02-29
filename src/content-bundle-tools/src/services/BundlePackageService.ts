@@ -15,6 +15,7 @@ import type {
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
+import { Principal } from '@dfinity/principal'
 
 export default class BundlePackageService extends CanisterService {
   constructor(packageId: string, identity?: Identity | Secp256k1KeyIdentity) {
@@ -111,5 +112,10 @@ export default class BundlePackageService extends CanisterService {
     })) as CanisterResponse<void>
 
     this.responseHandler(response)
+  }
+
+  public checkPossibilityToCreateBundle = async (principalString: string): Promise<boolean> => {
+    const principal = Principal.fromText(principalString)
+    return (await this.actor.contribute_opportunity_for(principal)) as boolean
   }
 }
