@@ -74,10 +74,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           data={{ ...bundle, description: bundle.description || '' }}
           footer={
             <If condition={isShowControls}>
-              <BundleControls
-                btnClassName={styles['remove-btn']}
-                {...{ bundleId, service, onDeleteSuccess, isEmptyBundle }}
-              />
+              <BundleControls {...{ bundleId, service, onDeleteSuccess, isEmptyBundle }} />
             </If>
           }
         />

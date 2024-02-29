@@ -10,18 +10,11 @@ import If from '~/components/general/If'
 interface BundleControlsProps {
   service: BundlePackageService
   bundleId: string
-  btnClassName?: string
   onDeleteSuccess?: () => void
   isEmptyBundle: boolean
 }
 
-const BundleControls: FC<BundleControlsProps> = ({
-  service,
-  bundleId,
-  btnClassName,
-  onDeleteSuccess,
-  isEmptyBundle,
-}) => {
+const BundleControls: FC<BundleControlsProps> = ({ service, bundleId, onDeleteSuccess, isEmptyBundle }) => {
   const { loading, setLoading } = useFullScreenLoading()
 
   const [open, setOpen] = useState(false)
@@ -53,9 +46,15 @@ const BundleControls: FC<BundleControlsProps> = ({
   }, [bundleId, onClose, onDeleteSuccess, service, setLoading])
 
   return (
-    <div>
+    <div className={styles.controls}>
       <If condition={isEmptyBundle}>
-        <Button text="Remove empty bundle" variant="text" color="red" onClick={onOpen} className={btnClassName} />
+        <Button
+          text="Remove empty bundle"
+          variant="text"
+          color="red"
+          onClick={onOpen}
+          className={styles['delete-btn']}
+        />
         <ModalDialog {...{ open, onClose }} className={styles.dialog}>
           <h3 className={styles.title}>Please, confirm deletion of bundle with ID:</h3>
           <p className={styles.id}>{bundleId}</p>
