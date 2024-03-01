@@ -119,7 +119,6 @@ export default class BundlePackageService extends CanisterService {
   }
 
   public checkPossibilityToCreateBundle = async (principal: string): Promise<boolean> => {
-    console.log(principal)
     return (await this.actor.contribute_opportunity_for({
       identity_type: { ICP: null },
       identity_id: principal,
