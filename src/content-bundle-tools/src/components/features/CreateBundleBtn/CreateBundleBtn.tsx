@@ -14,11 +14,16 @@ const CreateBundleBtn: FC<CreateBundleBtnProps> = ({ service }) => {
   const [possibleToCreate, setPossibleToCreate] = useState(false)
 
   useEffect(() => {
-    service.getPackageDetails().then(data => {
-      setPossibleToCreate(
-        data.owner === principal && (data.maxSupply === 'unlimited' || data.totalBundles < data.maxSupply),
-      )
-    })
+    if (principal) {
+      service
+        .checkPossibilityToCreateBundle(principal)
+        .then(value => {
+          setPossibleToCreate(value)
+        })
+        .catch(error => {
+          console.error(error)
+        })
+    }
   }, [principal, service])
 
   return possibleToCreate ? (

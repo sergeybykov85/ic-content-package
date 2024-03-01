@@ -35,6 +35,7 @@ export default class BundlePackageService extends CanisterService {
     const { total_supply, items } = (await this.actor.get_bundle_refs_page(
       startIndex,
       pageSize,
+      [], // search criteria
     )) as PaginatedListResponse<BundleDto>
     return new PaginatedList(
       { page, pageSize, totalItems: Number(total_supply) },
@@ -52,6 +53,11 @@ export default class BundlePackageService extends CanisterService {
       VariantType<ADDITIONAL_DATA_TYPES>[]
     >
     return this.responseHandler(response).map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
+  }
+
+  public getBundleSupportedDataGroups = async (): Promise<ADDITIONAL_DATA_TYPES[]> => {
+    const response = (await this.actor.get_supported_groups()) as VariantType<ADDITIONAL_DATA_TYPES>[]
+    return response.map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
   }
 
   public getBundleAdditionalData = async (
@@ -110,5 +116,12 @@ export default class BundlePackageService extends CanisterService {
     })) as CanisterResponse<void>
 
     this.responseHandler(response)
+  }
+
+  public checkPossibilityToCreateBundle = async (principal: string): Promise<boolean> => {
+    return (await this.actor.contribute_opportunity_for({
+      identity_type: { ICP: null },
+      identity_id: principal,
+    })) as boolean
   }
 }

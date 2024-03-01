@@ -1,5 +1,13 @@
 @import "src/styles/variables";
 
+.controls {
+  display: flex;
+}
+
+.delete-btn {
+  margin-left: auto;
+}
+
 .dialog {
   max-width: 500px;
 }
@@ -15,7 +23,6 @@
   color: $grey-text-color;
 }
 .btn-group {
-
   display: flex;
   flex-direction: column;
   gap: 16px;

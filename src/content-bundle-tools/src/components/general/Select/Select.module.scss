@@ -26,20 +26,22 @@
 .input {
   width: 100%;
   position: relative;
-  &:after:not([disabled]) {
-    position: absolute;
-    content: "";
-    background: url("/images/arrow-down.svg") no-repeat center;
-    width: 10px;
-    height: 100%;
-    top: 0;
-    right: 16px;
-    transition: $transition-time;
-    z-index: -1;
-  }
-  input {
-    cursor: pointer;
-    padding-right: 32px;
+  &:not(&.disabled) {
+    &:after {
+      position: absolute;
+      content: "";
+      background: url("/images/arrow-down.svg") no-repeat center;
+      width: 10px;
+      height: 100%;
+      top: 0;
+      right: 16px;
+      transition: $transition-time;
+      z-index: -1;
+    }
+    input {
+      cursor: pointer;
+      padding-right: 32px;
+    }
   }
 }
 

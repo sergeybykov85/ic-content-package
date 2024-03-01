@@ -18,9 +18,9 @@ dfx deps init internet_identity --argument '(null)'
 ```
 dfx deps deploy
 ```
-4. Generate IDL files for the **content-bundle-tools** canister:
+4. Generate IDL files:
 ```
-dfx generate content-bundle-tools
+dfx generate
 ```
 5. Deploy the **content-bundle-tools** canister:
 ```

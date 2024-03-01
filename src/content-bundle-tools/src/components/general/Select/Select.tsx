@@ -49,7 +49,11 @@ function Select<T extends string = string>({
     <div ref={ref} className={clsx(styles.select, className, visible && styles.opened)}>
       <label>
         <span className={clsx(styles.label, !label && styles['no-label'])}>{label}</span>
-        <TextInput readOnly {...{ value, placeholder, onFocus, disabled }} className={styles.input} />
+        <TextInput
+          readOnly
+          {...{ value, placeholder, onFocus, disabled }}
+          className={clsx(styles.input, disabled && styles.disabled)}
+        />
         <If condition={Boolean(error)}>
           <div className={styles.error}>{error}</div>
         </If>

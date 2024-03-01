@@ -6,12 +6,12 @@ import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
 import If from '~/components/general/If'
 import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
-import { Additions, Poi } from '~/components/features/AdditionalData'
 import CopyBtn from '~/components/general/CopyBtn'
 import styles from './BundleDetailsBlock.module.scss'
-import DeleteBundle from '~/components/features/DeleteBundle'
+import BundleControls from '~/components/features/BundleControls'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '~/context/AuthContext'
+import AdditionalData from '~/components/features/AdditionalData'
 
 interface BundleDetailsBlockProps {
   packageId: string
@@ -27,12 +27,9 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   const service = useMemo(() => initBundlePackageService?.(packageId), [initBundlePackageService, packageId])
 
   const [bundle, setBundle] = useState<Bundle | null>(null)
-  const [dataGroups, setDataGroups] = useState<ADDITIONAL_DATA_TYPES[]>([])
+  const [supportedDataGroups, setSupportedDataGroups] = useState<ADDITIONAL_DATA_TYPES[]>([])
 
-  const isPossibleToDelete = useMemo(
-    () => !dataGroups.length && principal === bundle?.owner,
-    [bundle?.owner, dataGroups.length, principal],
-  )
+  const isShowControls = useMemo(() => principal === bundle?.owner, [bundle?.owner, principal])
 
   useEffect(() => {
     setLoading(true)
@@ -49,10 +46,12 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   }, [bundleId, navigate, service, setLoading])
 
   useEffect(() => {
-    if (!dataGroups.length) {
+    if (!supportedDataGroups.length) {
       service
-        ?.getBundleDataGroups(bundleId)
-        .then(response => setDataGroups(response))
+        ?.getBundleSupportedDataGroups()
+        .then(response => {
+          setSupportedDataGroups(response)
+        })
         .catch(error => {
           console.error(error)
           enqueueSnackbar(error.message, {
@@ -60,7 +59,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           })
         })
     }
-  }, [service, dataGroups.length, bundleId])
+  }, [service, supportedDataGroups.length])
 
   const onDeleteSuccess = useCallback(() => {
     navigate(`/package/${packageId}`, { replace: true })
@@ -72,17 +71,29 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
         <h3 className={styles['sub-title']}>
           Package ID: {packageId} <CopyBtn text={packageId} />
         </h3>
-        <DetailsBlock data={{ ...bundle, description: bundle.description || '' }} />
-        <If condition={isPossibleToDelete}>
-          <DeleteBundle btnClassName={styles['remove-btn']} onSuccess={onDeleteSuccess} {...{ bundleId, service }} />
-        </If>
-        <If condition={dataGroups.includes(ADDITIONAL_DATA_TYPES.POI)}>
+        <DetailsBlock
+          data={{ ...bundle, description: bundle.description || '' }}
+          footer={
+            <If condition={isShowControls}>
+              <BundleControls {...{ bundleId, service, onDeleteSuccess }} />
+            </If>
+          }
+        />
+        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_TYPES.POI)}>
           <br />
-          <Poi {...{ bundleId, service, bundle }} />
+          <AdditionalData
+            title="Point of interest"
+            type={ADDITIONAL_DATA_TYPES.POI}
+            {...{ bundleId, service, bundle }}
+          />
         </If>
-        <If condition={dataGroups.includes(ADDITIONAL_DATA_TYPES.Additions)}>
+        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_TYPES.Additions)}>
           <br />
-          <Additions {...{ bundleId, service, bundle }} />
+          <AdditionalData
+            title="Additional informartion"
+            type={ADDITIONAL_DATA_TYPES.Additions}
+            {...{ bundleId, service, bundle }}
+          />
         </If>
       </>
     )

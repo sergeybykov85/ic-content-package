@@ -7,7 +7,6 @@ import If from '~/components/general/If'
 import { useAuth } from '~/context/AuthContext'
 import { Link, useLocation } from 'react-router-dom'
 import Button from '~/components/general/Button'
-import styles from './PackageDetailsBlock.module.scss'
 
 interface PackageDetailsBlockProps {
   bundlePackageService: BundlePackageService
@@ -49,10 +48,10 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageServic
     return (
       <DetailsBlock
         data={{ ...packageData, tags }}
-        editButton={
+        footer={
           <If condition={bundleEditable}>
             <Link to={`edit`} state={{ ...state, dataToEdit }}>
-              <Button text="Edit package" variant="outlined" className={styles['edit-bundle']} />
+              <Button text="Edit package" variant="outlined" />
             </Link>
           </If>
         }
