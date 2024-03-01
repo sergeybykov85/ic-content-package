@@ -1,10 +1,10 @@
 import type { ChangeEventHandler, FC, FormEventHandler } from 'react'
 import { useCallback, useState, useEffect } from 'react'
 import { TextInput } from '~/components/general/Inputs'
-import Button from '~/components/general/Button'
 import styles from './CreateBundleForm.module.scss'
 import Chip from '~/components/general/Chip'
 import clsx from 'clsx'
+import IconButton from '~/components/general/IconButton'
 
 interface TagsFormProps {
   onChange: (tags: string[]) => void
@@ -51,9 +51,12 @@ const TagsForm: FC<TagsFormProps> = ({ onChange }) => {
           pattern="[a-zA-Z_]+"
           title="Only letters and underscore"
         />
-        <Button type="submit" variant="text" className={clsx(tagValue && styles['show-plus'])}>
-          <img src="/images/plus.svg" alt="plus" />
-        </Button>
+        <IconButton
+          iconName="plus.svg"
+          iconAlt="plus"
+          type="submit"
+          className={clsx(tagValue && styles['show-plus'])}
+        />
       </div>
       <div className={styles.tags}>
         {tags.map(tag => (
