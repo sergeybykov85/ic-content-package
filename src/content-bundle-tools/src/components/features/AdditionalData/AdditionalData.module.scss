@@ -1,14 +1,24 @@
-@import "../../../styles/mixins";
+@import "src/styles/mixins";
+@import "src/styles/variables";
 
 .container {
   @include box
 }
 
-.title {
+.header {
   display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.title {
   font-size: 24px;
   font-weight: 500;
-  margin-bottom: 18px;
+}
+
+.btn:hover img {
+  filter: $primary-blue-filter;
 }
 
 .grid {
@@ -23,7 +33,7 @@
     width: 24px;
     height: 24px;
     &:hover {
-      filter: invert(29%) sepia(67%) saturate(7453%) hue-rotate(233deg) brightness(88%) contrast(93%);
+      filter: $primary-blue-filter;
     }
   }
 }

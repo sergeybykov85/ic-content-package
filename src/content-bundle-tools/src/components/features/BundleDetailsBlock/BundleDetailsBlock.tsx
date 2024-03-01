@@ -28,8 +28,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
 
   const [bundle, setBundle] = useState<Bundle | null>(null)
   const [supportedDataGroups, setSupportedDataGroups] = useState<ADDITIONAL_DATA_TYPES[]>([])
-
-  const isShowControls = useMemo(() => principal === bundle?.owner, [bundle?.owner, principal])
+  const [possibilityToModify, setPossibilityToModify] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -61,6 +60,22 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
     }
   }, [service, supportedDataGroups.length])
 
+  useEffect(() => {
+    if (service && principal) {
+      service
+        .checkPossibilityToModifyBundle(bundleId, principal)
+        .then(response => {
+          setPossibilityToModify(response)
+        })
+        .catch(error => {
+          console.error(error)
+          enqueueSnackbar(error.message, {
+            variant: 'error',
+          })
+        })
+    }
+  }, [service])
+
   const onDeleteSuccess = useCallback(() => {
     navigate(`/package/${packageId}`, { replace: true })
   }, [navigate, packageId])
@@ -74,7 +89,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
         <DetailsBlock
           data={{ ...bundle, description: bundle.description || '' }}
           footer={
-            <If condition={isShowControls}>
+            <If condition={possibilityToModify}>
               <BundleControls {...{ bundleId, service, onDeleteSuccess }} />
             </If>
           }
@@ -84,6 +99,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           <AdditionalData
             title="Point of interest"
             type={ADDITIONAL_DATA_TYPES.POI}
+            editable={possibilityToModify}
             {...{ bundleId, service, bundle }}
           />
         </If>
@@ -92,6 +108,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           <AdditionalData
             title="Additional informartion"
             type={ADDITIONAL_DATA_TYPES.Additions}
+            editable={possibilityToModify}
             {...{ bundleId, service, bundle }}
           />
         </If>

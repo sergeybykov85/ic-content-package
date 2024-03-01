@@ -8,6 +8,7 @@ import type AdditionalDataSection from '~/models/AdditionalDataSection.ts'
 import type { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
 import { enqueueSnackbar } from 'notistack'
 import DataItem from './components/DataItem/DataItem.tsx'
+import IconButton from '~/components/general/IconButton'
 
 interface AdditionalDataProps {
   type: ADDITIONAL_DATA_TYPES
@@ -15,9 +16,10 @@ interface AdditionalDataProps {
   service: BundlePackageService
   bundleId: string
   bundle: Bundle
+  editable: boolean
 }
 
-const AdditionalData: FC<AdditionalDataProps> = ({ type, title, service, bundle, bundleId }) => {
+const AdditionalData: FC<AdditionalDataProps> = ({ type, title, service, bundle, bundleId, editable }) => {
   const [sourceUrl, setSourceUrl] = useState('')
   const [sections, setSections] = useState<AdditionalDataSection[]>([])
 
@@ -43,14 +45,18 @@ const AdditionalData: FC<AdditionalDataProps> = ({ type, title, service, bundle,
 
   return (
     <div className={styles.container}>
-      <h3 className={styles.title}>
-        {title}
+      <div className={styles.header}>
+        <h3 className={styles.title}>{title}</h3>
+        <If condition={editable}>
+          <IconButton iconName="plus.svg" size={32} className={styles.btn} />
+        </If>
         <If condition={Boolean(sourceUrl)}>
           <ExternalLink href={sourceUrl!} className={styles.link}>
             <img src="/images/new-tab.svg" alt="" />
           </ExternalLink>
         </If>
-      </h3>
+      </div>
+
       <div className={styles.grid}>
         {sections.map(item => (
           <DataItem item={item} bundle={bundle} key={item.category} />

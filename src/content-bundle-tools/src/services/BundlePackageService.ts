@@ -124,4 +124,11 @@ export default class BundlePackageService extends CanisterService {
       identity_id: principal,
     })) as boolean
   }
+
+  public checkPossibilityToModifyBundle = async (bundleId: string, principal: string): Promise<boolean> => {
+    return (await this.actor.bundle_contribute_opportunity_for(bundleId, {
+      identity_type: { ICP: null },
+      identity_id: principal,
+    })) as boolean
+  }
 }
