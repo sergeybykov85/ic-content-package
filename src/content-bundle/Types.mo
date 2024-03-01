@@ -242,6 +242,7 @@ module {
 	public type DataPathArgs = {
 		group : CommonTypes.DataGroupId;
 		category : ?CommonTypes.CategoryId;
+		resource_id : ?Text;
 	};	
 
 	public type DataAccessListArgs = {

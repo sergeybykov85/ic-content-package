@@ -289,12 +289,11 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 										let p_ids = Array.map<Types.Actor.BundlePackageView, Text> (packages, func x = x.id);
 										let res = Buffer.Buffer<Types.Actor.BundleDetailsView>(Array.size(p_ids));
 										//extra filter for any package
-										let bundle_criteria = _bundle_search_criteria(criteria)
+										let bundle_criteria = _bundle_search_criteria(criteria);
 										for (id in p_ids.vals()) {
 											let package_actor : Types.Actor.BundlePackageActor = actor (id);
 											// todo : in fact we have to filter bundles by tag/country/classification
-											let slice = await package_actor.get_bundles_page(0, 1000, bundle_criteria
-											);
+											let slice = await package_actor.get_bundles_page(0, 1000, bundle_criteria);
 											for (bundle in slice.items.vals()) {
 												res.add(bundle);
 											};
@@ -474,7 +473,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		Buffer.toArray(res);
     };
 
-	private func _bundle_search_criteria (widget_crriteria:Criteria) : ?BundleSearchCriteria {
+	private func _bundle_search_criteria (widget_crriteria:Types.Criteria) : ?Types.BundleSearchCriteria {
 		if (Option.isSome(widget_crriteria.by_country_code) or
 			Option.isSome(widget_crriteria.by_tag) or
 			Option.isSome(widget_crriteria.by_classification)) {
@@ -484,10 +483,10 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 				country_code = widget_crriteria.by_country_code;
 				tag = widget_crriteria.by_tag;
 				classification = widget_crriteria.by_classification;
-			}
-		}
+			};
+		};
 		return null;
-	}
+	};
 
 	private func _resolve_widget_type (widget_type: Types.WidgetType) : Text {
         switch (widget_type) {
