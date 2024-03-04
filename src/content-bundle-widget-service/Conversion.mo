@@ -27,7 +27,8 @@ module {
 		id : Text;
 		name : Text;
 		description : Text;
-		type_id : Types.WidgetType;
+		type_id : Types.TypeId;
+		status : Types.Status;
 		criteria : ?CriteriaView;
 		options : ?OptionsView;
 		creator : CommonTypes.Identity;
@@ -64,6 +65,7 @@ module {
 			criteria = cr;
 			options = opt;
 			type_id = info.type_id;
+			status = info.status;
 			creator = info.creator;
 			created = info.created;
         };

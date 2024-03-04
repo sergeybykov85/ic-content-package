@@ -12,13 +12,21 @@ import CommonTypes "../shared/CommonTypes";
 
 module {
 
-	public type WidgetType = {
+	public type TypeId = {
 		// Just information, or information of several bundles
 		#Bundle;
 		// more complex object : list of summary details with expand mode etc
 		#Feed;
 		// more types possible laterrr
 	};
+
+	public type Status = {
+		// only owner can see the items, widget criteria etc
+		#Draft;
+		// published widget, items visible for anyone
+		#Active;
+	};
+	
 
 	public type CriteriaArgs = {
 		entity : ?IdsRef;
@@ -31,7 +39,7 @@ module {
 	public type WidgetCreationRequest = {
 		name : Text;
 		description : Text;
-		type_id : WidgetType;
+		type_id : TypeId;
 		criteria : ?CriteriaArgs;
 	};
 
@@ -81,7 +89,8 @@ module {
 	public type Widget = {
 		var name : Text;
 		var description : Text;
-		type_id : WidgetType;
+		type_id : TypeId;
+		var status : Status;
 		var criteria : ?Criteria;
 		var options : ?Options;
 		creator : CommonTypes.Identity;
@@ -100,7 +109,7 @@ module {
 	public type SearchCriteriaArgs = {
 		// true -- AND for all filters; false --> OR for all filters
 		intersect : Bool;
-		kind : ?WidgetType;
+		kind : ?TypeId;
 		creator : ?CommonTypes.Identity;
 	};	
 

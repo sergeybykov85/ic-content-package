@@ -168,6 +168,8 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 			var name = args.name;
 			var description = args.description;
 			type_id = args.type_id;
+			// widget is created with a Draft status;
+			var status = #Draft;
 			var criteria = cr;
 			var options = null; // for now it is not supported
 			creator = identity;
@@ -192,7 +194,10 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		#ok(widget_id);
 	};
 
-	public shared ({ caller }) func update_widget_criteria (widget_id:Text, criteria: Types.CriteriaArgs) : async Result.Result<Text, CommonTypes.Errors> {
+	/**
+	* Updates widget criteria
+	*/
+	public shared ({ caller }) func apply_widget_criteria (widget_id:Text, criteria: Types.CriteriaArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (widget_get(widget_id)) {
 			case (?w) {
@@ -216,6 +221,22 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 					var by_tag = criteria.by_tag;
 					var by_classification = criteria.by_classification;
 				};
+				return #ok(widget_id);
+			};
+			case (null) {return #err(#NotFound)}
+		};
+	};
+
+	/**
+	* Change widget status
+	*/
+	public shared ({ caller }) func apply_widget_status (widget_id:Text, status: Types.Status) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
+		switch (widget_get(widget_id)) {
+			case (?w) {
+				let identity = _build_identity(caller);
+				if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
+				w.status := status;
 				return #ok(widget_id);
 			};
 			case (null) {return #err(#NotFound)}
@@ -258,9 +279,17 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		};
     };	
 
-	public composite query func query_widget_items (widget_id:Text) : async Result.Result<[Types.Actor.BundleDetailsView], CommonTypes.Errors> {
+	public composite query ({ caller }) func query_widget_items (widget_id:Text) : async Result.Result<[Types.Actor.BundleDetailsView], CommonTypes.Errors> {
 		switch (widget_get(widget_id)) {
+			case (null) {return #err(#NotFound)};
 			case (?w) {
+				//if Draft, then only owner can inspect the data
+				if (w.status != #Active) {
+					let identity = _build_identity(caller);
+					if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
+					//return #err(#InvalidRequest);
+				};
+
 				let items = switch (w.criteria) {
 					case (?criteria) {
 						// load all needed items
@@ -307,9 +336,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 										};
 										Buffer.toArray(res);										
 									};
-
 								};
-
 							};
 						};
 					};
@@ -319,7 +346,6 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 
 				return #ok(items);
 			};
-			case (null) {return #err(#NotFound)}
 		};
 	};
 
@@ -363,6 +389,18 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
     public query func get_widgets(ids:[Text]) : async [Conversion.WidgetView] {
 		CommonUtils.get_items_by_ids(ids, widget_get, Conversion.convert_widget_view);
     };	
+
+	/**
+	* Returns widgets for the current user. Request for pagination
+	*/
+  	public query ({ caller }) func get_my_widgets_page(start: Nat, limit: Nat) : async CommonTypes.DataSlice<Conversion.WidgetView> {
+		let identity = _build_identity(caller);
+		CommonUtils.get_page(_get_ids_for_criteria({
+			creator = ?identity;
+			kind = null;
+			intersect = false;
+		}), start, limit, widget_get, Conversion.convert_widget_view);		
+  	};	
 
 	/**
 	* Returns widgets for the creator. Request for pagination
@@ -483,7 +521,74 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		return null;
 	};
 
-	private func _resolve_widget_type (widget_type: Types.WidgetType) : Text {
+	private func _query_widget_items (w:Types.Widget) : async [Types.Actor.BundleDetailsView] {
+				//if Draft, then only owner can inspect the data
+				/*if (w.status != #Active) {
+					let identity = _build_identity(caller);
+					//return #err(#InvalidRequest);
+				};*/
+
+				let items = switch (w.criteria) {
+					case (?criteria) {
+						// load all needed items
+						// logic based on the criteria : entity has higher priority 
+						switch (criteria.entity) {
+							// load by entity
+							case (?entity) {
+								let package_actor : Types.Actor.BundlePackageActor = actor (entity.package_id);
+								await package_actor.get_bundles_by_ids(entity.ids);								
+							};
+							case (null) {
+								// scan by certain package	
+								switch (criteria.package) {
+									case (?package) {
+										let package_actor : Types.Actor.BundlePackageActor = actor (package);
+										//add bundle criteria for this package
+										let slice = await package_actor.get_bundles_page(0, 1000, _bundle_search_criteria(criteria));
+										slice.items;
+									};
+									case (null) {
+										let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
+		
+										let packages = await registry_actor.get_packages_by_criteria({
+											intersect = true;
+											// no filter by type
+											kind = null;
+											// no filter by ceator
+											creator = null;
+											country_code = criteria.by_country_code;
+											tag = criteria.by_tag;
+											classification = criteria.by_classification;
+										});
+										let p_ids = Array.map<Types.Actor.BundlePackageView, Text> (packages, func x = x.id);
+										let res = Buffer.Buffer<Types.Actor.BundleDetailsView>(Array.size(p_ids));
+										//extra filter for any package
+										let bundle_criteria = _bundle_search_criteria(criteria);
+										for (id in p_ids.vals()) {
+											let package_actor : Types.Actor.BundlePackageActor = actor (id);
+											// todo : in fact we have to filter bundles by tag/country/classification
+											let slice = await package_actor.get_bundles_page(0, 1000, bundle_criteria);
+											for (bundle in slice.items.vals()) {
+												res.add(bundle);
+											};
+										};
+										Buffer.toArray(res);										
+									};
+
+								};
+
+							};
+						};
+					};
+										// no criteria, no items
+					case (null) {[]};
+				};
+
+				return items;
+	};
+
+
+	private func _resolve_widget_type (widget_type: Types.TypeId) : Text {
         switch (widget_type) {
             case (#Bundle) { "Bundle"};
             case (#Feed) { "Feed"};
