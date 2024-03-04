@@ -12,6 +12,7 @@ import BundleControls from '~/components/features/BundleControls'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '~/context/AuthContext'
 import AdditionalData from '~/components/features/AdditionalData'
+import NewAdditionalDataModal from '~/components/features/NewAdditionalDataModal'
 
 interface BundleDetailsBlockProps {
   packageId: string
@@ -29,6 +30,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   const [bundle, setBundle] = useState<Bundle | null>(null)
   const [supportedDataGroups, setSupportedDataGroups] = useState<ADDITIONAL_DATA_TYPES[]>([])
   const [possibilityToModify, setPossibilityToModify] = useState(false)
+  const [newDataGroup, setNewDataGroup] = useState<ADDITIONAL_DATA_TYPES | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -74,7 +76,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           })
         })
     }
-  }, [service])
+  }, [bundleId, principal, service])
 
   const onDeleteSuccess = useCallback(() => {
     navigate(`/package/${packageId}`, { replace: true })
@@ -100,6 +102,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
             title="Point of interest"
             type={ADDITIONAL_DATA_TYPES.POI}
             editable={possibilityToModify}
+            onPlusClick={group => setNewDataGroup(group)}
             {...{ bundleId, service, bundle }}
           />
         </If>
@@ -109,9 +112,16 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
             title="Additional informartion"
             type={ADDITIONAL_DATA_TYPES.Additions}
             editable={possibilityToModify}
+            onPlusClick={group => setNewDataGroup(group)}
             {...{ bundleId, service, bundle }}
           />
         </If>
+        <NewAdditionalDataModal
+          group={newDataGroup}
+          supportedGroups={supportedDataGroups}
+          onClose={() => setNewDataGroup(null)}
+          service={service}
+        />
       </>
     )
   }

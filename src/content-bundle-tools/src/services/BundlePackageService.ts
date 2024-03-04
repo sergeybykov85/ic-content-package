@@ -11,6 +11,7 @@ import type {
   AdditionalDataDto,
   ADDITIONAL_DATA_TYPES,
   CreateBundleParams,
+  AdditionalDataCategories,
 } from '~/types/bundleTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
@@ -58,6 +59,15 @@ export default class BundlePackageService extends CanisterService {
   public getBundleSupportedDataGroups = async (): Promise<ADDITIONAL_DATA_TYPES[]> => {
     const response = (await this.actor.get_supported_groups()) as VariantType<ADDITIONAL_DATA_TYPES>[]
     return response.map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
+  }
+
+  public getBundleSupportedDataCategories = async (
+    group: ADDITIONAL_DATA_TYPES,
+  ): Promise<AdditionalDataCategories[]> => {
+    const response = (await this.actor.get_supported_categories({
+      [group]: null,
+    })) as VariantType<AdditionalDataCategories>[]
+    return response.map(item => Object.keys(item)[0]) as AdditionalDataCategories[]
   }
 
   public getBundleAdditionalData = async (

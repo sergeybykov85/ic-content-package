@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState } from 'react'
+import { type FC, type MouseEventHandler, useCallback, useEffect, useState } from 'react'
 import styles from './AdditionalData.module.scss'
 import ExternalLink from '~/components/general/ExternalLink'
 import If from '~/components/general/If'
@@ -17,9 +17,10 @@ interface AdditionalDataProps {
   bundleId: string
   bundle: Bundle
   editable: boolean
+  onPlusClick: (group: ADDITIONAL_DATA_TYPES) => void
 }
 
-const AdditionalData: FC<AdditionalDataProps> = ({ type, title, service, bundle, bundleId, editable }) => {
+const AdditionalData: FC<AdditionalDataProps> = ({ type, title, service, bundle, bundleId, editable, onPlusClick }) => {
   const [sourceUrl, setSourceUrl] = useState('')
   const [sections, setSections] = useState<AdditionalDataSection[]>([])
 
@@ -43,12 +44,20 @@ const AdditionalData: FC<AdditionalDataProps> = ({ type, title, service, bundle,
       })
   }, [bundleId, service, type])
 
+  const handlePlusClick = useCallback<MouseEventHandler<HTMLButtonElement>>(
+    event => {
+      event.stopPropagation()
+      editable && onPlusClick(type)
+    },
+    [editable, onPlusClick, type],
+  )
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h3 className={styles.title}>{title}</h3>
         <If condition={editable}>
-          <IconButton iconName="plus.svg" size={32} className={styles.btn} />
+          <IconButton iconName="plus.svg" size={32} className={styles.btn} onClick={handlePlusClick} />
         </If>
         <If condition={Boolean(sourceUrl)}>
           <ExternalLink href={sourceUrl!} className={styles.link}>
