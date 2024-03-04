@@ -1,4 +1,4 @@
-import type { IdentityRecord, VariantType, StorageData } from '~/types/globals.ts'
+import type { Coordinates, IdentityRecord } from '~/types/globals.ts'
 
 export interface BundleDto {
   id: string
@@ -17,10 +17,7 @@ export interface BundleDto {
 
 export interface LocationIndexDto {
   city: string[]
-  coordinates: {
-    latitude: number
-    longitude: number
-  }
+  coordinates: Coordinates
   country_code2: string
   region: string[]
 }
@@ -41,42 +38,6 @@ export interface BundleDetailsDto extends Omit<BundleDto, 'tags' | 'classificati
     about: AboutIndexDto[]
   }
 }
-
-export interface AdditionalDataSectionDto {
-  category: VariantType<string>
-  data: StorageData[]
-  data_path: StorageData
-}
-
-export interface AdditionalDataDto {
-  data_path: StorageData
-  sections: AdditionalDataSectionDto[]
-  // readonly
-}
-
-export enum ADDITIONAL_DATA_GROUPS {
-  POI = 'POI',
-  Additions = 'Additions',
-}
-
-export enum POI_CATEGORIES {
-  Location = 'Location',
-  About = 'About',
-  History = 'History',
-  AudioGuide = 'AudioGuide',
-  Gallery = 'Gallery',
-  AR = 'AR',
-}
-
-export enum ADDITIONS_CATEGORIES {
-  Audio = 'Audio',
-  Video = 'Video',
-  Gallery = 'Gallery',
-  Article = 'Article',
-  Document = 'Document',
-}
-
-export type AdditionalDataCategories = POI_CATEGORIES | ADDITIONS_CATEGORIES
 
 export interface CreateBundleParams {
   name: string

@@ -5,14 +5,13 @@ import { idlFactory as idl } from '~/../../declarations/bundle_package'
 import type { DataSegmentationDto, DeployPackageMetadata, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'
+import type { BundleDetailsDto, BundleDto, CreateBundleParams } from '~/types/bundleTypes.ts'
 import type {
-  BundleDetailsDto,
-  BundleDto,
   AdditionalDataDto,
   ADDITIONAL_DATA_GROUPS,
-  CreateBundleParams,
   AdditionalDataCategories,
-} from '~/types/bundleTypes.ts'
+  AdditionalDataRequest,
+} from '~/types/bundleDataTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
@@ -140,5 +139,10 @@ export default class BundlePackageService extends CanisterService {
       identity_type: { ICP: null },
       identity_id: principal,
     })) as boolean
+  }
+
+  public applyDataSection = async <T>(bundleId: string, request: AdditionalDataRequest<T>): Promise<void> => {
+    const response = (await this.actor.apply_bundle_section(bundleId, request)) as CanisterResponse<string>
+    this.responseHandler(response)
   }
 }

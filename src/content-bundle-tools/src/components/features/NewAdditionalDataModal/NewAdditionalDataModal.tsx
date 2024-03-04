@@ -1,6 +1,6 @@
 import { type FC, useEffect, useMemo, useState } from 'react'
-import type { ADDITIONS_CATEGORIES, POI_CATEGORIES, AdditionalDataCategories } from '~/types/bundleTypes.ts'
-import { ADDITIONAL_DATA_GROUPS } from '~/types/bundleTypes.ts'
+import type { ADDITIONS_CATEGORIES, POI_CATEGORIES, AdditionalDataCategories } from '~/types/bundleDataTypes.ts'
+import { ADDITIONAL_DATA_GROUPS } from '~/types/bundleDataTypes.ts'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
 import ModalDialog from '~/components/general/ModalDialog'
 import Select from '~/components/general/Select'

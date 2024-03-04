@@ -1,4 +1,4 @@
-import type { AdditionalDataSectionDto } from '~/types/bundleTypes.ts'
+import type { AdditionalDataSectionDto } from '~/types/bundleDataTypes.ts'
 import CanisterDTO from '~/models/CanisterDTO.ts'
 
 export interface DataListItem {

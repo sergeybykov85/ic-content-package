@@ -34,3 +34,8 @@ export interface StorageData {
   locale: string[]
   name: string[]
 }
+
+export interface Coordinates {
+  latitude: number
+  longitude: number
+}
