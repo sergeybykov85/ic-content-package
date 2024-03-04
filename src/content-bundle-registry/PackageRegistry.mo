@@ -171,7 +171,6 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 							submitted = Time.now();
 						}:Types.BundlePackage).0;
 
-						submitter.packages:=List.push(package_id, submitter.packages);
 						// index for all packages
 						all_packages:= List.push(package_id, all_packages);
 						// index for submitter
@@ -194,7 +193,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 
 						// register in the tag service
 						let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
-						ignore await index_service_actor.register_package(package);	
+						ignore await index_service_actor.include_package(package);	
 						return #ok(package_id);
 					};
 				};
@@ -202,6 +201,50 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (null) { return #err(#AccessDenied); };
 		}
 	};
+
+	/**
+	* Removes the package from  the registry. Notice, the package is not delete itself, no it is an exclusion from the registry
+	* Package creator/owner or custody of the package_registry is allowed to do this action
+	*/
+	public shared ({ caller }) func delist_package (id : Text) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
+		switch (package_get(id)) {
+			case (?package) { 
+				let identity = _build_identity(caller);
+				// who can delist : submitter, creator or owner of the registry
+				if (can_manage(caller) or package.submitter == identity or package.creator == identity) {
+					packages := Trie.remove(packages, CommonUtils.text_key(id), Text.equal).0; 
+					// index for all packages
+					all_packages:=CommonUtils.list_exclude(all_packages, id);
+					// index for submitter
+					switch (submitter2package_get(package.submitter)) {
+						case (?by_provider) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(package.submitter), Text.equal, CommonUtils.list_exclude(by_provider, id)).0; };
+						case (null) {}
+					};
+					// index for creator
+					switch (creator2package_get(package.creator)) {
+						case (?by_creator) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(package.creator), Text.equal, CommonUtils.list_exclude(by_creator, id)).0; };
+						case (null) {}
+					};
+
+					// index by kind
+					let submission_key = Utils.resolve_submission_name(package.submission);
+					switch (type2package_get(submission_key)) {
+						case (?by_kind) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal,  CommonUtils.list_exclude(by_kind, id)).0; };
+						case (null) {}
+					};
+
+					// un register in the tag service
+					let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
+					ignore await index_service_actor.exclude_package(Principal.fromText(id));	
+				};
+				#ok(id); 
+			};
+			case (null) { return #err(#NotFound); };
+		};		
+
+	};
+
 
 	/**
 	* Regreshes the information about the registered package like name, description, logo
@@ -278,14 +321,20 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 	*/
     public query func get_package(id:Text) : async Result.Result<Conversion.BundlePackageView, CommonTypes.Errors> {
 		switch (package_get(id)) {
-			case (?package) { #ok(Conversion.convert_package_view(id, package)); };
+			case (?package) { #ok(Conversion.convert_package_view(package, id)); };
 			case (null) { return #err(#NotFound); };
 		};
     };
 
     public query func get_submitter(identity:CommonTypes.Identity) : async Result.Result<Conversion.SubmitterView, CommonTypes.Errors> {
 		switch (submitter_get(identity)) {
-			case (?submitter) { #ok(Conversion.convert_submitter_view(submitter)); };
+			case (?submitter) { 
+				let packages = switch (submitter2package_get(identity)) {
+					case (?by_provider) {by_provider};
+					case (null) {List.nil()};
+				};
+				#ok(Conversion.convert_submitter_view(submitter, packages));
+			};
 			case (null) { return #err(#NotFound); };
 		};
     };
@@ -316,6 +365,16 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (null) { [] };
 		};
     };
+	/**
+	* Returns packages for the creator. Request for pagination
+	*/
+    public query func get_packages_page_by_creator(start: Nat, limit: Nat, identity:CommonTypes.Identity) : async CommonTypes.DataSlice<Conversion.BundlePackageView> {
+		let ids = switch (creator2package_get(identity)) {
+			case (?ids) { List.toArray(ids) };
+			case (null) { [] };
+		};
+		CommonUtils.get_page(ids, start, limit, package_get, Conversion.convert_package_view);
+    };	
 
 	/**
 	* Returns packages for the type
@@ -326,7 +385,19 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 			case (?by_kind) {  _get_packages(List.toArray(by_kind)) };
 			case (null) {[]};
 		};
-    };	
+    };
+
+	/**
+	* Returns packages for the type.  Request for pagination
+	*/
+    public query func get_packages_page_by_type(start: Nat, limit: Nat, kind:Types.Submission) : async CommonTypes.DataSlice<Conversion.BundlePackageView> {
+		let kind_key = Utils.resolve_submission_name(kind);
+		let ids = switch (type2package_get(kind_key)) {
+			case (?by_kind) {  List.toArray(by_kind) };
+			case (null) {[]};
+		};
+		CommonUtils.get_page(ids, start, limit, package_get, Conversion.convert_package_view);
+    };		
 	/**
 	* Returns packages for the type and creator (optional)
 	*/
@@ -485,7 +556,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		let res = Buffer.Buffer<Conversion.BundlePackageView>(Array.size(ids));
 		for (id in ids.vals()) {
 			switch (package_get(id)) {
-				case (?package) { res.add(Conversion.convert_package_view(id, package)); };
+				case (?package) { res.add(Conversion.convert_package_view(package, id)); };
 				case (null) {  };
 			};
 		};
@@ -524,10 +595,6 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		if (CommonUtils.identity_equals(identity, owner)) return true;
 		// check access list
 		return Option.isSome(List.find(access_list , CommonUtils.find_identity(identity)));
-    };
-
-	private func _is_operator (identity : CommonTypes.Identity) : Bool {
-		Option.isSome(List.find(access_list , CommonUtils.find_identity(identity)));
     };
 
 }

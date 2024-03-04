@@ -251,6 +251,13 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		};
 	};
 
+    public query func get_widget(id:Text) : async Result.Result<Conversion.WidgetView, CommonTypes.Errors> {
+		switch (widget_get(id)) {
+			case (?widget) { #ok(Conversion.convert_widget_view(widget, id)); };
+			case (null) { return #err(#NotFound); };
+		};
+    };	
+
 	public composite query func query_widget_items (widget_id:Text) : async Result.Result<[Types.Actor.BundleDetailsView], CommonTypes.Errors> {
 		switch (widget_get(widget_id)) {
 			case (?w) {
@@ -349,60 +356,36 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 			case (null) {trial_allowance};
 		};
 	};
+
 	/**
 	* Returns widgets by ids
 	*/
     public query func get_widgets(ids:[Text]) : async [Conversion.WidgetView] {
-		_get_widgets(ids);
+		CommonUtils.get_items_by_ids(ids, widget_get, Conversion.convert_widget_view);
     };	
 
 	/**
-	* Returns widgets for the creator
+	* Returns widgets for the creator. Request for pagination
 	*/
-    public query func get_widgets_by_creator(identity:CommonTypes.Identity) : async [Conversion.WidgetView] {
-		switch (creator2widget_get(identity)) {
-			case (?ids) { _get_widgets(List.toArray(ids)) };
-			case (null) { [] };
-		};
+    public query func get_widgets_page_by_creator(start: Nat, limit: Nat, identity:CommonTypes.Identity) : async CommonTypes.DataSlice<Conversion.WidgetView> {
+		CommonUtils.get_page(_get_ids_for_criteria({
+			creator = ?identity;
+			kind = null;
+			intersect = false;
+		}), start, limit, widget_get, Conversion.convert_widget_view);
     };
+
 	/**
-	* Returns widgets for specific type
+	* Returns widgets. Request for pagination
 	*/
-	public query func get_widgets_by_type(kind:Types.WidgetType) : async [Conversion.WidgetView] {
-		let kind_key = _resolve_widget_type(kind);
-		switch (type2widget_get(kind_key)) {
-			case (?by_kind) { _get_widgets(List.toArray(by_kind)) };
-			case (null) {[]};
-		};
-    };
+    public query func get_widgets_page(start: Nat, limit: Nat, criteria: Types.SearchCriteriaArgs): async CommonTypes.DataSlice<Conversion.WidgetView> {
+		CommonUtils.get_page(_get_ids_for_criteria(criteria), start, limit, widget_get, Conversion.convert_widget_view);
+    };	
 	/**
 	* Returns widgets based on the search crriteria.
 	*/
-	public query func get_widget_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.WidgetView] {
-		let by_creator = switch (criteria.creator) {
-			case (?identity) {
-				switch (creator2widget_get(identity)) {
-					case (?ids) { List.toArray(ids) };
-					case (null) { [] };
-				}
-			};
-			case (null) {[]};
-		};
-		let by_type = switch (criteria.kind) {
-			case (?kind) {
-				let kind_key = _resolve_widget_type(kind);
-				switch (type2widget_get(kind_key)) {
-					case (?by_kind) {(List.toArray(by_kind)) };
-					case (null) {[]};
-				};
-			};
-			case (null) {[]};
-		};		
-
-		var ids:[Text] = [];
-		if (criteria.intersect) {ids:=CommonUtils.build_intersect([by_creator, by_type]);}
-		else { ids:=CommonUtils.build_uniq([by_creator, by_type])};
-		_get_widgets(ids);
+	public query func get_widgets_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.WidgetView] {
+		CommonUtils.get_items_by_ids(_get_ids_for_criteria(criteria), widget_get, Conversion.convert_widget_view);
 	};	
 
 	public query func activity_by(identity:CommonTypes.Identity) : async Types.Activity {
@@ -437,6 +420,30 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		Array.size(validated_ids) == Array.size(ids.ids);
 	};
 
+	private func _get_ids_for_criteria(criteria:Types.SearchCriteriaArgs) :  [Text] {
+		let by_creator = switch (criteria.creator) {
+			case (?identity) {
+				switch (creator2widget_get(identity)) {
+					case (?ids) { List.toArray(ids) };
+					case (null) { [] };
+				}
+			};
+			case (null) {[]};
+		};
+		let by_type = switch (criteria.kind) {
+			case (?kind) {
+				let kind_key = _resolve_widget_type(kind);
+				switch (type2widget_get(kind_key)) {
+					case (?by_kind) {(List.toArray(by_kind)) };
+					case (null) {[]};
+				};
+			};
+			case (null) {[]};
+		};		
+		if (criteria.intersect) {CommonUtils.build_intersect([by_creator, by_type]);}
+		else {CommonUtils.build_uniq([by_creator, by_type])};
+	};	
+
 	/**
 	* Validates if packages are registered.
 	*/
@@ -460,18 +467,6 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		}; allowance = allowance;
 		};
 	};
-
-
-    private func _get_widgets(ids:[Text]) : [Conversion.WidgetView] {
-		let res = Buffer.Buffer<Conversion.WidgetView>(Array.size(ids));
-		for (id in ids.vals()) {
-			switch (widget_get(id)) {
-				case (?w) { res.add(Conversion.convert_widget_view(id, w))};
-				case (null) {  };
-			};
-		};
-		Buffer.toArray(res);
-    };
 
 	private func _bundle_search_criteria (widget_crriteria:Types.Criteria) : ?Types.BundleSearchCriteria {
 		if (Option.isSome(widget_crriteria.by_country_code) or

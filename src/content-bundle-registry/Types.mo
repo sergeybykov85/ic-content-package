@@ -84,8 +84,6 @@ module {
 		var name : Text;
 		var description : Text;
 		identity : CommonTypes.Identity;
-		// principal id
-		var packages : List.List<Text>;
 		created: Time.Time;
 	};
 
@@ -120,7 +118,8 @@ module {
 		};		
 
 		public type IndexServiceActor = actor {
-			register_package : shared (package : Principal)  -> async Result.Result<(Text), CommonTypes.Errors>;
+			include_package : shared (package : Principal)  -> async Result.Result<(Text), CommonTypes.Errors>;
+			exclude_package : shared (package : Principal)  -> async Result.Result<(Text), CommonTypes.Errors>;
 			get_packages_by_tag : shared query (tag : Text) -> async [Text];
 			get_packages_by_classification : shared query (classification : Text) -> async [Text];
 			get_packages_by_country : shared query (country_code : Text) -> async [Text];

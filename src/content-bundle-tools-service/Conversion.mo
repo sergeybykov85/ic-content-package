@@ -29,7 +29,7 @@ module {
 		created: Time.Time;
 	};
 
-	public func convert_package_view (id: Text, info: Types.BundlePackage) : BundlePackageView {
+	/*public func convert_package_view (id: Text, info: Types.BundlePackage) : BundlePackageView {
         return {
 			id = id;
 			submission = info.submission;
@@ -38,7 +38,7 @@ module {
 			created = info.created;
 			submitted = info.submitted;
         };
-    };		
+    };		*/
 
 	public func convert_submitter_view (info: Types.Submitter) : SubmitterView {
         return {

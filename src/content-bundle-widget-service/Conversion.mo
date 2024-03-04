@@ -34,7 +34,7 @@ module {
 		created : Time.Time;
 	};
 
-	public func convert_widget_view (id: Text, info: Types.Widget) : WidgetView {
+	public func convert_widget_view (info: Types.Widget, id:Text) : WidgetView {
 		let cr:?CriteriaView = switch (info.criteria) {
 			case (?criteria) {
 				?{

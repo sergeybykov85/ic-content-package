@@ -40,7 +40,7 @@ module {
 		created: Time.Time;
 	};
 
-	public func convert_package_view (id: Text, info: Types.BundlePackage) : BundlePackageView {
+	public func convert_package_view (info: Types.BundlePackage, id: Text) : BundlePackageView {
         return {
 			id = id;
 			submission = info.submission;
@@ -55,12 +55,12 @@ module {
         };
     };		
 
-	public func convert_submitter_view (info: Types.Submitter) : SubmitterView {
+	public func convert_submitter_view (info: Types.Submitter, packages : List.List<Text>) : SubmitterView {
         return {
 			name = info.name;
 			description = info.description;
 			identity = info.identity;
-			packages = List.toArray (info.packages);
+			packages = List.toArray (packages);
 			created = info.created;
         };
     };

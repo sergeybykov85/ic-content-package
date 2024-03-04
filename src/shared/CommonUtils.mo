@@ -4,6 +4,7 @@ import Text "mo:base/Text";
 import Trie "mo:base/Trie";
 import TrieSet "mo:base/TrieSet";
 import Iter "mo:base/Iter";
+import List "mo:base/List";
 import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import Option "mo:base/Option";
@@ -53,6 +54,10 @@ module {
         };
     };
 
+    public func list_exclude (list:List.List<Text>, id:Text): List.List<Text> {
+        List.mapFilter<Text, Text>(list, func(b:Text) : ?Text { if (b == id) { return null; } else { return ?b; }});
+    };
+
     public func build_uniq (arrays: [[Text]]) : [Text] {
          var set = TrieSet.empty<Text>();
          for (array in arrays.vals()) {
@@ -94,6 +99,32 @@ module {
             if (is_intersect) { intersect.add(id);};
         };
         Buffer.toArray(intersect);
-    };         
+    };
+
+
+	public func get_page<T, V>(ids:[Text], start: Nat, limit: Nat, get : (id : Text) -> ?V, conversion : (V, Text) -> T):  CommonTypes.DataSlice<T> {
+        let res = Buffer.Buffer<T>(limit);
+        var i = start;
+        while (i < start + limit and i < ids.size()) {
+			let id = ids[i];
+			switch (get(id)) {
+				case (?w) { res.add(conversion(w, id)) };
+				case (null) {  };
+			};
+            i += 1;
+        };
+        return {items = Buffer.toArray(res); total_supply = Array.size(ids); };
+    };
+
+    public func get_items_by_ids<T, V>(ids:[Text],  get : (id : Text) -> ?V, conversion : (V, Text) -> T) : [T] {
+		let res = Buffer.Buffer<T>(Array.size(ids));
+		for (id in ids.vals()) {
+			switch (get(id)) {
+				case (?w) { res.add(conversion(w, id))};
+				case (null) {  };
+			};
+		};
+		Buffer.toArray(res);
+    };            
 
 };

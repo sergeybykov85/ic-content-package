@@ -540,14 +540,20 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (#ok(b)) {b;};
 					case (#err(e)) {return #err(e);};
 				};
+				/*
+				* Right now apply_bundle_section is used to upload "structured" object.
+				* In this case locale is specified only for About category!
+				*/
+
 				// save into databucket
 				switch (await _apply_bundle_section(bundle, {
-					name = args.name;
+					// name is not used for the structured-data
+					name = null;
 					resource_id = args.resource_id;
 					group = args.group;
 					nested_path = args.nested_path;
 					category = args.category;
-					locale = args.locale;
+					locale = (if (args.category == #About) {args.locale} else {null});
 					payload = { value = blob_to_save; content_type = ?"application/json"; };
 					action = args.action;
 				})) {
@@ -955,7 +961,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	* Returns bundles by their ids
 	*/
     public query func get_bundle_refs_by_ids(ids:[Text]) : async [Conversion.BundleRefView] {
-		_get_items_by_ids(ids, Conversion.convert_bundle_ref_view);
+		CommonUtils.get_items_by_ids(ids, bundle_get, Conversion.convert_bundle_ref_view);
     };
 
 	/**
@@ -963,7 +969,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
 	public query func get_bundle_refs_by_criteria (criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundleRefView] {
 		let ids = _get_ids_for_criteria(criteria);
-		_get_items_by_ids(ids, Conversion.convert_bundle_ref_view);
+		CommonUtils.get_items_by_ids(ids, bundle_get, Conversion.convert_bundle_ref_view);
 	};
 
 	/**
@@ -971,7 +977,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 	*/
 	public query func get_bundles_by_criteria (criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundleDetailsView] {
 		let ids = _get_ids_for_criteria(criteria);
-		_get_items_by_ids(ids, Conversion.convert_bundle_details_view);
+		CommonUtils.get_items_by_ids(ids, bundle_get, Conversion.convert_bundle_details_view);
 	};
 
 	/**
@@ -982,7 +988,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (?c) {_get_ids_for_criteria(c)};
 			case (null) {List.toArray(all_bundles)};
 		};
-		_get_page(ids_to_process, start, limit, Conversion.convert_bundle_ref_view);
+		CommonUtils.get_page(ids_to_process, start, limit, bundle_get, Conversion.convert_bundle_ref_view);
     };
 
 	/**
@@ -993,7 +999,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			case (?c) {_get_ids_for_criteria(c)};
 			case (null) {List.toArray(all_bundles)};
 		};
-		_get_page(ids_to_process, start, limit, Conversion.convert_bundle_details_view);
+		CommonUtils.get_page(ids_to_process, start, limit, bundle_get, Conversion.convert_bundle_details_view);
     };	
 
 	/**
@@ -1068,33 +1074,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		if (criteria.intersect) {CommonUtils.build_intersect(id_arr);}
 		else {CommonUtils.build_uniq(id_arr);}
 	};
-
-    private func _get_items_by_ids <T>(ids:[Text],  conversion : (Types.Bundle, Text) -> T) : [T] {
-		let res = Buffer.Buffer<T>(Array.size(ids));
-		for (id in ids.vals()) {
-			switch (bundle_get(id)) {
-				case (?bundle) { res.add(conversion(bundle, id)); };
-				case (null) {  };
-			};
-		};
-		Buffer.toArray(res);
-    };	
-
-	private func _get_page <T>(ids:[Text], start: Nat, limit: Nat, conversion : (Types.Bundle, Text) -> T):  CommonTypes.DataSlice<T> {
-        let res = Buffer.Buffer<T>(limit);
-        var i = start;
-        while (i < start + limit and i < ids.size()) {
-			let id = ids[i];
-			switch (bundle_get(id)) {
-				case (?bundle) { res.add(conversion(bundle, id)); };
-				case (null) {  };
-			};
-            i += 1;
-        };
-        return {items = Buffer.toArray(res); total_supply = Array.size(ids); };
-    };
-
-				
 
 	private func _get_classifications () : [Text] {
 		let class_buff = Buffer.Buffer<Text>(Trie.size(classification2bundle));

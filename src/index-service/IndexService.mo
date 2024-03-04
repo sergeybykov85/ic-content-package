@@ -93,6 +93,16 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 		};
 	};
 
+	/**
+	* Returns index data for the package
+	*/
+	private func _index_data (get : (id : Text) -> ?[Text], package_id:Text) : [Text] {
+		switch (get(package_id)) {
+			case (?current) {current};
+			case (null) {[]};
+		};
+	};	
+
     private func _index_include_package(get : (id : Text) -> ?List.List<Text>, index : Trie.Trie<Text, List.List<Text>>,  value:Text, package_id:Text) :  Trie.Trie<Text, List.List<Text>> {
 		switch (get(value)) {
 			case (?package_ids) {
@@ -151,7 +161,31 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 			country2package := _index_include_package(country2package_get, country2package, t, package_id);
 		};
 		package2country := Trie.put(package2country, CommonUtils.text_key(package_id), Text.equal, countries).0;       
-	};	
+	};
+
+	private func _exclude_package_countries (package_id:Text) : () {
+		let ex = _index_data(package2country_get, package_id);
+		for (t in ex.vals()) {
+			country2package := _index_exclude_package(country2package_get, country2package, t, package_id);
+		};		
+		package2country := Trie.remove(package2country, CommonUtils.text_key(package_id), Text.equal).0; 
+	};
+
+	private func _exclude_package_tags (package_id:Text) : () {
+		let ex = _index_data(package2tag_get, package_id);
+		for (t in ex.vals()) {
+			tag2package := _index_exclude_package(tag2package_get, tag2package, t, package_id);
+		};		
+		package2tag := Trie.remove(package2tag, CommonUtils.text_key(package_id), Text.equal).0; 
+	};
+
+	private func _exclude_package_classifications (package_id:Text) : () {
+		let ex = _index_data(package2classification_get, package_id);
+		for (t in ex.vals()) {
+			classification2package := _index_exclude_package(classification2package_get, classification2package, t, package_id);
+		};		
+		package2classification := Trie.remove(package2classification, CommonUtils.text_key(package_id), Text.equal).0; 
+	};			
 
 
 	private func _sync_package (package_id : Text, ref: Types.PackageRef) :  async Result.Result<(), CommonTypes.Errors> {
@@ -189,7 +223,7 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
     	operators := ids;
     };
 
-	public shared ({ caller }) func register_package (package : Principal) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func include_package (package : Principal) : async Result.Result<Text, CommonTypes.Errors> {
 		if (not (caller == CREATOR or _is_operator(caller))) return #err(#AccessDenied);
 		let package_id = Principal.toText(package);
 		switch (package_get(package_id)) {
@@ -207,6 +241,7 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 					_process_package_tags(package_id, segment.tags);
 					_process_package_classifications(package_id, segment.classifications);
 					_process_package_countries(package_id, segment.countries);
+
 					#ok(package_id);
 				}catch (e) {
 					// ignore for now
@@ -215,6 +250,28 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 			};
 		};
 	};
+
+	public shared ({ caller }) func exclude_package (package : Principal) : async Result.Result<Text, CommonTypes.Errors> {
+		if (not (caller == CREATOR or _is_operator(caller))) return #err(#AccessDenied);
+		let id = Principal.toText(package);
+		switch (package_get(id)) {
+			case (null) {return #err(#NotRegistered)};
+			case (?pack) {
+				try {
+					_exclude_package_tags(id );
+					_exclude_package_classifications(id );
+					_exclude_package_countries(id);
+					
+					packages := Trie.remove(packages, CommonUtils.text_key(id), Text.equal).0; 
+					all_packages:=CommonUtils.list_exclude(all_packages, id);
+					#ok(id);
+				}catch (e) {
+					// ignore for now
+					return #err(#ActionFailed);
+				};
+			};
+		};
+	};	
 
 	public shared ({ caller }) func sync_package (package_id:Text) : async Result.Result<(), CommonTypes.Errors> {
 		if (not (caller == CREATOR or _is_operator(caller))) return #err(#AccessDenied);
