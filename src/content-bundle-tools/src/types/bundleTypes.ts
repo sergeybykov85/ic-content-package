@@ -54,7 +54,7 @@ export interface AdditionalDataDto {
   // readonly
 }
 
-export enum ADDITIONAL_DATA_TYPES { // TODO: rename on GROUPS
+export enum ADDITIONAL_DATA_GROUPS {
   POI = 'POI',
   Additions = 'Additions',
 }

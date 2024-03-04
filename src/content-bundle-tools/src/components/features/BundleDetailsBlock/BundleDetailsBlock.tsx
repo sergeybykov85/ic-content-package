@@ -5,7 +5,7 @@ import DetailsBlock from '~/components/general/DetailsBlock'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
 import If from '~/components/general/If'
-import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
+import { ADDITIONAL_DATA_GROUPS } from '~/types/bundleTypes.ts'
 import CopyBtn from '~/components/general/CopyBtn'
 import styles from './BundleDetailsBlock.module.scss'
 import BundleControls from '~/components/features/BundleControls'
@@ -28,9 +28,9 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   const service = useMemo(() => initBundlePackageService?.(packageId), [initBundlePackageService, packageId])
 
   const [bundle, setBundle] = useState<Bundle | null>(null)
-  const [supportedDataGroups, setSupportedDataGroups] = useState<ADDITIONAL_DATA_TYPES[]>([])
+  const [supportedDataGroups, setSupportedDataGroups] = useState<ADDITIONAL_DATA_GROUPS[]>([])
   const [possibilityToModify, setPossibilityToModify] = useState(false)
-  const [newDataGroup, setNewDataGroup] = useState<ADDITIONAL_DATA_TYPES | null>(null)
+  const [newDataGroup, setNewDataGroup] = useState<ADDITIONAL_DATA_GROUPS | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -96,21 +96,21 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
             </If>
           }
         />
-        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_TYPES.POI)}>
+        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_GROUPS.POI)}>
           <br />
           <AdditionalData
             title="Point of interest"
-            type={ADDITIONAL_DATA_TYPES.POI}
+            type={ADDITIONAL_DATA_GROUPS.POI}
             editable={possibilityToModify}
             onPlusClick={group => setNewDataGroup(group)}
             {...{ bundleId, service, bundle }}
           />
         </If>
-        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_TYPES.Additions)}>
+        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_GROUPS.Additions)}>
           <br />
           <AdditionalData
             title="Additional informartion"
-            type={ADDITIONAL_DATA_TYPES.Additions}
+            type={ADDITIONAL_DATA_GROUPS.Additions}
             editable={possibilityToModify}
             onPlusClick={group => setNewDataGroup(group)}
             {...{ bundleId, service, bundle }}

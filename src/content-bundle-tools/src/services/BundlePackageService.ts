@@ -9,7 +9,7 @@ import type {
   BundleDetailsDto,
   BundleDto,
   AdditionalDataDto,
-  ADDITIONAL_DATA_TYPES,
+  ADDITIONAL_DATA_GROUPS,
   CreateBundleParams,
   AdditionalDataCategories,
 } from '~/types/bundleTypes.ts'
@@ -49,20 +49,20 @@ export default class BundlePackageService extends CanisterService {
     return new Bundle(this.responseHandler(response))
   }
 
-  public getBundleDataGroups = async (bundleId: string): Promise<ADDITIONAL_DATA_TYPES[]> => {
+  public getBundleDataGroups = async (bundleId: string): Promise<ADDITIONAL_DATA_GROUPS[]> => {
     const response = (await this.actor.get_bundle_data_groups(bundleId)) as CanisterResponse<
-      VariantType<ADDITIONAL_DATA_TYPES>[]
+      VariantType<ADDITIONAL_DATA_GROUPS>[]
     >
-    return this.responseHandler(response).map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
+    return this.responseHandler(response).map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_GROUPS[]
   }
 
-  public getBundleSupportedDataGroups = async (): Promise<ADDITIONAL_DATA_TYPES[]> => {
-    const response = (await this.actor.get_supported_groups()) as VariantType<ADDITIONAL_DATA_TYPES>[]
-    return response.map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
+  public getBundleSupportedDataGroups = async (): Promise<ADDITIONAL_DATA_GROUPS[]> => {
+    const response = (await this.actor.get_supported_groups()) as VariantType<ADDITIONAL_DATA_GROUPS>[]
+    return response.map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_GROUPS[]
   }
 
   public getBundleSupportedDataCategories = async (
-    group: ADDITIONAL_DATA_TYPES,
+    group: ADDITIONAL_DATA_GROUPS,
   ): Promise<AdditionalDataCategories[]> => {
     const response = (await this.actor.get_supported_categories({
       [group]: null,
@@ -72,7 +72,7 @@ export default class BundlePackageService extends CanisterService {
 
   public getBundleAdditionalData = async (
     bundleId: string,
-    type: ADDITIONAL_DATA_TYPES,
+    type: ADDITIONAL_DATA_GROUPS,
   ): Promise<{ url: string; sections: AdditionalDataSection[] }> => {
     const response = (await this.actor.get_bundle_data(bundleId, {
       [type]: null,

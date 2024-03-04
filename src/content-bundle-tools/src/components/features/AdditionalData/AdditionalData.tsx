@@ -5,19 +5,19 @@ import If from '~/components/general/If'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
 import type Bundle from '~/models/Bundle.ts'
 import type AdditionalDataSection from '~/models/AdditionalDataSection.ts'
-import type { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
+import type { ADDITIONAL_DATA_GROUPS } from '~/types/bundleTypes.ts'
 import { enqueueSnackbar } from 'notistack'
 import DataItem from './components/DataItem/DataItem.tsx'
 import IconButton from '~/components/general/IconButton'
 
 interface AdditionalDataProps {
-  type: ADDITIONAL_DATA_TYPES
+  type: ADDITIONAL_DATA_GROUPS
   title: string
   service: BundlePackageService
   bundleId: string
   bundle: Bundle
   editable: boolean
-  onPlusClick: (group: ADDITIONAL_DATA_TYPES) => void
+  onPlusClick: (group: ADDITIONAL_DATA_GROUPS) => void
 }
 
 const AdditionalData: FC<AdditionalDataProps> = ({ type, title, service, bundle, bundleId, editable, onPlusClick }) => {

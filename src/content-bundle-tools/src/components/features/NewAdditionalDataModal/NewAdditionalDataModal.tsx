@@ -1,6 +1,6 @@
 import { type FC, useEffect, useMemo, useState } from 'react'
 import type { ADDITIONS_CATEGORIES, POI_CATEGORIES, AdditionalDataCategories } from '~/types/bundleTypes.ts'
-import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
+import { ADDITIONAL_DATA_GROUPS } from '~/types/bundleTypes.ts'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
 import ModalDialog from '~/components/general/ModalDialog'
 import Select from '~/components/general/Select'
@@ -8,21 +8,21 @@ import styles from './NewAdditionalDataModal.module.scss'
 
 interface NewAdditionalDataModalProps {
   onClose: () => void
-  group: ADDITIONAL_DATA_TYPES | null
-  supportedGroups: ADDITIONAL_DATA_TYPES[]
+  group: ADDITIONAL_DATA_GROUPS | null
+  supportedGroups: ADDITIONAL_DATA_GROUPS[]
   service?: BundlePackageService
 }
 
 interface CategoriesByGroup {
-  [ADDITIONAL_DATA_TYPES.POI]: POI_CATEGORIES[]
-  [ADDITIONAL_DATA_TYPES.Additions]: ADDITIONS_CATEGORIES[]
+  [ADDITIONAL_DATA_GROUPS.POI]: POI_CATEGORIES[]
+  [ADDITIONAL_DATA_GROUPS.Additions]: ADDITIONS_CATEGORIES[]
 }
 
 const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({ group, supportedGroups, onClose, service }) => {
   const [chosenGroup, setChosenGroup] = useState(group)
   const [categoriesByGroup, setCategoriesByGroup] = useState<CategoriesByGroup>({
-    [ADDITIONAL_DATA_TYPES.POI]: [],
-    [ADDITIONAL_DATA_TYPES.Additions]: [],
+    [ADDITIONAL_DATA_GROUPS.POI]: [],
+    [ADDITIONAL_DATA_GROUPS.Additions]: [],
   })
   const [chosenCategory, setChosenCategory] = useState<AdditionalDataCategories | ''>('')
 
