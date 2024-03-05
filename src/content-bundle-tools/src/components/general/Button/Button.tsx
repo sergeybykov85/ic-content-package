@@ -8,8 +8,16 @@ interface ButtonProps extends ComponentPropsWithoutRef<'button'> {
   text?: string
 }
 
-const Button: FC<ButtonProps> = ({ className, variant = 'contained', color = 'blue', text, children, ...props }) => (
-  <button className={clsx(styles.button, styles[variant], styles[color], className)} {...props}>
+const Button: FC<ButtonProps> = ({
+  className,
+  variant = 'contained',
+  color = 'blue',
+  text,
+  children,
+  type = 'button',
+  ...props
+}) => (
+  <button className={clsx(styles.button, styles[variant], styles[color], className)} {...props} type={type}>
     {text || children}
   </button>
 )

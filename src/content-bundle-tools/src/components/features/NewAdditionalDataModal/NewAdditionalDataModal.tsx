@@ -1,10 +1,13 @@
-import { type FC, useEffect, useMemo, useState } from 'react'
-import type { ADDITIONS_CATEGORIES, POI_CATEGORIES, AdditionalDataCategories } from '~/types/bundleDataTypes.ts'
-import { ADDITIONAL_DATA_GROUPS } from '~/types/bundleDataTypes.ts'
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
+import type { ADDITIONS_CATEGORIES, AdditionalDataCategories } from '~/types/bundleDataTypes.ts'
+import { ADDITIONAL_DATA_GROUPS, POI_CATEGORIES } from '~/types/bundleDataTypes.ts'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
+import styles from './NewAdditionalDataModal.module.scss'
 import ModalDialog from '~/components/general/ModalDialog'
 import Select from '~/components/general/Select'
-import styles from './NewAdditionalDataModal.module.scss'
+import LocationDataForm from '~/components/features/NewAdditionalDataModal/components/LocationDataForm/LocationDataForm.tsx'
+import IconButton from '~/components/general/IconButton'
+import Collapse from '~/components/general/Collapse'
 
 interface NewAdditionalDataModalProps {
   onClose: () => void
@@ -34,6 +37,9 @@ const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({ group, suppor
   useEffect(() => {
     setChosenGroup(group)
   }, [group])
+  useEffect(() => {
+    chosenGroup && setChosenCategory('')
+  }, [chosenGroup])
 
   useEffect(() => {
     if (service && chosenGroup && !categoriesByGroup[chosenGroup].length) {
@@ -46,22 +52,40 @@ const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({ group, suppor
     }
   }, [categoriesByGroup, chosenGroup, service])
 
+  const renderForm = useCallback(
+    (category: AdditionalDataCategories | '') => {
+      switch (category) {
+        case POI_CATEGORIES.Location:
+          return <LocationDataForm onCancel={onClose} />
+        default:
+          return null
+      }
+    },
+    [onClose],
+  )
+
   return (
-    <ModalDialog open={Boolean(group)} onClose={onClose}>
-      <h2>New additional data</h2>
+    <ModalDialog open={Boolean(group)}>
+      <div className={styles.header}>
+        <h2>New additional data</h2>
+        <IconButton iconName="cross.svg" size={25} onClick={onClose} />
+      </div>
       <div className={styles.selects}>
         <Select
+          label="Group"
           options={supportedGroups}
           defaultValue={chosenGroup || supportedGroups[0]}
           onSelect={value => setChosenGroup(value)}
         />
         <Select
+          label="Category"
           options={categoryOptions}
           defaultValue={chosenCategory}
           onSelect={value => setChosenCategory(value)}
           placeholder="Choose category..."
         />
       </div>
+      <Collapse open={Boolean(chosenCategory)}>{renderForm(chosenCategory)}</Collapse>
     </ModalDialog>
   )
 }
