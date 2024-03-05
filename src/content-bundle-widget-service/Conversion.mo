@@ -11,7 +11,6 @@ module {
 
 	public type CriteriaView = {
 		entity : ?Types.IdsRef;
-		package : ?Text;
 		by_country_code : ?Text;
 		by_tag : ?Text;
 		by_classification : ?Text;
@@ -40,7 +39,6 @@ module {
 			case (?criteria) {
 				?{
 					entity = criteria.entity;
-					package = criteria.package;
 					by_country_code = criteria.by_country_code;
 					by_tag = criteria.by_tag;
 					by_classification = criteria.by_classification;

@@ -30,7 +30,6 @@ module {
 
 	public type CriteriaArgs = {
 		entity : ?IdsRef;
-		package : ?Text;
 		by_tag : ?Text;
 		by_country_code : ?Text;
 		by_classification : ?Text;
@@ -42,6 +41,12 @@ module {
 		type_id : TypeId;
 		criteria : ?CriteriaArgs;
 	};
+
+	public type WidgetUpdateArgs = {
+		name : ?Text;
+		description : ?Text;
+		status : ?Status;
+	};		
 
 	public type WidgetServiceArgs = {
 		network : CommonTypes.Network;
@@ -66,7 +71,7 @@ module {
 
 	public type IdsRef = {
 		package_id : Text;
-		ids : [Text];
+		ids : ?[Text];
 	};
 
 	public type Criteria = {
@@ -74,7 +79,6 @@ module {
 		// principle is simple : either BY ids or by other criteria
 		// priority : entity, package, tags, classifications
 		var entity : ?IdsRef;
-		var package : ?Text;
 		var by_country_code : ?Text;
 		var by_tag : ?Text;
 		var by_classification : ?Text;
