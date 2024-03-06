@@ -161,6 +161,13 @@ export default class BundlePackageService extends CanisterService {
       })
     }
 
+    if (params.about) {
+      payload.about.push({
+        ...params.about,
+        attributes: [],
+      })
+    }
+
     return payload
   }
 

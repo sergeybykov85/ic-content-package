@@ -3,7 +3,6 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import Select from '~/components/general/Select'
 import { TextInput } from '~/components/general/Inputs'
-import Button from '~/components/general/Button'
 import styles from './LocationDataForm.module.scss'
 import type { ApplyAdditionalDataParams } from '~/types/bundleDataTypes.ts'
 import countries from '~/../public/libs/countries.json'
@@ -11,7 +10,7 @@ import countries from '~/../public/libs/countries.json'
 const COUNTRIES = countries as Record<string, string>
 
 interface LocationDataFormProps {
-  onCancel: () => void
+  formId: string
   onSubmit: (params: Pick<ApplyAdditionalDataParams, 'payload'>) => void
 }
 
@@ -23,7 +22,7 @@ interface FormValues {
   longitude: number
 }
 
-const LocationDataForm: FC<LocationDataFormProps> = ({ onCancel, onSubmit }) => {
+const LocationDataForm: FC<LocationDataFormProps> = ({ formId, onSubmit }) => {
   const handleSubmit = useCallback(
     (values: FormValues) => {
       const { country, region, city, latitude, longitude } = values
@@ -66,7 +65,7 @@ const LocationDataForm: FC<LocationDataFormProps> = ({ onCancel, onSubmit }) => 
   const handleCountrySelect = useCallback((value: string) => form.setFieldValue('country', value), [form])
 
   return (
-    <form onSubmit={form.handleSubmit} className={styles.form}>
+    <form onSubmit={form.handleSubmit} id={formId} className={styles.form}>
       <Select
         label="Country"
         placeholder="Chose country"
@@ -115,10 +114,6 @@ const LocationDataForm: FC<LocationDataFormProps> = ({ onCancel, onSubmit }) => 
           className={styles.input}
           type="number"
         />
-      </div>
-      <div className={styles.btns}>
-        <Button type="button" text="Cancel" variant="text" onClick={onCancel} />
-        <Button type="submit" text="Submit" />
       </div>
     </form>
   )

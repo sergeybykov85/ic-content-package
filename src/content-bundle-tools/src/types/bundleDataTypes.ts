@@ -49,9 +49,16 @@ export interface LocationDataPayload {
   coordinates: Coordinates
 }
 
+export interface AboutDataPayload {
+  name: string
+  description: string
+  locale: string // TODO: ????
+  attributes: [] // TODO: ????
+}
+
 export interface AdditionalDataPayload {
   location: LocationDataPayload[]
-  about: []
+  about: AboutDataPayload[]
   reference: []
   history: []
 }
@@ -74,9 +81,16 @@ export interface LocationDataParams {
   coordinates: Coordinates
 }
 
+export interface AboutDataParams {
+  name: string
+  description: string
+  locale: string // TODO: ????
+  attributes?: [] // TODO: ????
+}
+
 export interface AdditionalDataPayloadParams {
   location?: LocationDataParams
-  about?: []
+  about?: AboutDataParams
   reference?: []
   history?: []
 }

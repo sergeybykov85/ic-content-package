@@ -1,4 +1,4 @@
-import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { type FC, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import type {
   AdditionalDataCategories,
   ADDITIONS_CATEGORIES,
@@ -14,6 +14,8 @@ import IconButton from '~/components/general/IconButton'
 import Collapse from '~/components/general/Collapse'
 import { enqueueSnackbar } from 'notistack'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
+import Button from '~/components/general/Button'
+import AboutDataForm from '~/components/features/NewAdditionalDataModal/components/AboutDataForm'
 
 interface NewAdditionalDataModalProps {
   bundleId: string
@@ -38,6 +40,7 @@ const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({
   onSuccess,
 }) => {
   const { setLoading } = useFullScreenLoading()
+  const formId = useId()
 
   const [chosenGroup, setChosenGroup] = useState(group)
   const [categoriesByGroup, setCategoriesByGroup] = useState<CategoriesByGroup>({
@@ -104,12 +107,14 @@ const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({
       }
       switch (category) {
         case POI_CATEGORIES.Location:
-          return <LocationDataForm onSubmit={onSubmit} onCancel={onClose} />
+          return <LocationDataForm {...{ onSubmit, formId }} />
+        case POI_CATEGORIES.About:
+          return <AboutDataForm {...{ onSubmit, formId }} />
         default:
           return null
       }
     },
-    [onClose, onSubmit],
+    [onSubmit, formId],
   )
 
   return (
@@ -134,6 +139,10 @@ const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({
         />
       </div>
       <Collapse open={Boolean(chosenCategory)}>{renderForm(chosenCategory)}</Collapse>
+      <div className={styles.btns}>
+        <Button type="button" text="Cancel" variant="text" onClick={onClose} />
+        <Button type="submit" text="Submit" form={formId} />
+      </div>
     </ModalDialog>
   )
 }
