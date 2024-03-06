@@ -42,24 +42,50 @@ export enum ADDITIONAL_DATA_ACTIONS {
   Package = 'Package',
 }
 
-export interface LocationDataRequest {
+export interface LocationDataPayload {
   country_code2: string
-  region?: string[]
-  city?: string[]
+  region: string[]
+  city: string[]
   coordinates: Coordinates
 }
 
-export interface LocationPayload {
-  location: LocationDataRequest
+export interface AdditionalDataPayload {
+  location: LocationDataPayload[]
+  about: []
+  reference: []
+  history: []
 }
 
-export interface AdditionalDataRequest<T> {
+export interface AdditionalDataRequest {
+  group: VariantType<ADDITIONAL_DATA_GROUPS>
+  category: VariantType<AdditionalDataCategories>
+  nested_path: string[]
+  name: string[]
+  locale: string[]
+  resource_id: string[]
+  payload: AdditionalDataPayload
+  action: VariantType<ADDITIONAL_DATA_ACTIONS>
+}
+
+export interface LocationDataParams {
+  countryCode2: string
+  region?: string
+  city?: string
+  coordinates: Coordinates
+}
+
+export interface AdditionalDataPayloadParams {
+  location?: LocationDataParams
+  about?: []
+  reference?: []
+  history?: []
+}
+
+export interface ApplyAdditionalDataParams {
   group: ADDITIONAL_DATA_GROUPS
   category: AdditionalDataCategories
-  // nested_path?: string[]
-  name?: string[]
-  locale?: string[]
-  // resource_id?: string[]
-  payload: T
+  name?: string
+  locale?: string
   action: ADDITIONAL_DATA_ACTIONS
+  payload: AdditionalDataPayloadParams
 }

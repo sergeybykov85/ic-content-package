@@ -5,6 +5,9 @@ import GoogleMap from '~/components/features/GoogleMap/GoogleMap.tsx'
 import DataItemDefault from '../DataItemDefault/DataItemDefault.tsx'
 import If from '~/components/general/If'
 import styles from './DataItemLocation.module.scss'
+import countries from '~/../public/libs/countries.json'
+
+const COUNTRIES = countries as Record<string, string>
 
 interface DataItemLocationProps {
   list: DataListItem[]
@@ -30,8 +33,8 @@ const DataItemLocation: FC<DataItemLocationProps> = ({ list, locations }) => {
               </p>
             </If>
             <p>
-              <span>Country code:</span>
-              {item.country_code2}
+              <span>Country:</span>
+              {COUNTRIES[item.country_code2] || item.country_code2}
             </p>
             <p>
               <span>Latitude:</span>

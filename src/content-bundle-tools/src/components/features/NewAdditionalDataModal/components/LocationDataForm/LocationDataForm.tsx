@@ -2,17 +2,49 @@ import { type FC, useCallback } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import Select from '~/components/general/Select'
-import COUNTRIES from '~/../public/libs/countries.json'
 import { TextInput } from '~/components/general/Inputs'
 import Button from '~/components/general/Button'
 import styles from './LocationDataForm.module.scss'
+import type { ApplyAdditionalDataParams } from '~/types/bundleDataTypes.ts'
+import countries from '~/../public/libs/countries.json'
+
+const COUNTRIES = countries as Record<string, string>
 
 interface LocationDataFormProps {
   onCancel: () => void
+  onSubmit: (params: Pick<ApplyAdditionalDataParams, 'payload'>) => void
 }
 
-const LocationDataForm: FC<LocationDataFormProps> = ({ onCancel }) => {
-  const form = useFormik({
+interface FormValues {
+  country: string
+  region: string
+  city: string
+  latitude: number
+  longitude: number
+}
+
+const LocationDataForm: FC<LocationDataFormProps> = ({ onCancel, onSubmit }) => {
+  const handleSubmit = useCallback(
+    (values: FormValues) => {
+      const { country, region, city, latitude, longitude } = values
+
+      const countryCode2 = Object.keys(COUNTRIES).find(key => COUNTRIES[key] === country)!
+
+      onSubmit({
+        payload: {
+          location: {
+            countryCode2,
+            region,
+            city,
+            coordinates: { latitude, longitude },
+          },
+        },
+      })
+    },
+    [onSubmit],
+  )
+
+  const form = useFormik<FormValues>({
     initialValues: {
       country: '',
       region: '',
@@ -28,15 +60,10 @@ const LocationDataForm: FC<LocationDataFormProps> = ({ onCancel }) => {
       latitude: Yup.number().required('Required!'),
       longitude: Yup.number().required('Required!'),
     }),
-    onSubmit: values => console.log(values),
+    onSubmit: handleSubmit,
   })
 
-  const handleCountrySelect = useCallback(
-    (value: string) => {
-      form.setFieldValue('country', value)
-    },
-    [form],
-  )
+  const handleCountrySelect = useCallback((value: string) => form.setFieldValue('country', value), [form])
 
   return (
     <form onSubmit={form.handleSubmit} className={styles.form}>

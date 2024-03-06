@@ -41,7 +41,7 @@ export default class CanisterService {
     return ok
   }
 
-  protected createOptionalParam = <T>(value: T): T[] => {
+  protected createOptionalParam = <T>(value: T): NonNullable<T>[] => {
     return value ? [value] : []
   }
 }

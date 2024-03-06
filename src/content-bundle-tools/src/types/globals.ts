@@ -8,7 +8,7 @@ export interface PaginatedListResponse<DataType> {
   items: DataType[]
 }
 
-export type VariantType<T extends string> = Record<T, null>
+export type VariantType<T extends string> = Partial<Record<T, null>>
 
 export enum IdentityTypes {
   ICP = 'ICP',

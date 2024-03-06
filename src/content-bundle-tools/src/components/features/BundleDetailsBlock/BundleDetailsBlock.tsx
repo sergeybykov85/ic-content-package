@@ -32,7 +32,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   const [possibilityToModify, setPossibilityToModify] = useState(false)
   const [newDataGroup, setNewDataGroup] = useState<ADDITIONAL_DATA_GROUPS | null>(null)
 
-  useEffect(() => {
+  const getBundle = useCallback(() => {
     setLoading(true)
     service
       ?.getBundle(bundleId)
@@ -46,21 +46,38 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
       .finally(() => setLoading(false))
   }, [bundleId, navigate, service, setLoading])
 
+  const getSupportedDataGroups = useCallback(() => {
+    service
+      ?.getBundleSupportedDataGroups()
+      .then(response => {
+        setSupportedDataGroups(response)
+      })
+      .catch(error => {
+        console.error(error)
+        enqueueSnackbar(error.message, {
+          variant: 'error',
+        })
+      })
+  }, [service])
+
+  const onDeleteSuccess = useCallback(() => {
+    navigate(`/package/${packageId}`, { replace: true })
+  }, [navigate, packageId])
+
+  const onNewDataSuccess = useCallback(() => {
+    getBundle()
+    getSupportedDataGroups()
+  }, [getBundle, getSupportedDataGroups])
+
+  useEffect(() => {
+    getBundle()
+  }, [getBundle])
+
   useEffect(() => {
     if (!supportedDataGroups.length) {
-      service
-        ?.getBundleSupportedDataGroups()
-        .then(response => {
-          setSupportedDataGroups(response)
-        })
-        .catch(error => {
-          console.error(error)
-          enqueueSnackbar(error.message, {
-            variant: 'error',
-          })
-        })
+      getSupportedDataGroups()
     }
-  }, [service, supportedDataGroups.length])
+  }, [getSupportedDataGroups, supportedDataGroups.length])
 
   useEffect(() => {
     if (service && principal) {
@@ -77,10 +94,6 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
         })
     }
   }, [bundleId, principal, service])
-
-  const onDeleteSuccess = useCallback(() => {
-    navigate(`/package/${packageId}`, { replace: true })
-  }, [navigate, packageId])
 
   if (service && bundle) {
     return (
@@ -117,10 +130,12 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           />
         </If>
         <NewAdditionalDataModal
+          bundleId={bundleId}
           group={newDataGroup}
           supportedGroups={supportedDataGroups}
           onClose={() => setNewDataGroup(null)}
           service={service}
+          onSuccess={onNewDataSuccess}
         />
       </>
     )

@@ -11,6 +11,9 @@ import type {
   ADDITIONAL_DATA_GROUPS,
   AdditionalDataCategories,
   AdditionalDataRequest,
+  ApplyAdditionalDataParams,
+  AdditionalDataPayloadParams,
+  AdditionalDataPayload,
 } from '~/types/bundleDataTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
@@ -141,7 +144,37 @@ export default class BundlePackageService extends CanisterService {
     })) as boolean
   }
 
-  public applyDataSection = async <T>(bundleId: string, request: AdditionalDataRequest<T>): Promise<void> => {
+  private createPayloadResponse = (params: AdditionalDataPayloadParams): AdditionalDataPayload => {
+    const payload: AdditionalDataPayload = {
+      location: [],
+      history: [],
+      about: [],
+      reference: [],
+    }
+
+    if (params.location) {
+      payload.location.push({
+        country_code2: params.location.countryCode2,
+        coordinates: params.location.coordinates,
+        city: this.createOptionalParam(params.location.city),
+        region: this.createOptionalParam(params.location.region),
+      })
+    }
+
+    return payload
+  }
+
+  public applyDataSection = async (bundleId: string, params: ApplyAdditionalDataParams): Promise<void> => {
+    const request: AdditionalDataRequest = {
+      action: { [params.action]: null },
+      group: { [params.group]: null },
+      category: { [params.category]: null },
+      name: this.createOptionalParam(params.name),
+      locale: this.createOptionalParam(params.locale),
+      payload: this.createPayloadResponse(params.payload),
+      nested_path: [],
+      resource_id: [],
+    }
     const response = (await this.actor.apply_bundle_section(bundleId, request)) as CanisterResponse<string>
     this.responseHandler(response)
   }
