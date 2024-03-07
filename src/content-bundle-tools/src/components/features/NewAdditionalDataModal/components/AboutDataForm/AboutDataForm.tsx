@@ -19,8 +19,9 @@ type FormValues = Omit<AboutDataParams, 'attributes'>
 const AboutDataForm: FC<AboutDataFormProps> = ({ formId, onSubmit }) => {
   const handleSubmit = useCallback(
     (values: FormValues) => {
+      const locale = Object.keys(LOCALES).find(key => LOCALES[key] === values.locale)!
       onSubmit({
-        locale: values.locale,
+        locale,
         payload: {
           about: values,
         },
@@ -38,7 +39,10 @@ const AboutDataForm: FC<AboutDataFormProps> = ({ formId, onSubmit }) => {
     validateOnChange: false,
     validationSchema: Yup.object().shape({
       name: Yup.string().min(2, 'Too Short!').max(100, `Maximum length ${100} characters`).required('Required!'),
-      description: Yup.string().min(2, 'Too Short!').max(300, `Maximum length ${300} characters`).required('Required!'),
+      description: Yup.string()
+        .min(2, 'Too Short!')
+        .max(1000, `Maximum length ${1000} characters`)
+        .required('Required!'),
       locale: Yup.string().required('Required!'),
     }),
     onSubmit: handleSubmit,
@@ -48,6 +52,7 @@ const AboutDataForm: FC<AboutDataFormProps> = ({ formId, onSubmit }) => {
 
   return (
     <form onSubmit={form.handleSubmit} id={formId} className={styles.form}>
+      {/* TODO: Create Select with autocomplete */}
       <Select
         label="Locale"
         placeholder="Chose locale"

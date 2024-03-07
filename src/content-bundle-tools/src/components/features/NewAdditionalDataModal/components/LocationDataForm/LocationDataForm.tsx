@@ -66,6 +66,7 @@ const LocationDataForm: FC<LocationDataFormProps> = ({ formId, onSubmit }) => {
 
   return (
     <form onSubmit={form.handleSubmit} id={formId} className={styles.form}>
+      {/* TODO: Create Select with autocomplete */}
       <Select
         label="Country"
         placeholder="Chose country"
