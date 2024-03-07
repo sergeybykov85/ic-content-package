@@ -1462,6 +1462,13 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				}
 			};
 		};
+
+		// resolve final name
+		let resource_name = switch (args.name) {
+			case (?name) {name;};
+			case (null) {schema.resolve_resource_name(args.category, args.locale)};
+		};
+
 		switch (args.action) {
 			// upload binary data till 2mb
 			case (#Upload) {
@@ -1469,22 +1476,13 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				if (Option.isSome(target_section.active_upload)) return #err(#OperationNotAllowed);
 				target_section.counter:=target_section.counter + 1;
 
-				// resolve final name
-				let resource_name = switch (args.name) {
-					case (?name) {name;};
-					case (null) {schema.resolve_resource_name(args.category, args.locale)};
-				};
 				let replace_path:?CommonTypes.ResourcePath = switch (args.nested_path) {
 					// replace opportunity is just an "extra feature, sugar" to quickly update simple resources
 					case (null) {
 						let target_locale = Option.get(args.locale, "");
 						switch (args.resource_id) {
 							case (?target_resource) {List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool { target_resource == k.resource_id;})};
-							case (null) { 
-								List.find(target_section.data , func (k:CommonTypes.ResourcePath):Bool { 
-									Option.get(k.name, "") == resource_name and Option.get(k.locale, "") == target_locale
-								})
-							};
+							case (null) { List.find(target_section.data , _eq_resouce(resource_name, target_locale))};
 						};
 					};
 					// replace is not supported in case of nested path
@@ -1496,10 +1494,18 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (#ok(data)){ data; };
 					case (#err(e)) { return #err(e); };
 				};
-				//  update the existing section
-				target_section.data:= List.push(section_path, target_section.data);
+				//  update the existing section : include a new path only if required
+				if (Option.isNull(replace_path)) {
+					target_section.data:= List.push(section_path, target_section.data);
+				}
 			};
 			case (#UploadChunk) {
+				// replace option is not allowed for chunk-upload
+				let target_locale = Option.get(args.locale, "");
+				if (Option.isSome(List.find(target_section.data , _eq_resouce(resource_name, target_locale)))) {
+					 return #err(#DuplicateRecord);
+				};
+				
 				let bucket_actor : Types.Actor.DataBucketActor = actor (active_path.bucket_id);
 				switch (target_section.active_upload) {
 					case (?attempt) {ignore await bucket_actor.store_chunk(args.payload.value, ?attempt.binding_key);};
@@ -1519,12 +1525,12 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
 				switch (target_section.active_upload) {
 					case (?attempt) {
+						// replace option is not allowed for chunk-upload
+						let target_locale = Option.get(args.locale, "");
+						if (Option.isSome(List.find(target_section.data , _eq_resouce(resource_name, target_locale)))) {
+					 		return #err(#DuplicateRecord);
+						};						
 						target_section.counter:=target_section.counter + 1;
-						// resolve final name
-						let resource_name = switch (args.name) {
-							case (?name) {name;};
-							case (null) {schema.resolve_resource_name(args.category, args.locale)};
-						};
 
 						let res = await bucket_actor.commit_batch_by_key(attempt.binding_key, {
 							content_type = args.payload.content_type;
@@ -1678,6 +1684,10 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		}
 			
 	};
+
+	private func _eq_resouce(resource_name: Text, resource_locale:Text) : (k:CommonTypes.ResourcePath) -> Bool {
+      func (k:CommonTypes.ResourcePath) : Bool { Option.get(k.name, "") == resource_name and Option.get(k.locale, "") == resource_locale }
+    };
 
 	private func _register_bucket(name:Text, operators : [Principal], cycles : Nat): async Text {
 		Cycles.add(cycles);
