@@ -4,14 +4,14 @@ import * as Yup from 'yup'
 import Select from '~/components/general/Select'
 import { TextInput } from '~/components/general/Inputs'
 import styles from './LocationDataForm.module.scss'
-import type { ApplyAdditionalDataParams } from '~/types/bundleDataTypes.ts'
+import type { AdditionalDataDomainParams } from '~/types/bundleDataTypes.ts'
 import countries from '~/../public/libs/countries.json'
 
 const COUNTRIES = countries as Record<string, string>
 
 interface LocationDataFormProps {
   formId: string
-  onSubmit: (params: Pick<ApplyAdditionalDataParams, 'payload'>) => void
+  onSubmit: (params: { domainParams: Pick<AdditionalDataDomainParams, 'payload'> }) => void
 }
 
 interface FormValues {
@@ -30,12 +30,14 @@ const LocationDataForm: FC<LocationDataFormProps> = ({ formId, onSubmit }) => {
       const countryCode2 = Object.keys(COUNTRIES).find(key => COUNTRIES[key] === country)!
 
       onSubmit({
-        payload: {
-          location: {
-            countryCode2,
-            region,
-            city,
-            coordinates: { latitude, longitude },
+        domainParams: {
+          payload: {
+            location: {
+              countryCode2,
+              region,
+              city,
+              coordinates: { latitude, longitude },
+            },
           },
         },
       })

@@ -1,8 +1,9 @@
 import { type FC, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import type {
   AdditionalDataCategories,
+  AdditionalDataDomainParams,
+  AdditionalDataRawParams,
   ADDITIONS_CATEGORIES,
-  ApplyAdditionalDataParams,
 } from '~/types/bundleDataTypes.ts'
 import { ADDITIONAL_DATA_ACTIONS, ADDITIONAL_DATA_GROUPS, POI_CATEGORIES } from '~/types/bundleDataTypes.ts'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
@@ -73,18 +74,32 @@ const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({
   }, [categoriesByGroup, chosenGroup, service])
 
   const onSubmit = useCallback(
-    async (params: Partial<ApplyAdditionalDataParams> & Pick<ApplyAdditionalDataParams, 'payload'>) => {
+    async (params: {
+      domainParams?: Partial<AdditionalDataDomainParams> & Pick<AdditionalDataDomainParams, 'payload'>
+      rawParams?: Partial<AdditionalDataRawParams> & Pick<AdditionalDataRawParams, 'payload'>
+    }) => {
       try {
         if (!chosenGroup || !chosenCategory) {
           return
         }
         setLoading(true)
-        await service?.applyDataSection(bundleId, {
+        const generalParams = {
           group: chosenGroup,
           category: chosenCategory,
           action: ADDITIONAL_DATA_ACTIONS.Upload,
-          ...params,
-        })
+        }
+        if (params.domainParams) {
+          await service?.applyDataSection(bundleId, {
+            ...generalParams,
+            ...params.domainParams,
+          })
+        }
+        if (params.rawParams) {
+          await service?.applyDataSectionRaw(bundleId, {
+            ...generalParams,
+            ...params.rawParams,
+          })
+        }
         onClose()
         onSuccess()
         enqueueSnackbar('Success', { variant: 'success' })

@@ -20,17 +20,17 @@ export enum ADDITIONAL_DATA_GROUPS {
 export enum POI_CATEGORIES {
   Location = 'Location',
   About = 'About',
-  History = 'History',
+  // History = 'History',
   AudioGuide = 'AudioGuide',
   Gallery = 'Gallery',
-  AR = 'AR',
+  // AR = 'AR',
 }
 
 export enum ADDITIONS_CATEGORIES {
   Audio = 'Audio',
   Video = 'Video',
   Gallery = 'Gallery',
-  Article = 'Article',
+  // Article = 'Article',
   Document = 'Document',
 }
 
@@ -42,37 +42,45 @@ export enum ADDITIONAL_DATA_ACTIONS {
   Package = 'Package',
 }
 
-export interface LocationDataPayload {
+export interface LocationDataPayloadDto {
   country_code2: string
   region: string[]
   city: string[]
   coordinates: Coordinates
 }
 
-export interface AboutDataPayload {
+export interface AboutDataPayloadDto {
   name: string
   description: string
-  locale: string // TODO: ????
-  attributes: [] // TODO: ????
+  locale: string
+  attributes: []
 }
 
-export interface AdditionalDataPayload {
-  location: LocationDataPayload[]
-  about: AboutDataPayload[]
+export interface AdditionalDataPayloadDto {
+  location: LocationDataPayloadDto[]
+  about: AboutDataPayloadDto[]
   reference: []
   history: []
 }
 
-export interface AdditionalDataRequest {
+export interface AdditionalDataRawPayloadDto {
+  value: Uint8Array
+  content_type: string[]
+}
+
+export interface AdditionalDataRequestDto<T> {
   group: VariantType<ADDITIONAL_DATA_GROUPS>
   category: VariantType<AdditionalDataCategories>
   nested_path: string[]
   name: string[]
   locale: string[]
   resource_id: string[]
-  payload: AdditionalDataPayload
+  payload: T
   action: VariantType<ADDITIONAL_DATA_ACTIONS>
 }
+
+export type AdditionalDataDomainRequestDto = AdditionalDataRequestDto<AdditionalDataPayloadDto>
+export type AdditionalDataRawRequestDto = AdditionalDataRequestDto<AdditionalDataRawPayloadDto>
 
 export interface LocationDataParams {
   countryCode2: string
@@ -84,8 +92,8 @@ export interface LocationDataParams {
 export interface AboutDataParams {
   name: string
   description: string
-  locale: string // TODO: ????
-  attributes?: [] // TODO: ????
+  locale: string
+  attributes?: []
 }
 
 export interface AdditionalDataPayloadParams {
@@ -95,11 +103,19 @@ export interface AdditionalDataPayloadParams {
   history?: []
 }
 
-export interface ApplyAdditionalDataParams {
+export interface ApplyAdditionalDataParams<T> {
   group: ADDITIONAL_DATA_GROUPS
   category: AdditionalDataCategories
   name?: string
   locale?: string
   action: ADDITIONAL_DATA_ACTIONS
-  payload: AdditionalDataPayloadParams
+  payload: T
 }
+
+export interface AdditionalDataRawPayloadParams {
+  value: Uint8Array
+  contentType: string
+}
+
+export type AdditionalDataDomainParams = ApplyAdditionalDataParams<AdditionalDataPayloadParams>
+export type AdditionalDataRawParams = ApplyAdditionalDataParams<AdditionalDataRawPayloadParams>

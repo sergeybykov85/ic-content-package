@@ -10,10 +10,12 @@ import type {
   AdditionalDataDto,
   ADDITIONAL_DATA_GROUPS,
   AdditionalDataCategories,
-  AdditionalDataRequest,
-  ApplyAdditionalDataParams,
   AdditionalDataPayloadParams,
-  AdditionalDataPayload,
+  AdditionalDataPayloadDto,
+  AdditionalDataDomainRequestDto,
+  AdditionalDataDomainParams,
+  AdditionalDataRawParams,
+  AdditionalDataRawRequestDto,
 } from '~/types/bundleDataTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
@@ -144,8 +146,8 @@ export default class BundlePackageService extends CanisterService {
     })) as boolean
   }
 
-  private createPayloadResponse = (params: AdditionalDataPayloadParams): AdditionalDataPayload => {
-    const payload: AdditionalDataPayload = {
+  private createPayloadResponse = (params: AdditionalDataPayloadParams): AdditionalDataPayloadDto => {
+    const payload: AdditionalDataPayloadDto = {
       location: [],
       history: [],
       about: [],
@@ -171,8 +173,8 @@ export default class BundlePackageService extends CanisterService {
     return payload
   }
 
-  public applyDataSection = async (bundleId: string, params: ApplyAdditionalDataParams): Promise<void> => {
-    const request: AdditionalDataRequest = {
+  public applyDataSection = async (bundleId: string, params: AdditionalDataDomainParams): Promise<void> => {
+    const request: AdditionalDataDomainRequestDto = {
       action: { [params.action]: null },
       group: { [params.group]: null },
       category: { [params.category]: null },
@@ -183,6 +185,24 @@ export default class BundlePackageService extends CanisterService {
       resource_id: [],
     }
     const response = (await this.actor.apply_bundle_section(bundleId, request)) as CanisterResponse<string>
+    this.responseHandler(response)
+  }
+
+  public applyDataSectionRaw = async (bundleId: string, params: AdditionalDataRawParams): Promise<void> => {
+    const request: AdditionalDataRawRequestDto = {
+      action: { [params.action]: null },
+      group: { [params.group]: null },
+      category: { [params.category]: null },
+      name: this.createOptionalParam(params.name),
+      locale: this.createOptionalParam(params.locale),
+      payload: {
+        value: params.payload.value,
+        content_type: this.createOptionalParam(params.payload.contentType),
+      },
+      nested_path: [],
+      resource_id: [],
+    }
+    const response = (await this.actor.apply_bundle_section_raw(bundleId, request)) as CanisterResponse<string>
     this.responseHandler(response)
   }
 }

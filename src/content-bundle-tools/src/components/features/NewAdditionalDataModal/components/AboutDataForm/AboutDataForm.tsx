@@ -1,5 +1,5 @@
 import { type FC, useCallback } from 'react'
-import type { AboutDataParams, ApplyAdditionalDataParams } from '~/types/bundleDataTypes.ts'
+import type { AboutDataParams, AdditionalDataDomainParams } from '~/types/bundleDataTypes.ts'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import locales from '~/../public/libs/locales.json'
@@ -11,7 +11,7 @@ const LOCALES = locales as Record<string, string>
 
 interface AboutDataFormProps {
   formId: string
-  onSubmit: (params: Pick<ApplyAdditionalDataParams, 'payload' | 'locale'>) => void
+  onSubmit: (params: { domainParams: Pick<AdditionalDataDomainParams, 'payload' | 'locale'> }) => void
 }
 
 type FormValues = Omit<AboutDataParams, 'attributes'>
@@ -21,9 +21,11 @@ const AboutDataForm: FC<AboutDataFormProps> = ({ formId, onSubmit }) => {
     (values: FormValues) => {
       const locale = Object.keys(LOCALES).find(key => LOCALES[key] === values.locale)!
       onSubmit({
-        locale,
-        payload: {
-          about: values,
+        domainParams: {
+          locale,
+          payload: {
+            about: values,
+          },
         },
       })
     },
