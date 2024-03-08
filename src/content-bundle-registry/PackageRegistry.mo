@@ -503,7 +503,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		Buffer.toArray(res);
 	};
 
-	public composite query func get_packages_by_criteria(criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundlePackageView] {
+	public composite query func get_packages_by_criteria(start:Nat, limit:Nat, criteria:Types.SearchCriteriaArgs) : async  CommonTypes.DataSlice<Conversion.BundlePackageView>  {
 		let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
 		
 		let by_creator = switch (criteria.creator) {
@@ -545,7 +545,8 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		var ids:[Text] = [];
 		if (criteria.intersect) {ids:=CommonUtils.build_intersect(id_arr)}
 		else { ids:=CommonUtils.build_uniq(id_arr)};
-		_get_packages(ids);
+
+		CommonUtils.get_page(ids, start, limit, package_get, Conversion.convert_package_view);
 	};
 
 	public query func get_index_service() : async Text {
