@@ -5,7 +5,7 @@ import Select from '~/components/general/Select'
 import { TextInput } from '~/components/general/Inputs'
 import styles from './LocationDataForm.module.scss'
 import type { AdditionalDataDomainParams } from '~/types/bundleDataTypes.ts'
-import countries from '~/../public/libs/countries.json'
+import countries from '~/assets/countries.json'
 
 const COUNTRIES = countries as Record<string, string>
 

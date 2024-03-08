@@ -5,7 +5,7 @@ import GoogleMap from '~/components/features/GoogleMap/GoogleMap.tsx'
 import DataItemDefault from '../DataItemDefault/DataItemDefault.tsx'
 import If from '~/components/general/If'
 import styles from './DataItemLocation.module.scss'
-import countries from '~/../public/libs/countries.json'
+import countries from '~/assets/countries.json'
 
 const COUNTRIES = countries as Record<string, string>
 

@@ -20,17 +20,17 @@ export enum ADDITIONAL_DATA_GROUPS {
 export enum POI_CATEGORIES {
   Location = 'Location',
   About = 'About',
-  // History = 'History',
+  History = 'History',
   AudioGuide = 'AudioGuide',
   Gallery = 'Gallery',
-  // AR = 'AR',
+  AR = 'AR',
 }
 
 export enum ADDITIONS_CATEGORIES {
   Audio = 'Audio',
   Video = 'Video',
   Gallery = 'Gallery',
-  // Article = 'Article',
+  Article = 'Article',
   Document = 'Document',
 }
 

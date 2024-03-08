@@ -18,7 +18,7 @@ const ImageInput: FC<ImageInputProps> = ({ src, onLoaded, maxSize, className }) 
   const [imgSrc, setImgSrc] = useState(src)
 
   const onFileLoaded = useCallback<FileInputProps['onLoaded']>(
-    (readerResult, file) => {
+    ({ readerResult, file }) => {
       if (maxSize && maxSize < file.size) {
         enqueueSnackbar(`Max file size is ${bytesToMb(maxSize)}`, { variant: 'warning' })
         return

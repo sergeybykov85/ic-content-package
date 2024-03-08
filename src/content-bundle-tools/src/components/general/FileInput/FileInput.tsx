@@ -7,8 +7,8 @@ export interface FileInputProps {
   children?: ReactNode
   className?: string
   accept?: ComponentPropsWithoutRef<'input'>['accept']
-  onLoaded: (readerResult: FileReader['result'], file: File) => void
-  getAs: 'base64' | 'string'
+  onLoaded: (response: { file: File; readerResult?: FileReader['result'] }) => void
+  getAs?: 'base64' | 'string'
 }
 
 const FileInput: FC<FileInputProps> = ({ children, className, accept, onLoaded, getAs }) => {
@@ -18,17 +18,21 @@ const FileInput: FC<FileInputProps> = ({ children, className, accept, onLoaded, 
         return
       }
       const file = target.files[0]
-      const reader = new FileReader()
-      reader.onloadend = (): void => {
-        onLoaded(reader.result, file)
-      }
-      switch (getAs) {
-        case 'base64':
-          reader.readAsDataURL(file)
-          break
-        case 'string':
-          reader.readAsText(file)
-          break
+      if (getAs) {
+        const reader = new FileReader()
+        reader.onloadend = (): void => {
+          onLoaded({ file, readerResult: reader.result })
+        }
+        switch (getAs) {
+          case 'base64':
+            reader.readAsDataURL(file)
+            break
+          case 'string':
+            reader.readAsText(file)
+            break
+        }
+      } else {
+        onLoaded({ file })
       }
       target.value = '' // Clean input
     },

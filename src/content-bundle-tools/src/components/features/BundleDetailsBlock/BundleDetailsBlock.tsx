@@ -66,8 +66,8 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
 
   const onNewDataSuccess = useCallback(() => {
     getBundle()
-    getSupportedDataGroups()
-  }, [getBundle, getSupportedDataGroups])
+    setSupportedDataGroups([]) // Trigger useEffect to refresh dataGroups
+  }, [getBundle])
 
   useEffect(() => {
     getBundle()

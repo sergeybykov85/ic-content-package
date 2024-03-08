@@ -3,9 +3,13 @@ import type {
   AdditionalDataCategories,
   AdditionalDataDomainParams,
   AdditionalDataRawParams,
+} from '~/types/bundleDataTypes.ts'
+import {
+  ADDITIONAL_DATA_ACTIONS,
+  ADDITIONAL_DATA_GROUPS,
+  POI_CATEGORIES,
   ADDITIONS_CATEGORIES,
 } from '~/types/bundleDataTypes.ts'
-import { ADDITIONAL_DATA_ACTIONS, ADDITIONAL_DATA_GROUPS, POI_CATEGORIES } from '~/types/bundleDataTypes.ts'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
 import styles from './NewAdditionalDataModal.module.scss'
 import ModalDialog from '~/components/general/ModalDialog'
@@ -17,6 +21,7 @@ import { enqueueSnackbar } from 'notistack'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import Button from '~/components/general/Button'
 import AboutDataForm from '~/components/features/NewAdditionalDataModal/components/AboutDataForm'
+import RawDataForm from '~/components/features/NewAdditionalDataModal/components/RawDataForm'
 
 interface NewAdditionalDataModalProps {
   bundleId: string
@@ -125,8 +130,12 @@ const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({
           return <LocationDataForm {...{ onSubmit, formId }} />
         case POI_CATEGORIES.About:
           return <AboutDataForm {...{ onSubmit, formId }} />
+        case POI_CATEGORIES.AR:
+        case POI_CATEGORIES.History:
+        case ADDITIONS_CATEGORIES.Article:
+          return <p>Work in progress...</p>
         default:
-          return null
+          return <RawDataForm {...{ onSubmit, formId }} />
       }
     },
     [onSubmit, formId],
