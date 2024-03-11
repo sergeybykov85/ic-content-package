@@ -108,14 +108,8 @@ export interface ApplyAdditionalDataParams<T> {
   category: AdditionalDataCategories
   name?: string
   locale?: string
-  action: ADDITIONAL_DATA_ACTIONS
   payload: T
 }
 
-export interface AdditionalDataRawPayloadParams {
-  value: Uint8Array
-  contentType: string
-}
-
 export type AdditionalDataDomainParams = ApplyAdditionalDataParams<AdditionalDataPayloadParams>
-export type AdditionalDataRawParams = ApplyAdditionalDataParams<AdditionalDataRawPayloadParams>
+export type AdditionalDataRawParams = ApplyAdditionalDataParams<File>

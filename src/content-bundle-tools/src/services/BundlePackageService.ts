@@ -17,13 +17,18 @@ import type {
   AdditionalDataRawParams,
   AdditionalDataRawRequestDto,
 } from '~/types/bundleDataTypes.ts'
+import { ADDITIONAL_DATA_ACTIONS } from '~/types/bundleDataTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
+import fileToUint8Array from '~/utils/fileToUint8Array.ts'
 
 export default class BundlePackageService extends CanisterService {
+  public FILE_MAX_SIZE: number
+
   constructor(packageId: string, identity?: Identity | Secp256k1KeyIdentity) {
     super(idl, packageId, identity)
+    this.FILE_MAX_SIZE = Number(import.meta.env.VITE_FILE_MAX_SIZE)
   }
 
   public getPackageDetails = async (): Promise<PackageDetails> => {
@@ -175,7 +180,7 @@ export default class BundlePackageService extends CanisterService {
 
   public applyDataSection = async (bundleId: string, params: AdditionalDataDomainParams): Promise<void> => {
     const request: AdditionalDataDomainRequestDto = {
-      action: { [params.action]: null },
+      action: { [ADDITIONAL_DATA_ACTIONS.Upload]: null },
       group: { [params.group]: null },
       category: { [params.category]: null },
       name: this.createOptionalParam(params.name),
@@ -189,20 +194,58 @@ export default class BundlePackageService extends CanisterService {
   }
 
   public applyDataSectionRaw = async (bundleId: string, params: AdditionalDataRawParams): Promise<void> => {
-    const request: AdditionalDataRawRequestDto = {
-      action: { [params.action]: null },
+    const request: Omit<AdditionalDataRawRequestDto, 'action' | 'payload'> = {
       group: { [params.group]: null },
       category: { [params.category]: null },
       name: this.createOptionalParam(params.name),
       locale: this.createOptionalParam(params.locale),
-      payload: {
-        value: params.payload.value,
-        content_type: this.createOptionalParam(params.payload.contentType),
-      },
       nested_path: [],
       resource_id: [],
     }
-    const response = (await this.actor.apply_bundle_section_raw(bundleId, request)) as CanisterResponse<string>
-    this.responseHandler(response)
+    const fileAsUint8Array = await fileToUint8Array(params.payload)
+    if (params.payload.size < this.FILE_MAX_SIZE) {
+      const completedRequestDto: AdditionalDataRawRequestDto = {
+        ...request,
+        action: { [ADDITIONAL_DATA_ACTIONS.Upload]: null },
+        payload: {
+          value: fileAsUint8Array,
+          content_type: this.createOptionalParam(params.payload.type),
+        },
+      }
+      const response = (await this.actor.apply_bundle_section_raw(
+        bundleId,
+        completedRequestDto,
+      )) as CanisterResponse<string>
+      this.responseHandler(response)
+    } else {
+      // splitting file into chunks
+      const chunks = this.uint8ArrayToChunks(fileAsUint8Array, this.FILE_MAX_SIZE)
+
+      for (const chunk of chunks) {
+        const completedRequestDto: AdditionalDataRawRequestDto = {
+          ...request,
+          action: { [ADDITIONAL_DATA_ACTIONS.UploadChunk]: null },
+          payload: {
+            value: chunk,
+            content_type: this.createOptionalParam(params.payload.type),
+          },
+        }
+        const response = (await this.actor.apply_bundle_section_raw(
+          bundleId,
+          completedRequestDto,
+        )) as CanisterResponse<string>
+        this.responseHandler(response)
+      }
+      const finalRequest: AdditionalDataRawRequestDto = {
+        ...request,
+        action: { [ADDITIONAL_DATA_ACTIONS.Package]: null },
+        payload: {
+          value: new Uint8Array(0), // Empty bytes
+          content_type: this.createOptionalParam(params.payload.type),
+        },
+      }
+      const response = (await this.actor.apply_bundle_section_raw(bundleId, finalRequest)) as CanisterResponse<string>
+      this.responseHandler(response)
+    }
   }
 }

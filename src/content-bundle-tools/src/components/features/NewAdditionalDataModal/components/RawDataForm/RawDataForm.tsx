@@ -5,11 +5,6 @@ import * as Yup from 'yup'
 import { TextInput } from '~/components/general/Inputs'
 import FileInput, { type FileInputProps } from '~/components/general/FileInput'
 import styles from './RawDataForm.module.scss'
-import { enqueueSnackbar } from 'notistack'
-import bytesToMb from '~/utils/bytesToMb.ts'
-import fileToUint8Array from '~/utils/fileToUint8Array.ts'
-
-const FILE_MAX_SIZE = import.meta.env.VITE_FILE_MAX_SIZE
 
 interface RawDataFormProps {
   formId: string
@@ -25,23 +20,14 @@ const RawDataForm: FC<RawDataFormProps> = ({ formId, onSubmit }) => {
 
   const handleSubmit = useCallback(
     async ({ name }: FormValues) => {
-      if (!file) {
-        enqueueSnackbar(`Upload a file, please`, { variant: 'warning' })
-        return
-      }
-      if (file.size > FILE_MAX_SIZE) {
-        enqueueSnackbar(`Max file size is ${bytesToMb(FILE_MAX_SIZE)}`, { variant: 'warning' })
-        return
-      }
-      onSubmit({
-        rawParams: {
-          name,
-          payload: {
-            contentType: file.type,
-            value: await fileToUint8Array(file),
+      if (file) {
+        onSubmit({
+          rawParams: {
+            name,
+            payload: file,
           },
-        },
-      })
+        })
+      }
     },
     [file, onSubmit],
   )
@@ -52,7 +38,9 @@ const RawDataForm: FC<RawDataFormProps> = ({ formId, onSubmit }) => {
     },
     validateOnChange: false,
     validationSchema: Yup.object().shape({
-      name: Yup.string().required('Required!'),
+      name: Yup.string()
+        .required('Required!')
+        .matches(/^[a-zA-Z0-9_. -]+$/g, { message: 'Only latin characters, numbers, spaces and ".", "_", "-"' }),
     }),
     onSubmit: handleSubmit,
   })
@@ -79,7 +67,7 @@ const RawDataForm: FC<RawDataFormProps> = ({ formId, onSubmit }) => {
         className={styles.input}
       />
       <FileInput onLoaded={onLoadFile} className={styles.file}>
-        {file ? file.name : <span>Choose a file up to 2 mb</span>}
+        {file ? <p>{file.name}</p> : <span>Choose a file</span>}
       </FileInput>
     </form>
   )
