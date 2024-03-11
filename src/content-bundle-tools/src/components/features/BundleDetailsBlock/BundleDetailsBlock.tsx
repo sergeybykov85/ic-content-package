@@ -113,7 +113,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           <br />
           <AdditionalData
             title="Point of interest"
-            type={ADDITIONAL_DATA_GROUPS.POI}
+            group={ADDITIONAL_DATA_GROUPS.POI}
             editable={possibilityToModify}
             onPlusClick={group => setNewDataGroup(group)}
             {...{ bundleId, service, bundle }}
@@ -123,7 +123,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           <br />
           <AdditionalData
             title="Additional informartion"
-            type={ADDITIONAL_DATA_GROUPS.Additions}
+            group={ADDITIONAL_DATA_GROUPS.Additions}
             editable={possibilityToModify}
             onPlusClick={group => setNewDataGroup(group)}
             {...{ bundleId, service, bundle }}

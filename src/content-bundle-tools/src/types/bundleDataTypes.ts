@@ -1,7 +1,7 @@
 import type { Coordinates, StorageData, VariantType } from '~/types/globals.ts'
 
 export interface AdditionalDataSectionDto {
-  category: VariantType<string>
+  category: VariantType<AdditionalDataCategories>
   data: StorageData[]
   data_path: StorageData
 }
@@ -113,3 +113,9 @@ export interface ApplyAdditionalDataParams<T> {
 
 export type AdditionalDataDomainParams = ApplyAdditionalDataParams<AdditionalDataPayloadParams>
 export type AdditionalDataRawParams = ApplyAdditionalDataParams<File>
+
+export interface RemoveBundleDataParams {
+  group: ADDITIONAL_DATA_GROUPS
+  category?: AdditionalDataCategories
+  resourceId?: string
+}

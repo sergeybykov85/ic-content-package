@@ -16,6 +16,7 @@ import type {
   AdditionalDataDomainParams,
   AdditionalDataRawParams,
   AdditionalDataRawRequestDto,
+  RemoveBundleDataParams,
 } from '~/types/bundleDataTypes.ts'
 import { ADDITIONAL_DATA_ACTIONS } from '~/types/bundleDataTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
@@ -247,5 +248,17 @@ export default class BundlePackageService extends CanisterService {
       const response = (await this.actor.apply_bundle_section_raw(bundleId, finalRequest)) as CanisterResponse<string>
       this.responseHandler(response)
     }
+  }
+
+  public removeBundleData = async (
+    bundleId: string,
+    { group, category, resourceId }: RemoveBundleDataParams,
+  ): Promise<void> => {
+    const response = (await this.actor.remove_bundle_data(bundleId, {
+      group: { [group]: null },
+      category: category ? [{ [category]: null }] : [],
+      resource_id: this.createOptionalParam(resourceId),
+    })) as CanisterResponse<void>
+    this.responseHandler(response)
   }
 }
