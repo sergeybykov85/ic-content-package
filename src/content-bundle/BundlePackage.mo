@@ -488,7 +488,11 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 									// update model
 									case (#ok(_)) {
 										switch (args.group) {
-											case (#POI) {bundle.payload.poi_group:=null};
+											case (#POI) {
+												bundle.payload.poi_group:=null;
+												bundle.index.about:=List.nil();
+												bundle.index.location:=null;
+											};
 											case (#Additions) {bundle.payload.poi_group:=null};
 										};
 									};
