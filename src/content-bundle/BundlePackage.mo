@@ -1433,6 +1433,14 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		let schema = data_group_schema.1;
 
 		if (Utils.is_readonly(data_group)) return #err(#OperationNotAllowed);
+		let resource_name = switch (args.name) {
+			case (?name) {
+				// reject a request if name is not valid
+				if (ICS2Utils.invalid_name(name)) return #err(#InvalidRequest);
+				name;
+			};
+			case (null) {schema.resolve_resource_name(args.category, args.locale)};
+		};		
 		let target_section =  switch (_find_section(data_group,  args.category)) {
 			case (?sec){sec};
 			case (null) {
@@ -1461,12 +1469,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 					case (#err(_)) { return #err(#ActionFailed); };
 				}
 			};
-		};
-
-		// resolve final name
-		let resource_name = switch (args.name) {
-			case (?name) {name;};
-			case (null) {schema.resolve_resource_name(args.category, args.locale)};
 		};
 
 		switch (args.action) {
