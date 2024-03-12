@@ -5,14 +5,12 @@
   height: 32px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   font-size: 18px;
   border-bottom: 1px solid $border-color;
 
-  img {
-    margin-left: 1em;
-    transition: $transition-time;
-    transform: rotate(-90deg);
+  span {
+    margin-right: auto;
   }
 
   &:hover {
@@ -21,11 +19,21 @@
   }
 }
 
+.arrow {
+  margin-left: 1em;
+  transition: $transition-time;
+  transform: rotate(-90deg);
+}
+
 .opened {
   color: $primary-blue-color;
-  img {
+  .arrow {
     transform: rotate(0);
   }
+}
+
+.trash:hover {
+  filter: $red-color-filter;
 }
 
 .body {

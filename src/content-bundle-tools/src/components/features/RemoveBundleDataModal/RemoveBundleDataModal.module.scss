@@ -1,0 +1,21 @@
+@import "src/styles/variables";
+
+.title {
+  font-size: 32px;
+  font-weight: 400;
+  text-align: center;
+  margin-bottom: 32px;
+
+  span {
+    font-weight: 600;
+  }
+}
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  button {
+    width: 100%;
+    text-align: center;
+  }
+}

@@ -17,15 +17,30 @@
   }
 }
 
-.name {
+.shadow {
   width: 100%;
-  bottom: 0;
   position: absolute;
-  margin-top: 8px;
+  height: 24px;
+  &--top {
+    top: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(255,255,255,0) 100%);
+  }
+  &--bottom {
+    bottom: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(255,255,255,0) 100%);
+  }
+}
+
+.name {
+  display: block;
+  width: 100%;
   padding: 0 8px;
   text-align: center;
   color: #FFFFFF;
-  height: 24px;
-  background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(255,255,255,0) 100%);
   @include ellipsis
+}
+
+.cross {
+  margin-left: auto;
+  filter: $white-color-filter;
 }

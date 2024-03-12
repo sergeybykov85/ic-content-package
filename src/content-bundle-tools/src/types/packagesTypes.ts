@@ -1,4 +1,4 @@
-import type { IdentityRecord, VariantType } from '~/types/globals.ts'
+import type { IdentityRecord, RawFile, VariantType } from '~/types/globals.ts'
 
 export enum PackageTypes {
   Public = 'Public',
@@ -33,7 +33,7 @@ export interface PackageDetailsDto extends PackageDto {
 export interface DeployPackageMetadata {
   name: string
   description: string
-  logo?: { value: Uint8Array; type?: string }
+  logo?: RawFile
 }
 
 export interface DeployPackageOptions {

@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { CSSTransition } from 'react-transition-group'
 import useClickAway from '~/hooks/useClickAway'
 import clsx from 'clsx'
@@ -9,15 +9,18 @@ import useCssTransitionClassNames from '~/hooks/useCssTransitionClassNames'
 
 interface ModalDialogProps {
   open: boolean
-  onClose: () => void
+  onClose?: () => void
   children: ReactNode
   className?: string
 }
 
 const ModalDialog: FC<ModalDialogProps> = ({ open, onClose, children, className }) => {
-  usePressEsc(onClose)
+  const handleClose = useCallback(() => onClose && onClose(), [onClose])
 
-  const clickAwayRef = useClickAway<HTMLDialogElement>(onClose)
+  usePressEsc(handleClose)
+
+  const clickAwayRef = useClickAway<HTMLDialogElement>(handleClose)
+
   const { currentTransitionClassName, cssTransitionClassNames, transitionRef } = useCssTransitionClassNames({
     enter: styles['bg-enter'],
     enterActive: styles['bg-enter-active'],

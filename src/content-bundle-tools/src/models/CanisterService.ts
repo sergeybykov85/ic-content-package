@@ -41,7 +41,13 @@ export default class CanisterService {
     return ok
   }
 
-  protected createOptionalParam = <T>(value: T): T[] => {
+  protected createOptionalParam = <T>(value: T): NonNullable<T>[] => {
     return value ? [value] : []
+  }
+
+  protected uint8ArrayToChunks = (arr: Uint8Array, size: number): Uint8Array[] => {
+    return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => {
+      return arr.slice(i * size, i * size + size)
+    })
   }
 }

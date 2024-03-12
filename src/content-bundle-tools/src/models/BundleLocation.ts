@@ -1,11 +1,9 @@
 import type { LocationIndexDto } from '~/types/bundleTypes.ts'
 import CanisterDTO from '~/models/CanisterDTO.ts'
+import type { Coordinates } from '~/types/globals.ts'
 
 export default class BundleLocation extends CanisterDTO {
-  public coordinates: {
-    latitude: number
-    longitude: number
-  }
+  public coordinates: Coordinates
   public country_code2: string
   public city?: string
   public region?: string

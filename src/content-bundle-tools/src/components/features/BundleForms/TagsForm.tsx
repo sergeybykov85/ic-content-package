@@ -1,41 +1,40 @@
 import type { ChangeEventHandler, FC, FormEventHandler } from 'react'
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState } from 'react'
 import { TextInput } from '~/components/general/Inputs'
-import Button from '~/components/general/Button'
-import styles from './CreateBundleForm.module.scss'
+import styles from './BundleForms.module.scss'
 import Chip from '~/components/general/Chip'
 import clsx from 'clsx'
+import IconButton from '~/components/general/IconButton'
 
 interface TagsFormProps {
+  tags: string[]
   onChange: (tags: string[]) => void
 }
 
-const TagsForm: FC<TagsFormProps> = ({ onChange }) => {
+const TagsForm: FC<TagsFormProps> = ({ tags, onChange }) => {
   const [tagValue, setTagValue] = useState('')
-  const [tags, setTags] = useState<string[]>([])
-
-  useEffect(() => {
-    onChange(tags)
-  }, [onChange, tags])
 
   const handleTagChange = useCallback<ChangeEventHandler<HTMLInputElement>>(event => {
     setTagValue(event.target.value)
   }, [])
 
-  const handleDeleteTag = useCallback((value: string) => {
-    setTags(prevState => prevState.filter(item => item !== value))
-  }, [])
+  const handleDeleteTag = useCallback(
+    (value: string) => {
+      onChange(tags.filter(item => item !== value))
+    },
+    [onChange, tags],
+  )
 
   const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
     event => {
       event.preventDefault()
       if (tagValue && !tags.includes(tagValue.toLowerCase())) {
-        setTags(prevState => [...prevState, tagValue.toLowerCase()])
+        onChange([...tags, tagValue.toLowerCase()])
         setTagValue('')
         document.getElementById('tag-input')?.focus()
       }
     },
-    [tagValue, tags],
+    [onChange, tagValue, tags],
   )
 
   return (
@@ -51,9 +50,12 @@ const TagsForm: FC<TagsFormProps> = ({ onChange }) => {
           pattern="[a-zA-Z_]+"
           title="Only letters and underscore"
         />
-        <Button type="submit" variant="text" className={clsx(tagValue && styles['show-plus'])}>
-          <img src="/images/plus.svg" alt="plus" />
-        </Button>
+        <IconButton
+          iconName="plus.svg"
+          iconAlt="plus"
+          type="submit"
+          className={clsx(tagValue && styles['show-plus'])}
+        />
       </div>
       <div className={styles.tags}>
         {tags.map(tag => (

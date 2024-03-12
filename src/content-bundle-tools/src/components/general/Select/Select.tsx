@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useState } from 'react'
 import { TextInput } from '~/components/general/Inputs'
 import useClickAway from '~/hooks/useClickAway.ts'
 import styles from './Select.module.scss'
@@ -28,6 +28,10 @@ function Select<T extends string = string>({
 }: SelectProps<T>): ReactNode {
   const [value, setValue] = useState(defaultValue)
   const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    setValue(defaultValue)
+  }, [defaultValue])
 
   const onFocus = useCallback(() => !disabled && setVisible(true), [disabled])
   const hideOptions = useCallback(() => setVisible(false), [])

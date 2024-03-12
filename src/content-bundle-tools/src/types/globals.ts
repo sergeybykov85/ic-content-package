@@ -8,7 +8,7 @@ export interface PaginatedListResponse<DataType> {
   items: DataType[]
 }
 
-export type VariantType<T extends string> = Record<T, null>
+export type VariantType<T extends string> = Partial<Record<T, null>>
 
 export enum IdentityTypes {
   ICP = 'ICP',
@@ -33,4 +33,14 @@ export interface StorageData {
   bucket_id: string
   locale: string[]
   name: string[]
+}
+
+export interface Coordinates {
+  latitude: number
+  longitude: number
+}
+
+export interface RawFile {
+  value: Uint8Array
+  type?: string
 }

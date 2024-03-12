@@ -9,7 +9,7 @@ const PackageEditPage: FC = () => {
   const { packageId } = useParams()
   const { state } = useLocation()
 
-  if (!state.dataToEdit || !packageId) {
+  if (!state?.dataToEdit) {
     return <Navigate to={`/package/${packageId}`} state={state} />
   }
 
@@ -17,7 +17,7 @@ const PackageEditPage: FC = () => {
     <SectionLayout
       title={
         <>
-          Package ID: {packageId} <CopyBtn text={packageId} />
+          Package ID: {packageId} <CopyBtn text={packageId!} />
         </>
       }
       rightElement={
@@ -26,7 +26,7 @@ const PackageEditPage: FC = () => {
         </Link>
       }
     >
-      <PackageEditForm packageId={packageId} initValues={state.dataToEdit} />
+      <PackageEditForm packageId={packageId!} initValues={state.dataToEdit} />
     </SectionLayout>
   )
 }

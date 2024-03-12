@@ -5,20 +5,31 @@ import { idlFactory as idl } from '~/../../declarations/bundle_package'
 import type { DataSegmentationDto, DeployPackageMetadata, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'
+import type { BundleDetailsDto, BundleDto, BundleUpdateParams, CreateBundleParams } from '~/types/bundleTypes.ts'
 import type {
-  BundleDetailsDto,
-  BundleDto,
   AdditionalDataDto,
-  ADDITIONAL_DATA_TYPES,
-  CreateBundleParams,
-} from '~/types/bundleTypes.ts'
+  ADDITIONAL_DATA_GROUPS,
+  AdditionalDataCategories,
+  AdditionalDataPayloadParams,
+  AdditionalDataPayloadDto,
+  AdditionalDataDomainRequestDto,
+  AdditionalDataDomainParams,
+  AdditionalDataRawParams,
+  AdditionalDataRawRequestDto,
+  RemoveBundleDataParams,
+} from '~/types/bundleDataTypes.ts'
+import { ADDITIONAL_DATA_ACTIONS } from '~/types/bundleDataTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
+import fileToUint8Array from '~/utils/fileToUint8Array.ts'
 
 export default class BundlePackageService extends CanisterService {
+  public FILE_MAX_SIZE: number
+
   constructor(packageId: string, identity?: Identity | Secp256k1KeyIdentity) {
     super(idl, packageId, identity)
+    this.FILE_MAX_SIZE = Number(import.meta.env.VITE_FILE_MAX_SIZE)
   }
 
   public getPackageDetails = async (): Promise<PackageDetails> => {
@@ -48,21 +59,30 @@ export default class BundlePackageService extends CanisterService {
     return new Bundle(this.responseHandler(response))
   }
 
-  public getBundleDataGroups = async (bundleId: string): Promise<ADDITIONAL_DATA_TYPES[]> => {
+  public getBundleDataGroups = async (bundleId: string): Promise<ADDITIONAL_DATA_GROUPS[]> => {
     const response = (await this.actor.get_bundle_data_groups(bundleId)) as CanisterResponse<
-      VariantType<ADDITIONAL_DATA_TYPES>[]
+      VariantType<ADDITIONAL_DATA_GROUPS>[]
     >
-    return this.responseHandler(response).map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
+    return this.responseHandler(response).map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_GROUPS[]
   }
 
-  public getBundleSupportedDataGroups = async (): Promise<ADDITIONAL_DATA_TYPES[]> => {
-    const response = (await this.actor.get_supported_groups()) as VariantType<ADDITIONAL_DATA_TYPES>[]
-    return response.map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_TYPES[]
+  public getBundleSupportedDataGroups = async (): Promise<ADDITIONAL_DATA_GROUPS[]> => {
+    const response = (await this.actor.get_supported_groups()) as VariantType<ADDITIONAL_DATA_GROUPS>[]
+    return response.map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_GROUPS[]
+  }
+
+  public getBundleSupportedDataCategories = async (
+    group: ADDITIONAL_DATA_GROUPS,
+  ): Promise<AdditionalDataCategories[]> => {
+    const response = (await this.actor.get_supported_categories({
+      [group]: null,
+    })) as VariantType<AdditionalDataCategories>[]
+    return response.map(item => Object.keys(item)[0]) as AdditionalDataCategories[]
   }
 
   public getBundleAdditionalData = async (
     bundleId: string,
-    type: ADDITIONAL_DATA_TYPES,
+    type: ADDITIONAL_DATA_GROUPS,
   ): Promise<{ url: string; sections: AdditionalDataSection[] }> => {
     const response = (await this.actor.get_bundle_data(bundleId, {
       [type]: null,
@@ -91,6 +111,24 @@ export default class BundlePackageService extends CanisterService {
 
     const response = (await this.actor.register_bundle({ ...data, logo })) as CanisterResponse<string>
     return this.responseHandler(response)
+  }
+
+  public updateBundle = async (bundleId: string, data: BundleUpdateParams): Promise<void> => {
+    const request = {
+      name: this.createOptionalParam(data.name),
+      description: this.createOptionalParam(data.description),
+      classification: this.createOptionalParam(data.classification),
+      tags: this.createOptionalParam(data.tags),
+    }
+    const logo = []
+    if (data.logo) {
+      logo.push({
+        value: [...data.logo.value],
+        content_type: this.createOptionalParam(data.logo.type),
+      })
+    }
+    const response = (await this.actor.update_bundle(bundleId, { ...request, logo })) as CanisterResponse<void>
+    this.responseHandler(response)
   }
 
   public getSupportedClassifications = async (): Promise<string[]> => {
@@ -123,5 +161,122 @@ export default class BundlePackageService extends CanisterService {
       identity_type: { ICP: null },
       identity_id: principal,
     })) as boolean
+  }
+
+  public checkPossibilityToModifyBundle = async (bundleId: string, principal: string): Promise<boolean> => {
+    return (await this.actor.bundle_contribute_opportunity_for(bundleId, {
+      identity_type: { ICP: null },
+      identity_id: principal,
+    })) as boolean
+  }
+
+  private createPayloadResponse = (params: AdditionalDataPayloadParams): AdditionalDataPayloadDto => {
+    const payload: AdditionalDataPayloadDto = {
+      location: [],
+      history: [],
+      about: [],
+      reference: [],
+    }
+
+    if (params.location) {
+      payload.location.push({
+        country_code2: params.location.countryCode2,
+        coordinates: params.location.coordinates,
+        city: this.createOptionalParam(params.location.city),
+        region: this.createOptionalParam(params.location.region),
+      })
+    }
+
+    if (params.about) {
+      payload.about.push({
+        ...params.about,
+        attributes: [],
+      })
+    }
+
+    return payload
+  }
+
+  public applyDataSection = async (bundleId: string, params: AdditionalDataDomainParams): Promise<void> => {
+    const request: AdditionalDataDomainRequestDto = {
+      action: { [ADDITIONAL_DATA_ACTIONS.Upload]: null },
+      group: { [params.group]: null },
+      category: { [params.category]: null },
+      name: this.createOptionalParam(params.name),
+      locale: this.createOptionalParam(params.locale),
+      payload: this.createPayloadResponse(params.payload),
+      nested_path: [],
+      resource_id: [],
+    }
+    const response = (await this.actor.apply_bundle_section(bundleId, request)) as CanisterResponse<string>
+    this.responseHandler(response)
+  }
+
+  public applyDataSectionRaw = async (bundleId: string, params: AdditionalDataRawParams): Promise<void> => {
+    const request: Omit<AdditionalDataRawRequestDto, 'action' | 'payload'> = {
+      group: { [params.group]: null },
+      category: { [params.category]: null },
+      name: this.createOptionalParam(params.name),
+      locale: this.createOptionalParam(params.locale),
+      nested_path: [],
+      resource_id: [],
+    }
+    const fileAsUint8Array = await fileToUint8Array(params.payload)
+    if (params.payload.size < this.FILE_MAX_SIZE) {
+      const completedRequestDto: AdditionalDataRawRequestDto = {
+        ...request,
+        action: { [ADDITIONAL_DATA_ACTIONS.Upload]: null },
+        payload: {
+          value: fileAsUint8Array,
+          content_type: this.createOptionalParam(params.payload.type),
+        },
+      }
+      const response = (await this.actor.apply_bundle_section_raw(
+        bundleId,
+        completedRequestDto,
+      )) as CanisterResponse<string>
+      this.responseHandler(response)
+    } else {
+      // splitting file into chunks
+      const chunks = this.uint8ArrayToChunks(fileAsUint8Array, this.FILE_MAX_SIZE)
+
+      for (const chunk of chunks) {
+        const completedRequestDto: AdditionalDataRawRequestDto = {
+          ...request,
+          action: { [ADDITIONAL_DATA_ACTIONS.UploadChunk]: null },
+          payload: {
+            value: chunk,
+            content_type: this.createOptionalParam(params.payload.type),
+          },
+        }
+        const response = (await this.actor.apply_bundle_section_raw(
+          bundleId,
+          completedRequestDto,
+        )) as CanisterResponse<string>
+        this.responseHandler(response)
+      }
+      const finalRequest: AdditionalDataRawRequestDto = {
+        ...request,
+        action: { [ADDITIONAL_DATA_ACTIONS.Package]: null },
+        payload: {
+          value: new Uint8Array(0), // Empty bytes
+          content_type: this.createOptionalParam(params.payload.type),
+        },
+      }
+      const response = (await this.actor.apply_bundle_section_raw(bundleId, finalRequest)) as CanisterResponse<string>
+      this.responseHandler(response)
+    }
+  }
+
+  public removeBundleData = async (
+    bundleId: string,
+    { group, category, resourceId }: RemoveBundleDataParams,
+  ): Promise<void> => {
+    const response = (await this.actor.remove_bundle_data(bundleId, {
+      group: { [group]: null },
+      category: category ? [{ [category]: null }] : [],
+      resource_id: this.createOptionalParam(resourceId),
+    })) as CanisterResponse<void>
+    this.responseHandler(response)
   }
 }

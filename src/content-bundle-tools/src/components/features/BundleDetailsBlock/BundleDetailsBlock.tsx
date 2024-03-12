@@ -5,13 +5,14 @@ import DetailsBlock from '~/components/general/DetailsBlock'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
 import If from '~/components/general/If'
-import { ADDITIONAL_DATA_TYPES } from '~/types/bundleTypes.ts'
+import { ADDITIONAL_DATA_GROUPS } from '~/types/bundleDataTypes.ts'
 import CopyBtn from '~/components/general/CopyBtn'
 import styles from './BundleDetailsBlock.module.scss'
 import BundleControls from '~/components/features/BundleControls'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '~/context/AuthContext'
 import AdditionalData from '~/components/features/AdditionalData'
+import NewAdditionalDataModal from '~/components/features/NewAdditionalDataModal'
 
 interface BundleDetailsBlockProps {
   packageId: string
@@ -27,11 +28,11 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
   const service = useMemo(() => initBundlePackageService?.(packageId), [initBundlePackageService, packageId])
 
   const [bundle, setBundle] = useState<Bundle | null>(null)
-  const [supportedDataGroups, setSupportedDataGroups] = useState<ADDITIONAL_DATA_TYPES[]>([])
+  const [supportedDataGroups, setSupportedDataGroups] = useState<ADDITIONAL_DATA_GROUPS[]>([])
+  const [possibilityToModify, setPossibilityToModify] = useState(false)
+  const [newDataGroup, setNewDataGroup] = useState<ADDITIONAL_DATA_GROUPS | null>(null)
 
-  const isShowControls = useMemo(() => principal === bundle?.owner, [bundle?.owner, principal])
-
-  useEffect(() => {
+  const getBundle = useCallback(() => {
     setLoading(true)
     service
       ?.getBundle(bundleId)
@@ -45,12 +46,45 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
       .finally(() => setLoading(false))
   }, [bundleId, navigate, service, setLoading])
 
+  const getSupportedDataGroups = useCallback(() => {
+    service
+      ?.getBundleSupportedDataGroups()
+      .then(response => {
+        setSupportedDataGroups(response)
+      })
+      .catch(error => {
+        console.error(error)
+        enqueueSnackbar(error.message, {
+          variant: 'error',
+        })
+      })
+  }, [service])
+
+  const onDeleteSuccess = useCallback(() => {
+    navigate(`/package/${packageId}`, { replace: true })
+  }, [navigate, packageId])
+
+  const onNewDataSuccess = useCallback(() => {
+    getBundle()
+    setSupportedDataGroups([]) // Trigger useEffect to refresh dataGroups
+  }, [getBundle])
+
+  useEffect(() => {
+    getBundle()
+  }, [getBundle])
+
   useEffect(() => {
     if (!supportedDataGroups.length) {
+      getSupportedDataGroups()
+    }
+  }, [getSupportedDataGroups, supportedDataGroups.length])
+
+  useEffect(() => {
+    if (service && principal) {
       service
-        ?.getBundleSupportedDataGroups()
+        .checkPossibilityToModifyBundle(bundleId, principal)
         .then(response => {
-          setSupportedDataGroups(response)
+          setPossibilityToModify(response)
         })
         .catch(error => {
           console.error(error)
@@ -59,11 +93,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           })
         })
     }
-  }, [service, supportedDataGroups.length])
-
-  const onDeleteSuccess = useCallback(() => {
-    navigate(`/package/${packageId}`, { replace: true })
-  }, [navigate, packageId])
+  }, [bundleId, principal, service])
 
   if (service && bundle) {
     return (
@@ -74,27 +104,39 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
         <DetailsBlock
           data={{ ...bundle, description: bundle.description || '' }}
           footer={
-            <If condition={isShowControls}>
-              <BundleControls {...{ bundleId, service, onDeleteSuccess }} />
+            <If condition={possibilityToModify}>
+              <BundleControls {...{ bundleId, bundle, service, onDeleteSuccess }} />
             </If>
           }
         />
-        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_TYPES.POI)}>
+        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_GROUPS.POI)}>
           <br />
           <AdditionalData
             title="Point of interest"
-            type={ADDITIONAL_DATA_TYPES.POI}
+            group={ADDITIONAL_DATA_GROUPS.POI}
+            editable={possibilityToModify}
+            onPlusClick={group => setNewDataGroup(group)}
             {...{ bundleId, service, bundle }}
           />
         </If>
-        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_TYPES.Additions)}>
+        <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_GROUPS.Additions)}>
           <br />
           <AdditionalData
             title="Additional informartion"
-            type={ADDITIONAL_DATA_TYPES.Additions}
+            group={ADDITIONAL_DATA_GROUPS.Additions}
+            editable={possibilityToModify}
+            onPlusClick={group => setNewDataGroup(group)}
             {...{ bundleId, service, bundle }}
           />
         </If>
+        <NewAdditionalDataModal
+          bundleId={bundleId}
+          group={newDataGroup}
+          supportedGroups={supportedDataGroups}
+          onClose={() => setNewDataGroup(null)}
+          service={service}
+          onSuccess={onNewDataSuccess}
+        />
       </>
     )
   }

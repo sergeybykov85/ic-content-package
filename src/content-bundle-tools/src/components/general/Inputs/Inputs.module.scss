@@ -1,4 +1,5 @@
 @import "src/styles/variables";
+@import "src/styles/mixins";
 
 .wrapper {
   display: inline-block;
@@ -33,4 +34,6 @@
 }
 .textarea {
   resize: none;
+
+  @include custom-scroll
 }

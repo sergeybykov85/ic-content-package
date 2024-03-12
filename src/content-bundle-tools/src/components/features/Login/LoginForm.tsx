@@ -8,9 +8,9 @@ const LoginForm: FC = () => {
   const { login } = useAuth()
   const onClick = useCallback(() => login(), [login])
   const onLoaded = useCallback<FileInputProps['onLoaded']>(
-    result => {
-      if (typeof result === 'string') {
-        login(result)
+    ({ readerResult }) => {
+      if (typeof readerResult === 'string') {
+        login(readerResult)
       }
     },
     [login],

@@ -28,19 +28,9 @@
   gap: 8px;
 
   button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 53px;
-    width: 53px;
-    border-radius: 50%;
     padding: 0;
     opacity: 0;
     transition: $transition-time;
-  }
-
-  img {
-    height: 24px;
   }
 }
 .show-plus {
