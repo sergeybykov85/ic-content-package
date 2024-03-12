@@ -1,41 +1,40 @@
 import type { ChangeEventHandler, FC, FormEventHandler } from 'react'
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState } from 'react'
 import { TextInput } from '~/components/general/Inputs'
-import styles from './CreateBundleForm.module.scss'
+import styles from './BundleForms.module.scss'
 import Chip from '~/components/general/Chip'
 import clsx from 'clsx'
 import IconButton from '~/components/general/IconButton'
 
 interface TagsFormProps {
+  tags: string[]
   onChange: (tags: string[]) => void
 }
 
-const TagsForm: FC<TagsFormProps> = ({ onChange }) => {
+const TagsForm: FC<TagsFormProps> = ({ tags, onChange }) => {
   const [tagValue, setTagValue] = useState('')
-  const [tags, setTags] = useState<string[]>([])
-
-  useEffect(() => {
-    onChange(tags)
-  }, [onChange, tags])
 
   const handleTagChange = useCallback<ChangeEventHandler<HTMLInputElement>>(event => {
     setTagValue(event.target.value)
   }, [])
 
-  const handleDeleteTag = useCallback((value: string) => {
-    setTags(prevState => prevState.filter(item => item !== value))
-  }, [])
+  const handleDeleteTag = useCallback(
+    (value: string) => {
+      onChange(tags.filter(item => item !== value))
+    },
+    [onChange, tags],
+  )
 
   const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
     event => {
       event.preventDefault()
       if (tagValue && !tags.includes(tagValue.toLowerCase())) {
-        setTags(prevState => [...prevState, tagValue.toLowerCase()])
+        onChange([...tags, tagValue.toLowerCase()])
         setTagValue('')
         document.getElementById('tag-input')?.focus()
       }
     },
-    [tagValue, tags],
+    [onChange, tagValue, tags],
   )
 
   return (

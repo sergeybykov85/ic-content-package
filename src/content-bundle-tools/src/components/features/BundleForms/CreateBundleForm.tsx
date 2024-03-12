@@ -12,11 +12,11 @@ import ImageInput, { type OnLoaded } from '~/components/general/ImageInput'
 import Button from '~/components/general/Button'
 import Select from '~/components/general/Select'
 import clsx from 'clsx'
-import styles from './CreateBundleForm.module.scss'
-import TagsForm from '~/components/features/CreateBundleForm/TagsForm.tsx'
+import styles from './BundleForms.module.scss'
+import TagsForm from '~/components/features/BundleForms/TagsForm.tsx'
 
-const NAME_MAX_LENGTH = 100
-const DESCRIPTION_MAX_LENGTH = 300
+const NAME_MAX_LENGTH = import.meta.env.VITE_BUNDLE_NAME_MAX_LENGTH
+const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_BUNDLE_DESCRIPTION_MAX_LENGTH
 const IMAGE_MAX_SIZE = import.meta.env.VITE_FILE_MAX_SIZE
 
 interface FormValues {
@@ -147,7 +147,7 @@ const CreateBundleForm: FC<CreateBundleFormProps> = ({ packageId }) => {
               error={form.errors.classification}
             />
           </form>
-          <TagsForm onChange={handleTagsChange} />
+          <TagsForm tags={tags} onChange={handleTagsChange} />
         </div>
         <div>
           <ImageInput maxSize={IMAGE_MAX_SIZE} onLoaded={imageOnLoaded} className={styles.img} />

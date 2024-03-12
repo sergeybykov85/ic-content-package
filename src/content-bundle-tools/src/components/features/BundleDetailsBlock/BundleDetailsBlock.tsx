@@ -105,7 +105,7 @@ const BundleDetailsBlock: FC<BundleDetailsBlockProps> = ({ bundleId, packageId }
           data={{ ...bundle, description: bundle.description || '' }}
           footer={
             <If condition={possibilityToModify}>
-              <BundleControls {...{ bundleId, service, onDeleteSuccess }} />
+              <BundleControls {...{ bundleId, bundle, service, onDeleteSuccess }} />
             </If>
           }
         />

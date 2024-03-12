@@ -5,7 +5,7 @@ import { idlFactory as idl } from '~/../../declarations/bundle_package'
 import type { DataSegmentationDto, DeployPackageMetadata, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'
-import type { BundleDetailsDto, BundleDto, CreateBundleParams } from '~/types/bundleTypes.ts'
+import type { BundleDetailsDto, BundleDto, BundleUpdateParams, CreateBundleParams } from '~/types/bundleTypes.ts'
 import type {
   AdditionalDataDto,
   ADDITIONAL_DATA_GROUPS,
@@ -111,6 +111,24 @@ export default class BundlePackageService extends CanisterService {
 
     const response = (await this.actor.register_bundle({ ...data, logo })) as CanisterResponse<string>
     return this.responseHandler(response)
+  }
+
+  public updateBundle = async (bundleId: string, data: BundleUpdateParams): Promise<void> => {
+    const request = {
+      name: this.createOptionalParam(data.name),
+      description: this.createOptionalParam(data.description),
+      classification: this.createOptionalParam(data.classification),
+      tags: this.createOptionalParam(data.tags),
+    }
+    const logo = []
+    if (data.logo) {
+      logo.push({
+        value: [...data.logo.value],
+        content_type: this.createOptionalParam(data.logo.type),
+      })
+    }
+    const response = (await this.actor.update_bundle(bundleId, { ...request, logo })) as CanisterResponse<void>
+    this.responseHandler(response)
   }
 
   public getSupportedClassifications = async (): Promise<string[]> => {

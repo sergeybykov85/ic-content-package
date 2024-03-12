@@ -1,4 +1,4 @@
-import type { Coordinates, IdentityRecord } from '~/types/globals.ts'
+import type { Coordinates, IdentityRecord, RawFile } from '~/types/globals.ts'
 
 export interface BundleDto {
   id: string
@@ -42,7 +42,23 @@ export interface BundleDetailsDto extends Omit<BundleDto, 'tags' | 'classificati
 export interface CreateBundleParams {
   name: string
   description: string
-  logo?: { value: Uint8Array; type?: string }
+  logo?: RawFile
   classification: string
   tags: string[]
+}
+
+export interface BundleUpdateDto {
+  name?: string
+  description?: string
+  logo?: RawFile
+  tags?: string[]
+  classification?: string
+}
+
+export interface BundleUpdateParams {
+  name?: string
+  description?: string
+  logo?: RawFile
+  tags?: string[]
+  classification?: string
 }

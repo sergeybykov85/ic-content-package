@@ -1,6 +1,6 @@
 import { type FC } from 'react'
 import SectionLayout from '~/components/layouts/SectionLayout'
-import CreateBundleForm from '~/components/features/CreateBundleForm'
+import { CreateBundleForm } from '~/components/features/BundleForms'
 import { useParams } from 'react-router-dom'
 
 const DeployBundlePage: FC = () => {
