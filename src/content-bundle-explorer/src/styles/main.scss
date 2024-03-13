@@ -1,0 +1,10 @@
+@import "reset";
+@import "fonts";
+
+body {
+  min-height: 100vh;
+}
+
+.disable-scroll {
+  overflow: hidden;
+}

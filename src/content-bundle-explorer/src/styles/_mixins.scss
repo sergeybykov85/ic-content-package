@@ -1,0 +1,32 @@
+@import "src/styles/variables";
+
+@mixin ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@mixin grid-columns($repeat: 1) {
+  grid-template-columns: repeat($repeat, minmax(0, 1fr));
+}
+
+@mixin box($padding: 32px) {
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: $padding;
+}
+
+@mixin custom-scroll {
+  &::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+    &-thumb {
+      background: $grey-text-color;
+      border-radius: $border-radius;
+    }
+    &-track {
+      background: $grey-background-color;
+      border-radius: $border-radius;
+    }
+  }
+}
