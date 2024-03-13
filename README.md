@@ -4,7 +4,7 @@
 ## content-bundle-tools
 Steps to deploy front-end canister
 
-0. You'll need to install `dfx` and `Node.js` not lower than version 18
+0. You'll need to install `dfx` not lower than version 0.16 and `Node.js` not lower than version 18
 
 1. Pull the **Internet Identity** canister using dfx deps:
 ```
