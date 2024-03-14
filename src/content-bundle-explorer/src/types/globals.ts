@@ -5,12 +5,17 @@ export interface CanisterResponse<T> {
 
 export type VariantType<T extends string> = Partial<Record<T, null>>
 
-export enum IdentityTypes {
+export enum IDENTITY_TYPES {
   ICP = 'ICP',
   EvmChain = 'EvmChain',
 }
 
 export type IdentityRecord = {
-  identity_type: VariantType<IdentityTypes>
+  identity_type: VariantType<IDENTITY_TYPES>
   identity_id: string
+}
+
+export interface PaginatedListResponse<Item> {
+  total_supply: bigint
+  items: Item[]
 }

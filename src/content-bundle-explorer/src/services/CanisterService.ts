@@ -1,6 +1,6 @@
 import type { IDL } from '@dfinity/candid'
 import { Actor, type ActorMethod, type ActorSubclass, HttpAgent } from '@dfinity/agent'
-import type { CanisterResponse } from '~/types/globals.ts'
+import type { CanisterResponse, IDENTITY_TYPES, IdentityRecord } from '~/types/globals.ts'
 
 type ActorInstance = ActorSubclass<Record<string, ActorMethod<unknown[], unknown>>>
 
@@ -38,4 +38,11 @@ export default class CanisterService {
   protected createOptionalParam = <T>(value: T): NonNullable<T>[] => {
     return value ? [value] : []
   }
+
+  protected createIdentityDto = (id: string, type: IDENTITY_TYPES): IdentityRecord => ({
+    identity_id: id,
+    identity_type: {
+      [type]: null,
+    },
+  })
 }

@@ -6,7 +6,7 @@ import styles from './Breadcrumbs.module.scss'
 import { TextInput } from '~/components/general/Inputs'
 import IconButton from '~/components/general/IconButton'
 import clsx from 'clsx'
-import usePressEsc from '~/components/hooks/usePressEsc.ts'
+import usePressEsc from '~/hooks/usePressEsc.ts'
 
 type Type = 'package' | 'bundle'
 export type CrumbSubmitEvent = (type: Type, value: string) => void

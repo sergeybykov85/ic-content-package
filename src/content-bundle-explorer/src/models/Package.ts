@@ -1,4 +1,4 @@
-import type { PackageDto, PackageTypes } from '~/types/packageTypes.ts'
+import type { PackageDto, PACKAGE_TYPES } from '~/types/packageTypes.ts'
 import CanisterDTO from '~/models/CanisterDTO.ts'
 
 export class Package extends CanisterDTO {
@@ -11,7 +11,7 @@ export class Package extends CanisterDTO {
   public creator: string
   public submitter: string
   public submitted: string
-  public submission: PackageTypes
+  public submission: PACKAGE_TYPES
 
   constructor(packageDto: PackageDto) {
     super()

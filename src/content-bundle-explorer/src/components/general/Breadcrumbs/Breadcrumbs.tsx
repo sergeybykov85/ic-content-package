@@ -3,6 +3,7 @@ import Crumb, { type CrumbSubmitEvent } from './Crumb.tsx'
 import styles from './Breadcrumbs.module.scss'
 import { useNavigate, useParams } from 'react-router-dom'
 import If from '~/components/general/If'
+import clsx from 'clsx'
 
 const Breadcrumbs: FC = () => {
   const { packageId = '', bundleId = '' } = useParams()
@@ -21,7 +22,7 @@ const Breadcrumbs: FC = () => {
   )
 
   return (
-    <nav className={styles.flex}>
+    <nav className={clsx(styles.nav, styles.flex)}>
       <Crumb type="package" value={packageId} onSubmit={handleChange} />
       <If condition={Boolean(packageId)}>
         <span className={styles.grey}>/</span>
