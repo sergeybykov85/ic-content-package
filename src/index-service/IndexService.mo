@@ -15,7 +15,7 @@ import Types "./Types";
 import CommonUtils "../shared/CommonUtils";
 import CommonTypes "../shared/CommonTypes";
 
-shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArgs) = this {
+shared  (installation) actor class (initArgs : Types.IndexServiceArgs) = this {
 
 	// def scan period is 5 min = 300 sec
 	let SYNC_DATA_SEC = 300;
@@ -212,9 +212,9 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 			if (delta > MIN_RESCAN_PERIOD) ignore await _sync_package(id, r);
 		};
 	};
-	
-	stable var timer_data_sync = Timer.recurringTimer(#seconds(sync_data_sec), _sync_data_job);
+	// prior to 0.18 : stable var timer_data_sync = Timer.recurringTimer<system>(#seconds(sync_data_sec), _sync_data_job);
 
+	stable var timer_data_sync = 0;
 	/**
 	* Applies list of operators for the tag service
 	*/
@@ -299,7 +299,7 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 		if (not (caller == CREATOR or _is_operator(caller))) return #err(#AccessDenied);
 		sync_data_sec:=seconds;
 		Timer.cancelTimer (timer_data_sync);
-		timer_data_sync:= Timer.recurringTimer(#seconds(sync_data_sec), _sync_data_job);
+		timer_data_sync:= Timer.recurringTimer<system>(#seconds(sync_data_sec), _sync_data_job);
 		return #ok();
 	};	
 
@@ -372,7 +372,7 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 
   	public shared func wallet_receive() {
     	let amount = Cycles.available();
-    	ignore Cycles.accept(amount);
+    	ignore Cycles.accept<system>(amount);
   	};
 	
 	public query func available_cycles() : async Nat {
@@ -387,9 +387,9 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 		operators;
 	};
 
-	public query func get_sync_data_sec() : async Nat {
-		return sync_data_sec;
-	};
+	public query func get_timer_and_sync_data_sec() : async (Timer.TimerId, Nat) {
+		return (timer_data_sync, sync_data_sec);
+	};	
 
 	/**
 	* Returns data segmentation, aka classification over all packages
@@ -420,6 +420,6 @@ shared  (installation) actor class IndexService(initArgs : Types.IndexServiceArg
 	};
 
 	system func postupgrade() {
-		timer_data_sync:= Timer.recurringTimer(#seconds(sync_data_sec), _sync_data_job);
+		timer_data_sync:= Timer.recurringTimer<system>(#seconds(sync_data_sec), _sync_data_job);
 	};			
 };

@@ -1,8 +1,5 @@
-import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Cycles "mo:base/ExperimentalCycles";
-import Int "mo:base/Int";
-import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
 import Option "mo:base/Option";
 import Result "mo:base/Result";
@@ -23,13 +20,13 @@ import EmbededUI "./EmbededUI";
 // -- ICS2 core --
 import ICS2Http "mo:ics2-core/Http";
 
-shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegistryArgs) = this {
+shared (installation) actor class (initArgs : Types.PackageRegistryArgs) = this {
 
 	let RECENT_PACKAGES_CAPACITY = 5;
 	let RECENT_BUNDLES_CAPACITY = 10;
 
 	// immutable field
-	let CREATOR:CommonTypes.Identity = {
+	let _CREATOR:CommonTypes.Identity = {
 		identity_type = #ICP;
 		identity_id = Principal.toText(installation.caller);
 	};
@@ -40,8 +37,6 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
 	});
-
-	stable let NETWORK = initArgs.network;
 
 	// who can manage service : who can register new submitters etc
 	stable var access_list : List.List<CommonTypes.Identity> = List.nil();
@@ -271,7 +266,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 		};
 	};
 
-	public shared query ({ caller }) func http_request(request : ICS2Http.Request) : async ICS2Http.Response {
+	public shared query func http_request(request : ICS2Http.Request) : async ICS2Http.Response {
 		switch (Utils.get_resource_id(request.url)) {
 			case (?r) {
 				//view_mode is ignore for now
@@ -309,7 +304,7 @@ shared (installation) actor class PackageRegistry(initArgs : Types.PackageRegist
 
 	public shared func wallet_receive() {
     	let amount = Cycles.available();
-    	ignore Cycles.accept(amount);
+    	ignore Cycles.accept<system>(amount);
   	};
 	
 	public query func available_cycles() : async Nat {

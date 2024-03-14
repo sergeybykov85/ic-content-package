@@ -1,11 +1,8 @@
-import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Cycles "mo:base/ExperimentalCycles";
-import Int "mo:base/Int";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
 import Option "mo:base/Option";
-import Debug "mo:base/Debug";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
@@ -21,10 +18,10 @@ import CommonUtils "../shared/CommonUtils";
 import ICS2Utils "mo:ics2-core/Utils";
 
 
-shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceArgs) = this {
+shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 
 	// immutable field
-	let CREATOR:CommonTypes.Identity = {
+	let _CREATOR:CommonTypes.Identity = {
 		identity_type = #ICP;
 		identity_id = Principal.toText(installation.caller);
 	};
@@ -35,7 +32,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
 	});
 
-	stable let NETWORK = initArgs.network;
+	stable let _NETWORK = initArgs.network;
 
 	// trial allowance -- minimum number of packages to deploy even if allowances is not set. This is controlled by access_list.
 	stable var trial_allowance : Nat = 0;	
@@ -367,7 +364,7 @@ shared (installation) actor class WidgetService(initArgs : Types.WidgetServiceAr
 
 	public shared func wallet_receive() {
     	let amount = Cycles.available();
-    	ignore Cycles.accept(amount);
+    	ignore Cycles.accept<system>(amount);
   	};
 	
 	public query func available_cycles() : async Nat {

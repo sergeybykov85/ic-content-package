@@ -46,7 +46,7 @@ module {
     };
     
     public func normalize_tag (token : Text) : Text {
-        let x = Text.map(token , Prim.charToLower);
+        Text.map(token , Prim.charToLower);
     };
 
     public func tag_key(id: Text) : Trie.Key<Text> = { key = normalize_tag(id); hash = Text.hash (normalize_tag(id)) };

@@ -1,10 +1,8 @@
-import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import Cycles "mo:base/ExperimentalCycles";
 import Int "mo:base/Int";
 import Nat "mo:base/Nat";
-import Float "mo:base/Float";
 import Principal "mo:base/Principal";
 import Option "mo:base/Option";
 import Result "mo:base/Result";
@@ -12,7 +10,6 @@ import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Trie "mo:base/Trie";
 import List "mo:base/List";
-import Nat64 "mo:base/Nat64";
 
 // shared modules between registry, bundle, tools, et
 import CommonTypes "../shared/CommonTypes";
@@ -29,11 +26,8 @@ import ICS2DataBucket "mo:ics2-core/DataBucket";
 import ICS2Utils "mo:ics2-core/Utils";
 import ICS2Http "mo:ics2-core/Http";
 
-// -- serde --
-import { JSON; Candid } "mo:serde";
 
-
-shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageArgs) = this {
+shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageArgs) = this {
 
 	// management actor
 	let IC : Types.Actor.ICActor = actor "aaaaa-aa";
@@ -620,8 +614,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
         // reeturn active bucket in case data store already initialized
         if (Option.isSome(data_store.active_bucket)) return #ok(CommonUtils.unwrap(data_store.active_bucket));
 
-		let canister_id = Principal.toText(Principal.fromActor(this));	
-
         let cycles_assign:Nat = Option.get(cycles, Utils.DEF_BUCKET_CYCLES);
 	
 		let bucket_counter = data_store.bucket_counter + 1;
@@ -650,8 +642,6 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		if (not CommonUtils.identity_equals(_build_identity(caller), owner)) return #err(#AccessDenied);
         if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
 
-		let canister_id = Principal.toText(Principal.fromActor(this));	
-
         let cycles_assign:Nat = Option.get(cycles, Utils.DEF_BUCKET_CYCLES);
 	
 		let bucket_counter = data_store.bucket_counter + 1;
@@ -671,7 +661,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 		return #ok(bucket);
 	}; 	
 
-	public shared query ({ caller }) func http_request(request : ICS2Http.Request) : async ICS2Http.Response {
+	public shared query func http_request(request : ICS2Http.Request) : async ICS2Http.Response {
 		switch (Utils.get_resource_id(request.url)) {
 			case (?r) {
 				switch (r.view_mode) {
@@ -727,7 +717,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 
   	public shared func wallet_receive() {
     	let amount = Cycles.available();
-    	ignore Cycles.accept(amount);
+    	ignore Cycles.accept<system>(amount);
   	};
 	
 	public query func available_cycles() : async Nat {
@@ -1565,7 +1555,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				switch (bundle.payload.poi_group) {
 					case (?g) {g;};
 					case (null) {
-						let poi_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #POI)) {
+						switch (await _init_data_group(bundle.data_path, #POI)) {
 							case (#ok(r_path)) {
 								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil();};
 								bundle.payload.poi_group := ?g;
@@ -1580,7 +1570,7 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 				switch (bundle.payload.additions_group) {
 					case (?g) {g;};
 					case (null) {
-						let additions_group:Types.DataGroup = switch (await _init_data_group(bundle.data_path, #Additions)) {
+						switch (await _init_data_group(bundle.data_path, #Additions)) {
 							case (#ok(r_path)) {
 								let g:Types.DataGroup = { data_path = r_path; var sections = List.nil(); created = Time.now(); var readonly = null; var access_list = List.nil();};
 								bundle.payload.additions_group := ?g;
@@ -1696,8 +1686,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
     };
 
 	private func _register_bucket(name:Text, operators : [Principal], cycles : Nat): async Text {
-		Cycles.add(cycles);
-		let bucket_actor = await ICS2DataBucket.DataBucket({
+		Cycles.add<system>(cycles);
+		let bucket_actor = await ICS2DataBucket._DataBucket({
 			// apply the user account as operator of the bucket
 			name = name;
 			operators = operators;
@@ -1705,6 +1695,8 @@ shared (installation) actor class BundlePackage(initArgs : Types.BundlePackageAr
 			access_type = #Public;
 			access_token = null;
 		});
+		// run timer : default period in seconds.
+		ignore await bucket_actor.apply_cleanup_period (3600);
 
 		let bucket_principal = Principal.fromActor(bucket_actor);
 
