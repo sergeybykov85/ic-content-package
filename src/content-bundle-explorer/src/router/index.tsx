@@ -11,6 +11,14 @@ const router = createBrowserRouter([
         path: '',
         element: <HomePage />,
       },
+      {
+        path: 'package/:packageId',
+        element: <h1>Package page</h1>,
+      },
+      {
+        path: 'package/:packageId/bundle/:bundleId',
+        element: <h1>Package page</h1>,
+      },
     ],
   },
 ])
