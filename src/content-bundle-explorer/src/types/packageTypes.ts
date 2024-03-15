@@ -37,3 +37,10 @@ export interface Filters {
   tag?: string
   classification?: string
 }
+
+export interface DataSegmentationDto {
+  classifications: string[]
+  countries: string[]
+  tags: string[]
+  total_supply: bigint
+}

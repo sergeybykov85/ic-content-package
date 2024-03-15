@@ -1,11 +1,11 @@
 import { type FC } from 'react'
 import RecentPackages from '~/components/features/RecentPackages'
-import SearchFilters from '~/components/features/SearchFilters'
+import PackagesByFilter from '~/components/features/PackagesByFilter'
 
 const HomePage: FC = () => {
   return (
     <div>
-      <SearchFilters />
+      <PackagesByFilter />
       <RecentPackages />
     </div>
   )
