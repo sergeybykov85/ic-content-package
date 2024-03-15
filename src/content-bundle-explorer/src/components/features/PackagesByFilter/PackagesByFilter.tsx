@@ -8,7 +8,7 @@ import If from '~/components/general/If'
 import EmptyBlock from '~/components/features/EmptyBlock'
 import styles from './PackagesByFilter.module.scss'
 import PaginationControl from '~/components/features/PaginationControl'
-import { Pagination } from '~/types/globals.ts'
+import type { Pagination } from '~/types/globals.ts'
 
 type DataSegmentation = Omit<DataSegmentationDto, 'total_supply'>
 
@@ -32,8 +32,6 @@ const PackagesByFilter: FC = () => {
   const [packages, setPackages] = useState<Package[]>([])
   const [pagination, setPagination] = useState<Pagination>(paginationInitState)
   const [page, setPage] = useState(0)
-
-  console.log(pagination)
 
   const emptyFilters = useMemo<boolean>(() => {
     return Object.values(filters).every(item => Boolean(!item))

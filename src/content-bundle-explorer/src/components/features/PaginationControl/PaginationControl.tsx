@@ -32,8 +32,6 @@ const PaginationControl: FC<PaginationProps> = ({ pagination, onPageChange, clas
     [onPageChange],
   )
 
-  console.log(pagination.page, pagination.totalPages)
-
   if (pagination.totalPages < 2) {
     return null
   }
