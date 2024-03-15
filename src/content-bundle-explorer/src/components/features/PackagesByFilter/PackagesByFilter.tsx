@@ -5,6 +5,7 @@ import Select from '~/components/general/Select'
 import PackageGrid from '~/components/general/PackageGrid'
 import type { Package } from '~/models/Package.ts'
 import If from '~/components/general/If'
+import Button from '~/components/general/Button'
 import EmptyBlock from '~/components/features/EmptyBlock'
 import styles from './PackagesByFilter.module.scss'
 import PaginationControl from '~/components/features/PaginationControl'
@@ -87,12 +88,15 @@ const PackagesByFilter: FC = () => {
           name="tag"
           onSelect={handleSelectChange}
         />
+        <If condition={!emptyFilters}>
+          <Button variant="text" text="Reset filters" onClick={() => setFilters({})} className={styles.reset} />
+        </If>
       </div>
       <If condition={!packages.length}>
         <EmptyBlock variant={emptyFilters ? 'idle' : 'not-found'} />
       </If>
       <PackageGrid packages={packages} />
-      <PaginationControl pagination={pagination} onPageChange={page => setPage(page)} />
+      <PaginationControl pagination={pagination} onPageChange={page => setPage(page)} className={styles.pagination} />
     </div>
   )
 }
