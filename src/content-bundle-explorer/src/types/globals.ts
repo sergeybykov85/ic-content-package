@@ -19,3 +19,10 @@ export interface PaginatedListResponse<Item> {
   total_supply: bigint
   items: Item[]
 }
+
+export interface Pagination {
+  page: number
+  pageSize: number
+  totalPages: number
+  totalItems: number
+}
