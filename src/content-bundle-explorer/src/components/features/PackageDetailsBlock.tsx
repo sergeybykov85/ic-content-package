@@ -18,7 +18,11 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ service }) => {
     setLoading(true)
     service
       .getPackageDetails()
-      .then(data => setPackageData(data)) /* TODO: Add error boundary */
+      .then(data => setPackageData(data))
+      .catch(error => {
+        console.info('ERROR :', error)
+        throw Error('Package with such ID unavailable or does not exist')
+      })
       .finally(() => setLoading(false))
   }, [service, setLoading])
 

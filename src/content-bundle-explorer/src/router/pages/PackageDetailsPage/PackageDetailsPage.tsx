@@ -11,10 +11,14 @@ const PackageDetailsPage: FC = () => {
   const { packageId = '' } = useParams()
   const { initBundlePackageService } = useServices()
 
-  const service = useMemo(
-    () => initBundlePackageService && initBundlePackageService(packageId),
-    [initBundlePackageService, packageId],
-  )
+  const service = useMemo(() => {
+    try {
+      return initBundlePackageService && initBundlePackageService(packageId)
+    } catch (e) {
+      console.info('ERROR: ', e)
+      throw Error('Wrong package ID')
+    }
+  }, [initBundlePackageService, packageId])
 
   if (!service) {
     return <FullScreenLoader />
