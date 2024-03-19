@@ -9,6 +9,9 @@ const srcPath = path.resolve(__dirname, './src')
 const declarationsDirPath = path.resolve(__dirname, '../declarations')
 
 export default defineConfig({
+  server: {
+    port: 5101,
+  },
   plugins: [
     react(),
     eslint({
@@ -36,4 +39,3 @@ export default defineConfig({
     },
   },
 })
-

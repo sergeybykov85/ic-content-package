@@ -11,7 +11,7 @@ const declarationsDirPath = path.resolve(__dirname, '../declarations')
 
 export default defineConfig({
   server: {
-    port: 5000
+    port: 5100
   },
   plugins: [
     react(),
