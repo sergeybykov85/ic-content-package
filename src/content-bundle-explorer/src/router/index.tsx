@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import MainLayout from '~/components/layouts/MainLayout'
 import HomePage from '~/router/pages/HomePage.tsx'
+import PackageDetailsPage from '~/router/pages/PackageDetailsPage'
 
 const router = createBrowserRouter([
   {
@@ -13,7 +14,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'package/:packageId',
-        element: <h1>Package page</h1>,
+        element: <PackageDetailsPage />,
       },
       {
         path: 'package/:packageId/bundle/:bundleId',
