@@ -9,16 +9,24 @@ export enum PACKAGE_TYPES {
 type PackageSubmission = VariantType<PACKAGE_TYPES>
 
 export interface PackageDto {
-  id: string
   name: string
   description: string
   logo_url: string[]
   max_supply: bigint[]
   created: bigint
   creator: IdentityRecord
+  submission: PackageSubmission
+}
+
+export interface PackageWithSubmitterDto extends PackageDto {
+  id: string
   submitter: IdentityRecord
   submitted: bigint
-  submission: PackageSubmission
+}
+
+export interface PackageWithOwnerDto extends PackageDto {
+  owner: IdentityRecord
+  total_bundles: bigint
 }
 
 export interface FiltersDto {

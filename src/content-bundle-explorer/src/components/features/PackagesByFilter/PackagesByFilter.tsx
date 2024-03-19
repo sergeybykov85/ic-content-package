@@ -3,7 +3,7 @@ import { type DataSegmentationDto, type Filters, PACKAGE_TYPES } from '~/types/p
 import { useServices } from '~/context/ServicesContext'
 import Select from '~/components/general/Select'
 import PackageGrid from '~/components/general/PackageGrid'
-import type { Package } from '~/models/Package.ts'
+import type { PackageWithSubmitter } from '~/models/PackageWithSubmitter.ts'
 import If from '~/components/general/If'
 import Button from '~/components/general/Button'
 import EmptyBlock from '~/components/features/EmptyBlock'
@@ -30,7 +30,7 @@ const PackagesByFilter: FC = () => {
 
   const [filters, setFilters] = useState<Filters>({})
   const [dataSegmentation, setDataSegmentation] = useState<DataSegmentation>(dataSegmentationInitState)
-  const [packages, setPackages] = useState<Package[]>([])
+  const [packages, setPackages] = useState<PackageWithSubmitter[]>([])
   const [pagination, setPagination] = useState<Pagination>(paginationInitState)
   const [page, setPage] = useState(0)
 

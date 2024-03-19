@@ -1,7 +1,7 @@
 import { idlFactory as idl } from '~/../../declarations/package_registry'
 import CanisterService from '~/services/CanisterService.ts'
-import { Package } from '~/models/Package.ts'
-import type { DataSegmentationDto, Filters, FiltersDto, PackageDto } from '~/types/packageTypes.ts'
+import { PackageWithSubmitter } from '~/models/PackageWithSubmitter.ts'
+import type { DataSegmentationDto, Filters, FiltersDto, PackageWithSubmitterDto } from '~/types/packageTypes.ts'
 import { IDENTITY_TYPES, type PaginatedListResponse } from '~/types/globals.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import countries from '~/assets/countries.json'
@@ -15,20 +15,23 @@ export default class PackageRegistryService extends CanisterService {
     super(idl, PACKAGE_REGISTRY_CANISTER_ID)
   }
 
-  public getRecentPackages = async (packageCapacity?: number, bundleCapacity?: number): Promise<Package[]> => {
+  public getRecentPackages = async (
+    packageCapacity?: number,
+    bundleCapacity?: number,
+  ): Promise<PackageWithSubmitter[]> => {
     const response = (await this.actor.get_recent_packages(
       this.createOptionalParam(packageCapacity),
       this.createOptionalParam(bundleCapacity),
-    )) as { package: PackageDto }[]
+    )) as { package: PackageWithSubmitterDto }[]
 
-    return response.map(item => new Package(item.package))
+    return response.map(item => new PackageWithSubmitter(item.package))
   }
 
   public getPackagesByFilters = async (
     page: number,
     pageSize: number,
     filters: Filters,
-  ): Promise<PaginatedList<Package>> => {
+  ): Promise<PaginatedList<PackageWithSubmitter>> => {
     const startIndex = page * pageSize
     const countryCode = Object.keys(COUNTRIES).find(key => COUNTRIES[key] === filters.countryCode)
     const filtersDto: FiltersDto = {
@@ -43,10 +46,10 @@ export default class PackageRegistryService extends CanisterService {
       startIndex,
       pageSize,
       filtersDto,
-    )) as PaginatedListResponse<PackageDto>
+    )) as PaginatedListResponse<PackageWithSubmitterDto>
     return new PaginatedList(
       { page, pageSize, totalItems: Number(total_supply) },
-      items.map(i => new Package(i)),
+      items.map(i => new PackageWithSubmitter(i)),
     )
   }
 

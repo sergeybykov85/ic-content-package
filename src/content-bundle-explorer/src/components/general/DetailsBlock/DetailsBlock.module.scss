@@ -1,0 +1,66 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.container {
+  display: grid;
+  @include grid-columns(1);
+  gap: 32px;
+
+  @media (min-width: $bp-md) {
+    @include grid-columns(2);
+  }
+
+  @include box
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.title {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.img {
+  border-radius: $border-radius;
+  width: 100%;
+}
+
+.details {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    align-items: center;
+    color: $grey-text-color;
+  }
+  span {
+    display: block;
+    margin-left: auto;
+    color: black;
+    max-width: 250px;
+    @include ellipsis;
+  }
+}
+
+.label {
+  color: #FFFFFF!important;
+}
+
+.clickable-id {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tags {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

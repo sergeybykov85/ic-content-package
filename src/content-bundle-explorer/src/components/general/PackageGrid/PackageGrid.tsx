@@ -1,10 +1,10 @@
 import type { FC } from 'react'
-import type { Package } from '~/models/Package.ts'
+import type { PackageWithSubmitter } from '~/models/PackageWithSubmitter.ts'
 import { Link } from 'react-router-dom'
 import Card from '~/components/general/Card'
 import CardsGrid from '~/components/general/CardsGrid'
 
-const PackageGrid: FC<{ packages: Package[] }> = ({ packages }) => (
+const PackageGrid: FC<{ packages: PackageWithSubmitter[] }> = ({ packages }) => (
   <CardsGrid>
     {packages.map(item => (
       <Link to={`/package/${item.id}`} key={item.id}>
