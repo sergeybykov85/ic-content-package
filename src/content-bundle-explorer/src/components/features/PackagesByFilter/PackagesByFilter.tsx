@@ -1,5 +1,5 @@
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
-import { type DataSegmentationDto, type Filters, PACKAGE_TYPES } from '~/types/packageTypes.ts'
+import { type DataSegmentationDto, type PackageFilters, PACKAGE_TYPES } from '~/types/packageTypes.ts'
 import { useServices } from '~/context/ServicesContext'
 import Select from '~/components/general/Select'
 import PackageGrid from '~/components/general/PackageGrid'
@@ -9,7 +9,6 @@ import Button from '~/components/general/Button'
 import EmptyBlock from '~/components/features/EmptyBlock'
 import styles from './PackagesByFilter.module.scss'
 import PaginationControl from '~/components/features/PaginationControl'
-import type { Pagination } from '~/types/globals.ts'
 
 type DataSegmentation = Omit<DataSegmentationDto, 'total_supply'>
 
@@ -18,20 +17,14 @@ const dataSegmentationInitState: DataSegmentation = {
   countries: [],
   tags: [],
 }
-const paginationInitState: Pagination = {
-  page: 0,
-  pageSize: 8,
-  totalPages: 1,
-  totalItems: 0,
-}
 
 const PackagesByFilter: FC = () => {
   const { packageRegistryService } = useServices()
 
-  const [filters, setFilters] = useState<Filters>({})
+  const [filters, setFilters] = useState<PackageFilters>({})
   const [dataSegmentation, setDataSegmentation] = useState<DataSegmentation>(dataSegmentationInitState)
   const [packages, setPackages] = useState<PackageWithSubmitter[]>([])
-  const [pagination, setPagination] = useState<Pagination>(paginationInitState)
+  const [totalPages, setTotalPages] = useState(0)
   const [page, setPage] = useState(0)
 
   const emptyFilters = useMemo<boolean>(() => {
@@ -45,7 +38,7 @@ const PackagesByFilter: FC = () => {
   useEffect(() => {
     packageRegistryService.getPackagesByFilters(page, 8, filters).then(response => {
       setPackages(response.items)
-      setPagination(response.pagination)
+      setTotalPages(response.pagination.totalPages)
     })
   }, [packageRegistryService, filters, page])
 
@@ -96,7 +89,7 @@ const PackagesByFilter: FC = () => {
         <EmptyBlock variant={emptyFilters ? 'idle' : 'not-found'} />
       </If>
       <PackageGrid packages={packages} />
-      <PaginationControl pagination={pagination} onPageChange={page => setPage(page)} className={styles.pagination} />
+      <PaginationControl pagination={{ page, totalPages }} onPageChange={setPage} />
     </div>
   )
 }

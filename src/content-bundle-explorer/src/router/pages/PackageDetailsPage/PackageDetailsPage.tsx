@@ -6,6 +6,7 @@ import Button from '~/components/general/Button'
 import { useServices } from '~/context/ServicesContext'
 import { FullScreenLoader } from '~/components/general/Loaders'
 import PackageDetailsBlock from '~/components/features/PackageDetailsBlock.tsx'
+import BundlesList from '~/components/features/BundlesList'
 
 const PackageDetailsPage: FC = () => {
   const { packageId = '' } = useParams()
@@ -33,6 +34,7 @@ const PackageDetailsPage: FC = () => {
         </Link>
       </h1>
       <PackageDetailsBlock service={service} />
+      <BundlesList service={service} />
     </section>
   )
 }

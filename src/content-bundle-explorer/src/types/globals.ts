@@ -26,3 +26,8 @@ export interface Pagination {
   totalPages: number
   totalItems: number
 }
+
+export interface Coordinates {
+  latitude: number
+  longitude: number
+}

@@ -38,7 +38,7 @@ export interface FiltersDto {
   classification: string[]
 }
 
-export interface Filters {
+export interface PackageFilters {
   kind?: PACKAGE_TYPES
   creator?: string
   countryCode?: string

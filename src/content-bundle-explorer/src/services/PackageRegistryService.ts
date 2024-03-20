@@ -1,7 +1,7 @@
 import { idlFactory as idl } from '~/../../declarations/package_registry'
 import CanisterService from '~/services/CanisterService.ts'
 import { PackageWithSubmitter } from '~/models/PackageWithSubmitter.ts'
-import type { DataSegmentationDto, Filters, FiltersDto, PackageWithSubmitterDto } from '~/types/packageTypes.ts'
+import type { DataSegmentationDto, PackageFilters, FiltersDto, PackageWithSubmitterDto } from '~/types/packageTypes.ts'
 import { IDENTITY_TYPES, type PaginatedListResponse } from '~/types/globals.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import countries from '~/assets/countries.json'
@@ -30,7 +30,7 @@ export default class PackageRegistryService extends CanisterService {
   public getPackagesByFilters = async (
     page: number,
     pageSize: number,
-    filters: Filters,
+    filters: PackageFilters,
   ): Promise<PaginatedList<PackageWithSubmitter>> => {
     const startIndex = page * pageSize
     const countryCode = Object.keys(COUNTRIES).find(key => COUNTRIES[key] === filters.countryCode)
