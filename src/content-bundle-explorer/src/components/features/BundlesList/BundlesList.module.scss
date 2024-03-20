@@ -4,3 +4,13 @@
   @include title;
   margin: 32px 0;
 }
+.filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.reset {
+  height: 100%;
+  margin-top: auto;
+}

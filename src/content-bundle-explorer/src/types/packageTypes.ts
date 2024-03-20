@@ -29,7 +29,7 @@ export interface PackageWithOwnerDto extends PackageDto {
   total_bundles: bigint
 }
 
-export interface FiltersDto {
+export interface PackageFiltersDto {
   intersect: boolean
   kind: PackageSubmission[]
   creator: IdentityRecord[]

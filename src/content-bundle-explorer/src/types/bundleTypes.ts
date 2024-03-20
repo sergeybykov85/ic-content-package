@@ -1,7 +1,8 @@
 import type { Coordinates, IdentityRecord } from '~/types/globals.ts'
-import type { PackageFilters } from '~/types/packageTypes.ts'
+import type { PackageFilters, PackageFiltersDto } from '~/types/packageTypes.ts'
 
 export type BundleFilters = Omit<PackageFilters, 'kind'>
+export type BundleFiltersDto = Omit<PackageFiltersDto, 'kind'>
 
 export interface BundleDto {
   id: string
