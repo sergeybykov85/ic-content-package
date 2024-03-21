@@ -3,6 +3,7 @@ import MainLayout from '~/components/layouts/MainLayout'
 import HomePage from '~/router/pages/HomePage.tsx'
 import PackageDetailsPage from '~/router/pages/PackageDetailsPage'
 import ErrorPage from '~/router/pages/ErrorPage'
+import BundleDetailsPage from '~/router/pages/BundleDetailsPage'
 
 const router = createBrowserRouter([
   {
@@ -10,7 +11,7 @@ const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       {
-        path: '',
+        index: true,
         element: <HomePage />,
       },
       {
@@ -20,7 +21,8 @@ const router = createBrowserRouter([
       },
       {
         path: 'package/:packageId/bundle/:bundleId',
-        element: <h1>Package page</h1>,
+        element: <BundleDetailsPage />,
+        errorElement: <ErrorPage />,
       },
     ],
   },

@@ -7,19 +7,20 @@ import { useServices } from '~/context/ServicesContext'
 import { FullScreenLoader } from '~/components/general/Loaders'
 import PackageDetailsBlock from '~/components/features/PackageDetailsBlock.tsx'
 import BundlesList from '~/components/features/BundlesList'
+import useError from '~/hooks/useError.ts'
 
 const PackageDetailsPage: FC = () => {
   const { packageId = '' } = useParams()
   const { initBundlePackageService } = useServices()
+  const throwError = useError()
 
   const service = useMemo(() => {
     try {
       return initBundlePackageService && initBundlePackageService(packageId)
     } catch (e) {
-      console.info('ERROR: ', e)
-      throw Error('Wrong package ID')
+      throwError(e, 'Wrong package ID')
     }
-  }, [initBundlePackageService, packageId])
+  }, [initBundlePackageService, packageId, throwError])
 
   if (!service) {
     return <FullScreenLoader />
