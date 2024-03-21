@@ -31,3 +31,11 @@ export interface Coordinates {
   latitude: number
   longitude: number
 }
+
+export interface StorageData {
+  resource_id: string
+  url: string
+  bucket_id: string
+  locale: string[]
+  name: string[]
+}

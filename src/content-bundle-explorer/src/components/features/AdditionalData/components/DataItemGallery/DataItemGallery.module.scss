@@ -1,0 +1,46 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.gallery {
+  a {
+    position: relative;
+    transition: $transition-time;
+    cursor: pointer;
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+  img {
+    border-radius: $border-radius;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.shadow {
+  width: 100%;
+  position: absolute;
+  height: 24px;
+  &--top {
+    top: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(255,255,255,0) 100%);
+  }
+  &--bottom {
+    bottom: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(255,255,255,0) 100%);
+  }
+}
+
+.name {
+  display: block;
+  width: 100%;
+  padding: 0 8px;
+  text-align: center;
+  color: #FFFFFF;
+  @include ellipsis
+}
+
+.cross {
+  margin-left: auto;
+  filter: $white-color-filter;
+}

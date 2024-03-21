@@ -8,6 +8,10 @@ import { FullScreenLoader } from '~/components/general/Loaders'
 import type Bundle from '~/models/Bundle.ts'
 import useError from '~/hooks/useError.ts'
 import DetailsBlock from '~/components/general/DetailsBlock'
+import { ADDITIONAL_DATA_GROUPS } from '~/types/bundleDataTypes.ts'
+import { enqueueSnackbar } from 'notistack'
+import If from '~/components/general/If.tsx'
+import AdditionalData from '~/components/features/AdditionalData'
 
 const BundleDetailsPage: FC = () => {
   const { packageId = '', bundleId = '' } = useParams()
@@ -15,10 +19,25 @@ const BundleDetailsPage: FC = () => {
   const throwError = useError()
 
   const [bundle, setBundle] = useState<Bundle | null>(null)
+  const [supportedDataGroups, setSupportedDataGroups] = useState<ADDITIONAL_DATA_GROUPS[]>([])
 
   const service = useMemo(() => initBundlePackageService?.(packageId), [initBundlePackageService, packageId])
 
-  const getBundle = useCallback(() => {
+  const getSupportedDataGroups = useCallback(() => {
+    service
+      ?.getBundleSupportedDataGroups()
+      .then(response => {
+        setSupportedDataGroups(response)
+      })
+      .catch(error => {
+        console.error(error)
+        enqueueSnackbar(error.message, {
+          variant: 'error',
+        })
+      })
+  }, [service])
+
+  useEffect(() => {
     service
       ?.getBundle(bundleId)
       .then(response => {
@@ -27,11 +46,13 @@ const BundleDetailsPage: FC = () => {
       .catch(error => {
         throwError(error, 'Bundle with such ID unavailable or does not exist')
       })
-  }, [bundleId, service, throwError])
+  }, [service, bundleId, throwError])
 
   useEffect(() => {
-    getBundle()
-  }, [getBundle])
+    if (!supportedDataGroups.length) {
+      getSupportedDataGroups()
+    }
+  }, [getSupportedDataGroups, supportedDataGroups.length])
 
   if (!service || !bundle) {
     return <FullScreenLoader />
@@ -46,6 +67,22 @@ const BundleDetailsPage: FC = () => {
         </Link>
       </h1>
       <DetailsBlock data={{ ...bundle, description: bundle.description || '' }} />
+      <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_GROUPS.POI)}>
+        <br />
+        <AdditionalData
+          title="Point of interest"
+          group={ADDITIONAL_DATA_GROUPS.POI}
+          {...{ bundleId, service, bundle }}
+        />
+      </If>
+      <If condition={supportedDataGroups.includes(ADDITIONAL_DATA_GROUPS.Additions)}>
+        <br />
+        <AdditionalData
+          title="Additional informartion"
+          group={ADDITIONAL_DATA_GROUPS.Additions}
+          {...{ bundleId, service, bundle }}
+        />
+      </If>
     </section>
   )
 }

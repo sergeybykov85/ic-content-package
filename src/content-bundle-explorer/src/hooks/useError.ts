@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 
 type ThrowError = (error: unknown, customMessage: string) => void
 
+/**
+ * React Router error handler doesn't catch errors thrown from useCallback, but catches errors from useEffect.
+ * That's why this hook has been created
+ */
 const useError = (): ThrowError => {
   const [error, setError] = useState<unknown>()
 

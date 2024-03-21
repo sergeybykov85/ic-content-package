@@ -4,10 +4,12 @@ import type { DataSegmentationDto, PackageWithOwnerDto } from '~/types/packageTy
 import PackageWithOwner from '~/models/PackageWithOwner.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import Bundle from '~/models/Bundle.ts'
-import type { CanisterResponse, PaginatedListResponse } from '~/types/globals.ts'
+import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import { IDENTITY_TYPES } from '~/types/globals.ts'
 import type { BundleDetailsDto, BundleDto, BundleFilters, BundleFiltersDto } from '~/types/bundleTypes.ts'
 import countries from '~/assets/countries.json'
+import type { ADDITIONAL_DATA_GROUPS, AdditionalDataDto } from '~/types/bundleDataTypes.ts'
+import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
 
 const COUNTRIES = countries as Record<string, string>
 
@@ -58,5 +60,24 @@ export default class BundlePackageService extends CanisterService {
   public getBundle = async (bundleId: string): Promise<Bundle> => {
     const response = (await this.actor.get_bundle(bundleId)) as CanisterResponse<BundleDetailsDto>
     return new Bundle(this.responseHandler(response))
+  }
+
+  public getBundleSupportedDataGroups = async (): Promise<ADDITIONAL_DATA_GROUPS[]> => {
+    const response = (await this.actor.get_supported_groups()) as VariantType<ADDITIONAL_DATA_GROUPS>[]
+    return response.map(item => Object.keys(item)[0]) as ADDITIONAL_DATA_GROUPS[]
+  }
+
+  public getBundleAdditionalData = async (
+    bundleId: string,
+    type: ADDITIONAL_DATA_GROUPS,
+  ): Promise<{ url: string; sections: AdditionalDataSection[] }> => {
+    const response = (await this.actor.get_bundle_data(bundleId, {
+      [type]: null,
+    })) as CanisterResponse<AdditionalDataDto>
+    const data = this.responseHandler(response)
+    return {
+      url: data.data_path.url,
+      sections: data.sections.map(item => new AdditionalDataSection(item)),
+    }
   }
 }

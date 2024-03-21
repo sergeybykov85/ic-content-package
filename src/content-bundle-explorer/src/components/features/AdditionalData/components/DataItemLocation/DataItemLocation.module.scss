@@ -1,0 +1,11 @@
+@import "src/styles/variables";
+
+.item {
+  span {
+    color: $grey-text-color;
+    margin-right: .5em;
+  }
+  p {
+    margin-bottom: .5em;
+  }
+}
