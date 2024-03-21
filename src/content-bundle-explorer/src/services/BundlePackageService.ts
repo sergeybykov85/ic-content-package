@@ -21,7 +21,11 @@ export default class BundlePackageService extends CanisterService {
   }
 
   public getDataSegmentation = async (): Promise<DataSegmentationDto> => {
-    return (await this.actor.get_data_segmentation()) as DataSegmentationDto
+    const response = (await this.actor.get_data_segmentation()) as DataSegmentationDto
+    return {
+      ...response,
+      countries: response.countries.map(i => COUNTRIES[i] || i),
+    }
   }
 
   public getBundlesPaginatedList = async (
