@@ -23,6 +23,10 @@ const BundleDetailsPage: FC = () => {
 
   const service = useMemo(() => initBundlePackageService?.(packageId), [initBundlePackageService, packageId])
 
+  const bundleIdToRender = useMemo(() => {
+    return bundleId?.length > 30 ? `${bundleId?.slice(0, 20)}...` : bundleId
+  }, [bundleId])
+
   const getSupportedDataGroups = useCallback(() => {
     service
       ?.getBundleSupportedDataGroups()
@@ -61,7 +65,7 @@ const BundleDetailsPage: FC = () => {
   return (
     <section>
       <h1 className={styles.title}>
-        Bundle ID: {bundleId} <CopyBtn text={bundleId} />
+        Bundle ID: {bundleIdToRender} <CopyBtn text={bundleId} />
         <Link to={`/package/${packageId}`}>
           <Button variant="text" text="Back to package" />
         </Link>
