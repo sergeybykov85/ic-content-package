@@ -9,6 +9,7 @@ import Button from '~/components/general/Button'
 import EmptyBlock from '~/components/features/EmptyBlock'
 import styles from './PackagesByFilter.module.scss'
 import PaginationControl from '~/components/features/PaginationControl'
+import ChipsFilter from '~/components/features/ChipsFilter'
 
 type DataSegmentation = Omit<DataSegmentationDto, 'total_supply'>
 
@@ -31,7 +32,7 @@ const PackagesByFilter: FC = () => {
     return Object.values(filters).every(item => Boolean(!item))
   }, [filters])
 
-  const handleSelectChange = useCallback((value: string, name?: string) => {
+  const handleFilterChange = useCallback((value: string, name?: string) => {
     setFilters(prevState => ({ ...prevState, [name!]: value !== 'None' ? value : '' }))
   }, [])
 
@@ -55,15 +56,7 @@ const PackagesByFilter: FC = () => {
           defaultValue={filters.kind || ''}
           options={['None', ...Object.values(PACKAGE_TYPES)]}
           name="kind"
-          onSelect={handleSelectChange}
-        />
-        <Select
-          label="Classification"
-          placeholder="Select..."
-          defaultValue={filters.classification || ''}
-          options={['None', ...dataSegmentation.classifications]}
-          name="classification"
-          onSelect={handleSelectChange}
+          onSelect={handleFilterChange}
         />
         <Select
           label="Country"
@@ -71,20 +64,29 @@ const PackagesByFilter: FC = () => {
           defaultValue={filters.countryCode || ''}
           options={['None', ...dataSegmentation.countries]}
           name="countryCode"
-          onSelect={handleSelectChange}
-        />
-        <Select
-          label="Tag"
-          placeholder="Select..."
-          defaultValue={filters.tag || ''}
-          options={['None', ...dataSegmentation.tags]}
-          name="tag"
-          onSelect={handleSelectChange}
+          onSelect={handleFilterChange}
         />
         <If condition={!emptyFilters}>
           <Button variant="text" text="Reset filters" onClick={() => setFilters({})} className={styles.reset} />
         </If>
       </div>
+      <ChipsFilter
+        data={dataSegmentation.classifications}
+        label="Classifications:"
+        name="classification"
+        onChange={handleFilterChange}
+        activeItem={filters.classification || ''}
+        className={styles.chips}
+      />
+      <ChipsFilter
+        data={dataSegmentation.tags}
+        label="Tags:"
+        name="tag"
+        onChange={handleFilterChange}
+        activeItem={filters.tag || ''}
+        className={styles.chips}
+        color="blue"
+      />
       <If condition={!packages.length}>
         <EmptyBlock variant={emptyFilters ? 'idle' : 'not-found'} />
       </If>
