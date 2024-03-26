@@ -1,13 +1,10 @@
-import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Cycles "mo:base/ExperimentalCycles";
-import Int "mo:base/Int";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
 import Option "mo:base/Option";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
-import Time "mo:base/Time";
 import Trie "mo:base/Trie";
 import List "mo:base/List";
 
@@ -18,7 +15,7 @@ import CommonTypes "../shared/CommonTypes";
 import CommonUtils "../shared/CommonUtils";
 
 
-shared (installation) actor class PackageService(initArgs : Types.PackageServiceArgs) = this {
+shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
 	// def cycles for the package canister creation
 	let DEF_PACKAGE_CYCLES:Nat = 1_000_000_000_000;
 	// def cycles for  the databucket crreation when a new package is deployed
@@ -30,7 +27,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 
 
 	// immutable field
-	let CREATOR:CommonTypes.Identity = {
+	let _CREATOR:CommonTypes.Identity = {
 		identity_type = #ICP;
 		identity_id = Principal.toText(installation.caller);
 	};
@@ -41,7 +38,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
 	});
 
-	stable let NETWORK = initArgs.network;
+	stable let _NETWORK = initArgs.network;
 
 	// trial allowance -- minimum number of packages to deploy even if allowances is not set. This is controlled by access_list.
 	stable var trial_allowance : Nat = 0;
@@ -244,9 +241,9 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 		// reject request if fuel is not enough
 		if ((cycles_p + DEF_MINIMUM_REMAINING_CYCLES)  >  Cycles.balance()) return #err(#FuelNotEnough); 
 
-		Cycles.add(cycles_p);
+		Cycles.add<system>(cycles_p);
 		// deploy package
-		let bundle_package_actor = await BundlePackage.BundlePackage({
+		let bundle_package_actor = await BundlePackage._BundlePackage({
 			// apply the user account as operator of the bucket
 			mode = ?args.mode;
 			owner = ?args.owner;
@@ -296,7 +293,7 @@ shared (installation) actor class PackageService(initArgs : Types.PackageService
 
 	public shared func wallet_receive() {
     	let amount = Cycles.available();
-    	ignore Cycles.accept(amount);
+    	ignore Cycles.accept<system>(amount);
   	};
 	
 	public query func available_cycles() : async Nat {

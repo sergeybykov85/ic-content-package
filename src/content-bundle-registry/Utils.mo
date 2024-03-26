@@ -25,7 +25,7 @@ module {
 
    
     public func normalize (token : Text) : Text {
-        let x = Text.map(token , Prim.charToLower);
+        Text.map(token , Prim.charToLower);
     };
 
     public func submission_key(id: Text) : Trie.Key<Text> = { key = normalize(id); hash = Text.hash (normalize(id)) };

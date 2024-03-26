@@ -141,7 +141,7 @@ module {
 						};
 						switch (JSON.toText(to_candid(lj), LOCATION_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
-							case (#err (e)) { return #err(#InvalidRequest)};
+							case (#err (_)) { return #err(#InvalidRequest)};
 						};
 					};
 					case (null)  { return #err(#InvalidRequest)};
@@ -152,7 +152,7 @@ module {
 					case (?about) {
 						switch (JSON.toText(to_candid(about), ABOUT_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
-							case (#err (e)) { return #err(#InvalidRequest)};
+							case (#err (_)) { return #err(#InvalidRequest)};
 						};
 					};
 					// no data given
@@ -164,7 +164,7 @@ module {
 					case (?history) {
 						switch (JSON.toText(to_candid(history), HISTORY_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
-							case (#err (e)) { return #err(#InvalidRequest)};
+							case (#err (_)) { return #err(#InvalidRequest)};
 						};
 					};
 					// no data given
@@ -176,7 +176,7 @@ module {
 					case (?reference) {
 						switch (JSON.toText(to_candid(reference), REFERENCE_FIELDS, null)) {
 							case (#ok(j)) {Text.encodeUtf8(j); };
-							case (#err (e)) { return #err(#InvalidRequest)};
+							case (#err (_)) { return #err(#InvalidRequest)};
 						};
 					};
 					case (null)  { return #err(#InvalidRequest)};
