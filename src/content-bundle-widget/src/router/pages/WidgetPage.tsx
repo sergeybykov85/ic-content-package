@@ -22,7 +22,12 @@ const WidgetPage: FC = () => {
           <h2>{widget.name}</h2>
           <p>{widget.description}</p>
         </>
-      ) : null}
+      ) : (
+        <h2>
+          <br />
+          <i style={{ color: 'red' }}>NOT FOUND</i>
+        </h2>
+      )}
     </div>
   )
 }
