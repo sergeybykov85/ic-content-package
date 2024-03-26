@@ -1,7 +1,7 @@
 import CanisterService from '~/services/CanisterService.ts'
 import { idlFactory as idl } from '~/../../declarations/widget_service'
-import { CanisterResponse } from '~/types/globals.ts'
-import { WidgetDto } from '~/types/widgetTypes.ts'
+import type { CanisterResponse } from '~/types/globals.ts'
+import type { WidgetDto } from '~/types/widgetTypes.ts'
 import Widget from '~/models/Widget.ts'
 
 const WIDGET_SERVICE_CANISTER_ID = import.meta.env.VITE_WIDGET_SERVICE_CANISTER_ID

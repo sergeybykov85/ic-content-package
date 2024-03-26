@@ -1,4 +1,4 @@
-import { IdentityRecord, VariantType } from '~/types/globals.ts'
+import type { IdentityRecord, VariantType } from '~/types/globals.ts'
 
 export enum WIDGET_TYPES {
   Bundle = 'Bundle',

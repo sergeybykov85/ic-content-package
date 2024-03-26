@@ -1,7 +1,7 @@
-import { FC, useEffect, useState } from 'react'
+import { type FC, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useServices } from '~/context/ServicesContext'
-import Widget from '~/models/Widget.ts'
+import type Widget from '~/models/Widget.ts'
 
 const WidgetPage: FC = () => {
   const { widgetId } = useParams()
@@ -13,7 +13,7 @@ const WidgetPage: FC = () => {
     if (widgetId) {
       widgetService.getWidget(widgetId).then(response => setWidget(response))
     }
-  }, [])
+  }, [widgetId, widgetService])
   return (
     <div>
       <h1>Widget with ID: {widgetId}</h1>
