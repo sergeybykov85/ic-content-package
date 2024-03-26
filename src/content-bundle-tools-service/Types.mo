@@ -97,6 +97,22 @@ module {
 	*/
 	public module Actor {
 
+		public type BundlePackageView = {
+			// principal id
+			id : Text;
+			submission : Submission;
+			max_supply : ?Nat;
+			name : Text;
+			description : Text;
+			logo_url : ?Text;
+			created: Time.Time;
+			submitted: Time.Time;
+			// who created a package
+			creator : CommonTypes.Identity;
+			// who submitted a package
+			submitter : CommonTypes.Identity;		
+		};
+
 		public type PackageDetails = {
 			submission : Submission;
 			creator : CommonTypes.Identity;
@@ -107,16 +123,21 @@ module {
 			name : Text;
 			description : Text;
 			logo_url : ?Text;
-		};
+		};	
 	
 		public type PackageRegistryActor = actor {
-			is_submitter : shared(identity:CommonTypes.Identity)  -> async Bool;
+			is_submitter : shared query(identity:CommonTypes.Identity)  -> async Bool;
+			get_package : shared query(id:Text)  -> async Result.Result<BundlePackageView, CommonTypes.Errors>;
 			register_package : shared(package : Principal, assign_creator : ?CommonTypes.Identity)  -> async Result.Result<Text, CommonTypes.Errors>;
+			delist_package : shared (id : Text) -> async  Result.Result<Text, CommonTypes.Errors>;
 		};		
 
 		public type BundlePackageActor = actor {
+			get_details : shared query () -> async PackageDetails;
+			total_supply : shared query () -> async Nat;
 			transfer_ownership : shared (identity:CommonTypes.Identity)  -> async Result.Result<(), CommonTypes.Errors>;
-			init_data_store : shared (cycles : ?Nat) -> async Result.Result<Text, CommonTypes.Errors>;
+			init_datastore : shared (cycles : ?Nat) -> async Result.Result<Text, CommonTypes.Errors>;
+			release_datastore : shared (cycles : ?Nat) -> async Result.Result<(), CommonTypes.Errors>;
 			apply_contributors : shared (contributors: [CommonTypes.Identity])  -> async Result.Result<(), CommonTypes.Errors>;
 		};
 

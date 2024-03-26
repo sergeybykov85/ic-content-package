@@ -349,19 +349,7 @@ module {
 			commit_batch_by_key : shared (binding_key : Text, resource_args : ResourceArgs) -> async Result.Result<IdUrl, CommonTypes.Errors>;		
 		};
 
-    	public type ICActor = actor {
-        	stop_canister : shared { canister_id : Principal } -> async ();
-			delete_canister : shared { canister_id : Principal } -> async ();
-        	update_settings : shared {
-            	canister_id : Principal;
-            	settings : ICSettingsArgs;
-        	} -> async ();
-    	};
-
-		public type Wallet = actor {
-    		wallet_receive : () -> async ();
-			withdraw_cycles : shared {to : Principal; remainder_cycles : ?Nat} -> async ();
-    	};		
+	
 	};
 	///
 

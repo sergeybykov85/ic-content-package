@@ -1,6 +1,7 @@
 import Prelude "mo:base/Prelude";
 import Prim "mo:⛔";
 import Text "mo:base/Text";
+import Nat "mo:base/Nat";
 import Trie "mo:base/Trie";
 import TrieSet "mo:base/TrieSet";
 import Iter "mo:base/Iter";
@@ -14,6 +15,8 @@ import CommonTypes "./CommonTypes";
 module {
 
     public let ROOT = "/";
+
+    public let DEF_REMAINDER_CYCLES: Nat = 20_000_000_000;
 
     public func text_key(id: Text) : Trie.Key<Text> = { key = id; hash = Text.hash id };
 

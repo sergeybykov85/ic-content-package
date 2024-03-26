@@ -30,7 +30,7 @@ import ICS2Http "mo:ics2-core/Http";
 shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageArgs) = this {
 
 	// management actor
-	let IC : Types.Actor.ICActor = actor "aaaaa-aa";
+	let IC : CommonTypes.Actor.ICActor = actor "aaaaa-aa";
 
 	let POI_SCHEMA:Types.DataShema = Types.DataShema(#POI, [#Location, #About, #History, #AudioGuide, #Gallery, #AR]);
 	let ADDITIONS_SCHEMA:Types.DataShema = Types.DataShema(#Additions, [#Audio, #Video, #Gallery, #Article, #Document]);
@@ -606,7 +606,7 @@ shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageA
 	* Init a store, creating a 1st data bucket
 	* Allowed only to the owner or creator. If active bucket is already present --> no effect
 	*/
-	public shared ({ caller }) func init_data_store (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func init_datastore (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors> {
 		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		let caller_identity = _build_identity(caller);
 		if (not (CommonUtils.identity_equals(caller_identity, owner) or 
@@ -632,6 +632,41 @@ shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageA
 
 		return #ok(bucket);
 	};
+	/**
+	* Removes any created datastores.
+	* Allowed only to the owner or creator and if no bundles created yet.
+	* It might be useful to reset and remove just created package
+	*/
+	public shared ({ caller }) func release_datastore (remainder_cycles:?Nat) : async Result.Result<(), CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
+		let caller_identity = _build_identity(caller);
+		if (not (CommonUtils.identity_equals(caller_identity, owner) or 
+			CommonUtils.identity_equals(caller_identity, CREATOR))) return #err(#AccessDenied);
+        // reeturn active bucket in case data store already initialized
+        if (Option.isNull(data_store.active_bucket)) return #err(#DataStoreNotInitialized);
+		// allowed only if no bundles created yet
+		if (Trie.size(bundles) > 0) return #err(#OperationNotAllowed);
+
+		for (bucket_id in List.toIter(data_store.buckets)){
+			let bucket = Principal.fromText(bucket_id);
+			let ic_storage_wallet : CommonTypes.Actor.Wallet = actor (bucket_id);
+
+			let cycles = Option.get(remainder_cycles, CommonUtils.DEF_REMAINDER_CYCLES);
+			await ic_storage_wallet.withdraw_cycles({to = Principal.fromActor(this); remainder_cycles = ?cycles});
+			await IC.stop_canister({canister_id = bucket});
+			await IC.delete_canister({canister_id = bucket});
+		};
+
+		data_store.active_bucket := null;
+		data_store.buckets := List.nil();
+		data_store.bucket_counter := 0;
+		data_store.last_update:= ?Time.now();
+		//
+		_bundle_counter :=0;
+				// reset
+		return #ok();
+	};
+
 
 	/**
 	* Init a store, creating a 1st data bucket
@@ -659,7 +694,28 @@ shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageA
         data_store.last_update := ?Time.now();
 
 		return #ok(bucket);
-	}; 	
+	};
+
+	/**
+	* Sends cycles to the canister. The destination canister must have a method wallet_receive.
+	* It is possible to specify the amount of cycles to leave.
+	*/
+	public shared ({ caller }) func withdraw_cycles (args : {to : Principal;remainder_cycles :?Nat;}) : async () {
+		assert (not Principal.isAnonymous(caller));
+		let caller_identity = _build_identity(caller);		
+		assert (CommonUtils.identity_equals(caller_identity, owner) or CommonUtils.identity_equals(caller_identity, CREATOR));
+
+		let destination = Principal.toText(args.to);
+		let wallet : CommonTypes.Actor.Wallet = actor (destination);
+		let cycles = Cycles.balance();
+		let cycles_to_leave = Option.get(args.remainder_cycles, 0);
+		if  (cycles > cycles_to_leave) {
+			let cycles_to_send:Nat = cycles - cycles_to_leave;
+			Cycles.add<system>(cycles_to_send);
+            await wallet.wallet_receive();
+		}
+	};	
+
 
 	public shared query func http_request(request : ICS2Http.Request) : async ICS2Http.Response {
 		switch (Utils.get_resource_id(request.url)) {

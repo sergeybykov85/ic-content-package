@@ -93,5 +93,21 @@ module {
 		// no resource or no chunk
 		#ActionFailed;	
     };
+
+	public module Actor = {
+		public type ICActor = actor {
+        	stop_canister : shared { canister_id : Principal } -> async ();
+			delete_canister : shared { canister_id : Principal } -> async ();
+        	update_settings : shared {
+            	canister_id : Principal;
+            	settings : {controllers : ?[Principal]; };
+        	} -> async ();
+    	};
+
+		public type Wallet = actor {
+    		wallet_receive : () -> async ();
+			withdraw_cycles : shared {to : Principal; remainder_cycles : ?Nat} -> async ();
+    	};	
+	}	
 	
 };

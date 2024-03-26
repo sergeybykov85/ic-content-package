@@ -21,9 +21,10 @@ shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
 	// def cycles for  the databucket crreation when a new package is deployed
 	let DEF_DATASTORE_CYCLES:Nat = 600_000_000_000;
 	let DEF_MINIMUM_REMAINING_CYCLES:Nat = 5_000_000_000_000;
+	let DEF_REMAINDER_REMOVE_PACK_CYCLES: Nat = 20_000_000_000;
 	
 	// management actor
-	let IC : Types.Actor.ICActor = actor "aaaaa-aa";
+	let IC : CommonTypes.Actor.ICActor = actor "aaaaa-aa";
 
 
 	// immutable field
@@ -228,7 +229,57 @@ shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
 			cycles_package = null;
 			cycles_datastore = null;
 		});
-	};	
+	};
+
+	/**
+	* Removes the empty package physically and delists it from the registry as well.
+	* Package creator/owner is allowed to do this action
+	*/
+	public shared ({ caller }) func remove_empty_package (id : Text, remainder_cycles:?Nat) : async Result.Result<Text, CommonTypes.Errors> {
+		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
+		let identity = _build_identity(caller);
+
+		// index for creator
+		switch (creator2package_get(identity)) {
+			case (?by_creator) {
+				if (Option.isNull(List.find(by_creator, func (k:Text):Bool {k == id}))) return #err(#AccessDenied);
+				let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
+
+				switch (await registry_actor.get_package(id)) {
+					case (#ok(_)) { 
+						let package_actor : Types.Actor.BundlePackageActor = actor (id);
+						let cycles = Option.get(remainder_cycles, DEF_REMAINDER_REMOVE_PACK_CYCLES);
+						// prepare --> remove datastores
+						switch (await package_actor.release_datastore(?cycles)) {
+							case (#ok(_)) {
+								let package = Principal.fromText(id);
+								let ic_storage_wallet : CommonTypes.Actor.Wallet = actor (id);
+								await ic_storage_wallet.withdraw_cycles({to = Principal.fromActor(this); remainder_cycles = ?cycles});
+								await IC.stop_canister({canister_id = package});
+								await IC.delete_canister({canister_id = package});
+								//exclude
+								let fby_creator = List.mapFilter<Text, Text>(by_creator,
+									func(b:Text) : ?Text { if (b == id) { return null; } else { return ?b; }}
+								);
+								creator2package := Trie.put(creator2package, CommonUtils.identity_key(identity), Text.equal, fby_creator).0; 
+								// delist package as well
+								ignore await registry_actor.delist_package(id);
+
+								return #ok(id);
+							};
+							case (#err(e)) { return #err(e)};
+						};
+					};
+					case (#err(e)) { return #err(e); };
+				};
+
+			};
+			case (null) { return #err(#AccessDenied)}
+		};		
+
+	};
+
+
 
 	private func _deploy_package (args : Types.PackageCreationRequest) : async Result.Result<Text, CommonTypes.Errors> {
 		let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
@@ -254,7 +305,7 @@ shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
 
 		// init data store
 		let package_principal = Principal.fromActor(bundle_package_actor);
-		switch (await bundle_package_actor.init_data_store(?cycles_store)) {
+		switch (await bundle_package_actor.init_datastore(?cycles_store)) {
 			// ignore in case of success
 			case (#ok(_)) {};
 			case (#err(e)) { return #err(#ActionFailed)};

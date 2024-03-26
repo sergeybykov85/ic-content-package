@@ -208,32 +208,10 @@ shared (installation) actor class (initArgs : Types.PackageRegistryArgs) = this 
 				let identity = _build_identity(caller);
 				// who can delist : submitter, creator or owner of the registry
 				if (can_manage(caller) or package.submitter == identity or package.creator == identity) {
-					packages := Trie.remove(packages, CommonUtils.text_key(id), Text.equal).0; 
-					// index for all packages
-					all_packages:=CommonUtils.list_exclude(all_packages, id);
-					// index for submitter
-					switch (submitter2package_get(package.submitter)) {
-						case (?by_provider) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(package.submitter), Text.equal, CommonUtils.list_exclude(by_provider, id)).0; };
-						case (null) {}
-					};
-					// index for creator
-					switch (creator2package_get(package.creator)) {
-						case (?by_creator) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(package.creator), Text.equal, CommonUtils.list_exclude(by_creator, id)).0; };
-						case (null) {}
-					};
-
-					// index by kind
-					let submission_key = Utils.resolve_submission_name(package.submission);
-					switch (type2package_get(submission_key)) {
-						case (?by_kind) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal,  CommonUtils.list_exclude(by_kind, id)).0; };
-						case (null) {}
-					};
-
-					// un register in the tag service
-					let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
-					ignore await index_service_actor.exclude_package(Principal.fromText(id));	
+					ignore await _delist_package(id, package);
+					return #ok(id); 
 				};
-				#ok(id); 
+				return #err(#AccessDenied);
 			};
 			case (null) { return #err(#NotFound); };
 		};		
@@ -567,7 +545,36 @@ shared (installation) actor class (initArgs : Types.PackageRegistryArgs) = this 
 			identity_type = #ICP;
 			identity_id = Principal.toText(caller);
 		};
-	};	
+	};
+
+
+	private func _delist_package (id:Text, package : Types.BundlePackage) : async Text {
+		packages := Trie.remove(packages, CommonUtils.text_key(id), Text.equal).0; 
+		// index for all packages
+		all_packages:=CommonUtils.list_exclude(all_packages, id);
+		// index for submitter
+		switch (submitter2package_get(package.submitter)) {
+			case (?by_provider) {submitter2package := Trie.put(submitter2package, CommonUtils.identity_key(package.submitter), Text.equal, CommonUtils.list_exclude(by_provider, id)).0; };
+			case (null) {}
+		};
+		// index for creator
+		switch (creator2package_get(package.creator)) {
+			case (?by_creator) {creator2package := Trie.put(creator2package, CommonUtils.identity_key(package.creator), Text.equal, CommonUtils.list_exclude(by_creator, id)).0; };
+			case (null) {}
+		};
+
+		// index by kind
+		let submission_key = Utils.resolve_submission_name(package.submission);
+		switch (type2package_get(submission_key)) {
+			case (?by_kind) {type2package := Trie.put(type2package, Utils.submission_key(submission_key), Text.equal,  CommonUtils.list_exclude(by_kind, id)).0; };
+			case (null) {}
+		};
+
+		// un register in the tag service
+		let index_service_actor : Types.Actor.IndexServiceActor = actor (index_service);
+		ignore await index_service_actor.exclude_package(Principal.fromText(id));	
+		return id; 
+	};		
 
 	private func _register_submitter (args : Types.CommonArgs) : Result.Result<(), CommonTypes.Errors> {
 		switch (submitter_get(args.identity)) {
