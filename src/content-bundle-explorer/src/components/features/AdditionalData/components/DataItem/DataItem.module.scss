@@ -1,0 +1,41 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.header {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  border-bottom: 1px solid $border-color;
+
+  span {
+    margin-right: auto;
+  }
+
+  &:hover {
+    cursor: pointer;
+    color: $primary-blue-color;
+  }
+}
+
+.arrow {
+  margin-left: 1em;
+  transition: $transition-time;
+  transform: rotate(-90deg);
+}
+
+.opened {
+  color: $primary-blue-color;
+  .arrow {
+    transform: rotate(0);
+  }
+}
+
+.trash:hover {
+  filter: $red-color-filter;
+}
+
+.body {
+  padding: 16px 0;
+}

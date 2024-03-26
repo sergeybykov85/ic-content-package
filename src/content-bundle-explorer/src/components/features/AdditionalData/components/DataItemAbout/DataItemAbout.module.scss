@@ -1,0 +1,21 @@
+@import "src/styles/variables";
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.locale {
+  text-transform: uppercase;
+  span {
+    text-transform: none;
+    color: $grey-text-color;
+    margin-right: .5em;
+  }
+}
+
+.name {
+  font-size: 24px;
+  margin: .3em 0;
+}

@@ -1,0 +1,28 @@
+@import "src/styles/variables";
+
+.nav {
+  padding-bottom: 16px;
+}
+
+.flex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-btn {
+  padding: 6px;
+}
+.form {
+  input {
+    padding: 6px;
+  }
+}
+.grey {
+  color: $grey-text-color;
+}
+.value:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+

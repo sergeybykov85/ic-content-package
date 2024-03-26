@@ -1,0 +1,83 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.select {
+  position: relative;
+  display: inline-block;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.no-label {
+  margin-bottom: 0;
+}
+
+.opened {
+  .input:after {
+    transform: rotate(180deg);
+  }
+  .options {
+    display: block;
+  }
+}
+
+.input {
+  width: 100%;
+  position: relative;
+  &:not(&.disabled) {
+    &:after {
+      position: absolute;
+      content: "";
+      background: url("/images/arrow-down.svg") no-repeat center;
+      width: 10px;
+      height: 100%;
+      top: 0;
+      right: 16px;
+      transition: $transition-time;
+    }
+    input {
+      cursor: pointer;
+      padding-right: 32px;
+    }
+  }
+}
+
+.error {
+  margin-top: 8px;
+  color: darkred;
+  font-size: 14px;
+}
+
+.hide {
+  display: none;
+}
+
+.options {
+  display: none;
+  position: absolute;
+  z-index: 1;
+  background: #FFFFFF;
+
+  width: 100%;
+  margin-top: 8px;
+  cursor: pointer;
+  overflow: auto;
+  max-height: 310px;
+
+  @include custom-scroll;
+
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+
+  li {
+    z-index: 1;
+    padding: 16px;
+    &:hover {
+      background: $grey-background-color;
+    }
+  }
+}
+

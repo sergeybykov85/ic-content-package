@@ -1,4 +1,3 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
@@ -11,7 +10,7 @@ const declarationsDirPath = path.resolve(__dirname, '../declarations')
 
 export default defineConfig({
   server: {
-    port: 5100
+    port: 5101,
   },
   plugins: [
     react(),
@@ -23,11 +22,6 @@ export default defineConfig({
     alias: {
       '~': srcPath,
     },
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./vitest.setup.ts'],
   },
   define: {
     'process.env': process.env,

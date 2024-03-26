@@ -1,0 +1,39 @@
+@import "src/styles/mixins";
+@import "src/styles/variables";
+
+.container {
+  @include box
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.btn:hover img {
+  filter: $primary-blue-filter;
+}
+
+.grid {
+  display: grid;
+  @include grid-columns(1);
+  gap: 16px;
+}
+
+.link {
+  margin-left: auto;
+  img {
+    width: 24px;
+    height: 24px;
+    &:hover {
+      filter: $primary-blue-filter;
+    }
+  }
+}

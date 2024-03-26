@@ -1,0 +1,15 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+
+.empty {
+  @include box(32px);
+  border-style: dashed;
+  img {
+    margin: 16px auto;
+  }
+  p {
+    text-align: center;
+    color: $grey-text-color;
+  }
+}

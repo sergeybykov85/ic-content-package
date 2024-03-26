@@ -1,0 +1,22 @@
+$grey-background-color: #F7F7F7;
+$primary-blue-color: #2C44DA;
+$border-color: #DADADA;
+$grey-text-color: #727272;
+$red-color: #da2c2c;
+
+$primary-blue-filter: invert(29%) sepia(67%) saturate(7453%) hue-rotate(233deg) brightness(88%) contrast(93%);
+$red-color-filter: invert(31%) sepia(39%) saturate(4002%) hue-rotate(342deg) brightness(92%) contrast(110%);
+$white-color-filter: invert(99%) sepia(1%) saturate(4%) hue-rotate(9deg) brightness(102%) contrast(100%);
+
+$border-radius: 4px;
+
+$transition-time: .3s;
+
+$max-content-width: 1200px;
+
+// breakpoints
+$bp-sm: 576px;
+$bp-md: 768px;
+$bp-lg: 992px;
+$bp-xl: 1200px;
+$bp-xxl: 1400px;
