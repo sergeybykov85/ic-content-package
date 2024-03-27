@@ -115,7 +115,7 @@ module {
 		intersect : Bool;
 		kind : ?TypeId;
 		creator : ?CommonTypes.Identity;
-	};	
+	};
 
 	/**
 		Module to inter-canister calls
@@ -143,6 +143,7 @@ module {
 		};
 
 		public type BundleDetailsView = {
+			id : Text;
 			data_path : CommonTypes.ResourcePath;
 			name : Text;
 			description : Text;

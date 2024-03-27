@@ -293,7 +293,7 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 		};
     };	
 
-	public composite query ({ caller }) func query_widget_items (widget_id:Text) : async Result.Result<[Types.Actor.BundleDetailsView], CommonTypes.Errors> {
+	public composite query ({ caller }) func query_widget_items (widget_id:Text) : async Result.Result<[Conversion.WidgetItemView], CommonTypes.Errors> {
 		switch (widget_get(widget_id)) {
 			case (null) {return #err(#NotFound)};
 			case (?w) {
@@ -312,13 +312,16 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 							// load by entity
 							case (?entity) {
 								let package_actor : Types.Actor.BundlePackageActor = actor (entity.package_id);
-								switch (entity.ids) {
-									case (?ids) {await package_actor.get_bundles_by_ids(ids)};
+								let items = switch (entity.ids) {
+									case (?ids) {
+										await package_actor.get_bundles_by_ids(ids);
+									};
 									case (null) {
 										let slice = await package_actor.get_bundles_page(0, 1000, null);
 										slice.items;
 									};
 								};
+								Conversion.convert_bundle_items(items, entity.package_id);
 							};
 							// load by options
 							case (null) {
@@ -337,7 +340,7 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 								});
 								// it might be reasonable to restrict list of packages here
 								let p_ids = Array.map<Types.Actor.BundlePackageView, Text> (packages, func x = x.id);
-								let res = Buffer.Buffer<Types.Actor.BundleDetailsView>(Array.size(p_ids));
+								let res = Buffer.Buffer<Conversion.WidgetItemView>(Array.size(p_ids));
 								//extra filter for any package
 								let bundle_criteria = _bundle_search_criteria(criteria);
 								for (id in p_ids.vals()) {
@@ -345,7 +348,7 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 									// todo : in fact we have to filter bundles by tag/country/classification
 									let slice = await package_actor.get_bundles_page(0, 1000, bundle_criteria);
 									for (bundle in slice.items.vals()) {
-										res.add(bundle);
+										res.add(Conversion.convert_bundle_item(bundle, id));
 									};
 								};
 								Buffer.toArray(res);
