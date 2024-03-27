@@ -1015,6 +1015,13 @@ shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageA
     };
 
 	/**
+	* Returns bundle details by their ids
+	*/
+    public query func get_bundles_by_ids(ids:[Text]) : async [Conversion.BundleDetailsView] {
+		CommonUtils.get_items_by_ids(ids, bundle_get, Conversion.convert_bundle_details_view);
+    };	
+
+	/**
 	* Returns bundle refs by the search criteria
 	*/
 	public query func get_bundle_refs_by_criteria (criteria:Types.SearchCriteriaArgs) : async  [Conversion.BundleRefView] {
