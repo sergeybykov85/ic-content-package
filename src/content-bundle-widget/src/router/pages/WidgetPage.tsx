@@ -1,34 +1,29 @@
 import { type FC, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useServices } from '~/context/ServicesContext'
-import type Widget from '~/models/Widget.ts'
+import type Bundle from '~/models/Bundle.ts'
+import WidgetCarousel from '~/components/general/WidgetCarousel'
 
 const WidgetPage: FC = () => {
   const { widgetId } = useParams()
   const { widgetService } = useServices()
 
-  const [widget, setWidget] = useState<Widget | null>(null)
+  const [bundles, setBundles] = useState<Bundle[]>([])
 
   useEffect(() => {
     if (widgetId) {
-      widgetService.getWidget(widgetId).then(response => setWidget(response))
+      widgetService.getWidgetItems(widgetId).then(response => setBundles(response))
     }
   }, [widgetId, widgetService])
+
   return (
-    <div>
-      <h1>Widget with ID: {widgetId}</h1>
-      {widget ? (
-        <>
-          <h2>{widget.name}</h2>
-          <p>{widget.description}</p>
-        </>
-      ) : (
-        <h2>
-          <br />
-          <i style={{ color: 'red' }}>NOT FOUND</i>
-        </h2>
-      )}
-    </div>
+    <WidgetCarousel>
+      {bundles.map(item => (
+        <div key={item.id}>
+          <h2>{item.name}</h2>
+        </div>
+      ))}
+    </WidgetCarousel>
   )
 }
 

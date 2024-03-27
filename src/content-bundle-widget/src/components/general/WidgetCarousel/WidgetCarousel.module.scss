@@ -1,0 +1,19 @@
+@import "src/styles/variables";
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 -30px;
+}
+.btn {
+  &:hover img {
+    filter: $primary-blue-filter;
+  }
+  &--next img {
+    transform: rotate(180deg);
+  }
+}
+.slide {
+  width: 100%;
+}
