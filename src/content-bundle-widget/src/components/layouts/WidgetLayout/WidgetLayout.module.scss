@@ -1,0 +1,8 @@
+@import "src/styles/mixins";
+
+.layout {
+  @include box;
+
+  max-width: 1200px;
+  margin: 0 auto;
+}
