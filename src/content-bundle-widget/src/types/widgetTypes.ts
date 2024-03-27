@@ -1,4 +1,5 @@
 import type { IdentityRecord, VariantType } from '~/types/globals.ts'
+import type { BundleDto } from '~/types/bundleTypes.ts'
 
 export enum WIDGET_TYPES {
   Bundle = 'Bundle',
@@ -20,4 +21,9 @@ export interface WidgetDto {
   created: bigint
   // criteria: ?CriteriaView;
   // options : ?OptionsView;
+}
+
+export interface WidgetItemDto {
+  package_id: string
+  bundle: BundleDto
 }

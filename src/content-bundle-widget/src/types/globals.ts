@@ -14,3 +14,16 @@ export type IdentityRecord = {
   identity_type: VariantType<IDENTITY_TYPES>
   identity_id: string
 }
+
+export interface StorageData {
+  resource_id: string
+  url: string
+  bucket_id: string
+  locale: string[]
+  name: string[]
+}
+
+export interface Coordinates {
+  latitude: number
+  longitude: number
+}
