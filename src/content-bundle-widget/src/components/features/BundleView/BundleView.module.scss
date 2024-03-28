@@ -18,7 +18,7 @@
   top: 16px;
   right: 16px;
 }
-.name {
+.title {
   font-size: 32px;
   margin: 12px 0;
   font-weight: 500;
@@ -32,4 +32,10 @@
   button {
     text-decoration: underline;
   }
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
