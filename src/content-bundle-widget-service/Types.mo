@@ -149,6 +149,7 @@ module {
 			description : Text;
 			logo : ?CommonTypes.ResourcePath;
 			index : DataIndexView;
+			payload_items : [CommonTypes.DataPayloadStructure];
 			creator : CommonTypes.Identity;
 			owner : CommonTypes.Identity;
 			created : Time.Time;

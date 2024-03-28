@@ -46,6 +46,7 @@ module {
 			description : Text;
 			logo : ?CommonTypes.ResourcePath;
 			index : Types.Actor.DataIndexView;
+			payload_items : [CommonTypes.DataPayloadStructure];
 			creator : CommonTypes.Identity;
 			owner : CommonTypes.Identity;
 			created : Time.Time;
@@ -62,6 +63,7 @@ module {
 				description = info.description;
 				logo = info.logo;
 				index = info.index;
+				payload_items = info.payload_items;
 				creator = info.creator;
 				owner = info.owner;
 				created = info.created;

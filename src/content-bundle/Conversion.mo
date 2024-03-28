@@ -1,5 +1,6 @@
 
 import List "mo:base/List";
+import Buffer "mo:base/Buffer";
 import Option "mo:base/Option";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
@@ -76,6 +77,7 @@ module {
 		description : Text;
 		logo : ?CommonTypes.ResourcePath;
 		index : DataIndexView;
+		payload_items : [CommonTypes.DataPayloadStructure];
 		creator : CommonTypes.Identity;
 		owner : CommonTypes.Identity;
 		created : Time.Time;
@@ -97,6 +99,30 @@ module {
     };
 
     public func convert_bundle_details_view (info: Types.Bundle, id: Text) : BundleDetailsView {
+		//CommonTypes.DataPayloadStructure
+		let structure = Buffer.Buffer<CommonTypes.DataPayloadStructure>(2);
+		switch (info.payload.poi_group){
+			case (?poi) {
+				let categories = List.map(poi.sections, func (ac : Types.DataSection):CommonTypes.CategoryId {ac.category});			
+				structure.add({
+					group_id = #POI;
+					categories = List.toArray(categories);
+				});				
+			};
+			case (null) {};
+		};
+
+		switch (info.payload.additions_group){
+			case (?add) {
+				let categories = List.map(add.sections, func (ac : Types.DataSection):CommonTypes.CategoryId {ac.category});			
+				structure.add({
+					group_id = #Additions;
+					categories = List.toArray(categories);
+				});				
+			};
+			case (null) {};
+		};		
+
         return {
 			id = id;
 			data_path = info.data_path;
@@ -109,6 +135,7 @@ module {
 				location = info.index.location;
 				about = List.toArray(info.index.about);
 			};
+			payload_items = Buffer.toArray(structure);
 			creator = info.creator;
 			owner = info.owner;
 			created = info.created;
