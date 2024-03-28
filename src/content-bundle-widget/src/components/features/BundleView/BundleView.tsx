@@ -7,6 +7,7 @@ import Button from '~/components/general/Button'
 import { useFullScreenModal } from '~/context/FullScreenModalContext'
 import BundleTags from './components/BundleTags'
 import BundleAbout from '~/components/features/BundleView/components/BundleAbout'
+import BundleLocations from '~/components/features/BundleView/components/BundleLocations'
 
 enum BUNDLE_DATA_TYPES {
   Tags = 'Tags',
@@ -31,9 +32,12 @@ const BundleView: FC<BundleViewProps> = ({ bundle }) => {
           break
         case BUNDLE_DATA_TYPES.About:
           setContent(<BundleAbout about={bundle.about} />)
+          break
+        case BUNDLE_DATA_TYPES.Location:
+          setContent(<BundleLocations locations={bundle.location} />)
       }
     },
-    [setContent, bundle.tags, bundle.about],
+    [setContent, bundle.tags, bundle.about, bundle.location],
   )
 
   return (
@@ -46,7 +50,7 @@ const BundleView: FC<BundleViewProps> = ({ bundle }) => {
       <p>{bundle.description}</p>
       <div className={styles['btn-group']}>
         <If condition={bundle.location.length > 0}>
-          <Button variant="text" text="Location" />
+          <Button variant="text" text="Location" onClick={() => handleClick(BUNDLE_DATA_TYPES.Location)} />
         </If>
         <If condition={bundle.about.length > 0}>
           <Button variant="text" text="About" onClick={() => handleClick(BUNDLE_DATA_TYPES.About)} />
