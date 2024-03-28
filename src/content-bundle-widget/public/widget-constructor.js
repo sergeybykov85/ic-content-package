@@ -9,7 +9,7 @@ const createWidgetFrame = (container, frameIndex) => {
 
   frame.setAttribute('id', `${widgetId}-${frameIndex}`)
   frame.setAttribute('src', `${APP_URL}widget/${widgetId}`)
-  frame.setAttribute('height', '325')
+  frame.setAttribute('height', '481')
   frame.setAttribute('width', '100%')
   frame.setAttribute('style', 'border: none;')
 

@@ -2,7 +2,8 @@ import { type FC, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useServices } from '~/context/ServicesContext'
 import type Bundle from '~/models/Bundle.ts'
-import WidgetCarousel from '~/components/general/WidgetCarousel'
+import WidgetCarousel from '~/components/features/WidgetCarousel'
+import BundleView from '~/components/features/BundleView'
 
 const WidgetPage: FC = () => {
   const { widgetId } = useParams()
@@ -19,9 +20,7 @@ const WidgetPage: FC = () => {
   return (
     <WidgetCarousel>
       {bundles.map(item => (
-        <div key={item.id}>
-          <h2>{item.name}</h2>
-        </div>
+        <BundleView key={item.id} bundle={item} />
       ))}
     </WidgetCarousel>
   )
