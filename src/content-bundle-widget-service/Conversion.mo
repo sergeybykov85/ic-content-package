@@ -21,6 +21,7 @@ module {
 	public type OptionsView = {
 		width : ?Nat8;
 		height : ?Nat8;
+		payload_items :?[CommonTypes.DataPayloadStructure];
 		// other fields that impact to UI style could be placed here
 	};
 
@@ -46,7 +47,7 @@ module {
 			description : Text;
 			logo : ?CommonTypes.ResourcePath;
 			index : Types.Actor.DataIndexView;
-			payload_items : [CommonTypes.DataPayloadStructure];
+			data_availability : [CommonTypes.DataPayloadStructure];
 			creator : CommonTypes.Identity;
 			owner : CommonTypes.Identity;
 			created : Time.Time;
@@ -63,7 +64,7 @@ module {
 				description = info.description;
 				logo = info.logo;
 				index = info.index;
-				payload_items = info.payload_items;
+				data_availability = info.data_availability;
 				creator = info.creator;
 				owner = info.owner;
 				created = info.created;
@@ -96,6 +97,7 @@ module {
 				? {
 					width = options.width;
 					height = options.height;
+					payload_items = options.payload_items;
 				};
 			};
 			case (null) {null;};

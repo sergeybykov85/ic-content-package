@@ -77,7 +77,7 @@ module {
 		description : Text;
 		logo : ?CommonTypes.ResourcePath;
 		index : DataIndexView;
-		payload_items : [CommonTypes.DataPayloadStructure];
+		data_availability : [CommonTypes.DataPayloadStructure];
 		creator : CommonTypes.Identity;
 		owner : CommonTypes.Identity;
 		created : Time.Time;
@@ -99,7 +99,6 @@ module {
     };
 
     public func convert_bundle_details_view (info: Types.Bundle, id: Text) : BundleDetailsView {
-		//CommonTypes.DataPayloadStructure
 		let structure = Buffer.Buffer<CommonTypes.DataPayloadStructure>(2);
 		switch (info.payload.poi_group){
 			case (?poi) {
@@ -135,7 +134,7 @@ module {
 				location = info.index.location;
 				about = List.toArray(info.index.about);
 			};
-			payload_items = Buffer.toArray(structure);
+			data_availability = Buffer.toArray(structure);
 			creator = info.creator;
 			owner = info.owner;
 			created = info.created;

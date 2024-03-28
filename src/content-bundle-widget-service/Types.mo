@@ -35,11 +35,18 @@ module {
 		by_classification : ?Text;
 	};
 
+	public type OptionsArgs = {
+		width : ?Nat8;
+		height : ?Nat8;
+		payload_items : ?[CommonTypes.DataPayloadStructure];
+	};	
+
 	public type WidgetCreationRequest = {
 		name : Text;
 		description : Text;
 		type_id : TypeId;
 		criteria : ?CriteriaArgs;
+		options : ?OptionsArgs;
 	};
 
 	public type WidgetUpdateArgs = {
@@ -87,6 +94,7 @@ module {
 	public type Options = {
 		var width : ?Nat8;
 		var height : ?Nat8;
+		var payload_items : ?[CommonTypes.DataPayloadStructure];
 		// other fields that impact to UI style could be placed here
 	};
 
@@ -149,7 +157,7 @@ module {
 			description : Text;
 			logo : ?CommonTypes.ResourcePath;
 			index : DataIndexView;
-			payload_items : [CommonTypes.DataPayloadStructure];
+			data_availability : [CommonTypes.DataPayloadStructure];
 			creator : CommonTypes.Identity;
 			owner : CommonTypes.Identity;
 			created : Time.Time;

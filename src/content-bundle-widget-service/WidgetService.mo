@@ -133,6 +133,18 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 			case (null) {0};
 		};
 		if (created >= allowance) return #err(#AccessDenied);
+
+		let opt:?Types.Options = switch (args.options) {
+			case (?options) {
+				?{
+					var width = options.width;
+					var height = options.height;
+					var payload_items = options.payload_items;
+				};
+			};
+			case (null) {null};
+		};
+
 		let cr:?Types.Criteria = switch (args.criteria) {
 			case (?criteria) {
 				// validate entity
@@ -162,7 +174,7 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 			// widget is created with a Draft status;
 			var status = #Draft;
 			var criteria = cr;
-			var options = null; // for now it is not supported
+			var options = opt;
 			creator = identity;
 			created = Time.now();
 		}:Types.Widget).0;
@@ -214,26 +226,42 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 	};
 
 	/**
-	* Updates widget criteria
+	* Updates widget criteria & options
 	*/
-	public shared ({ caller }) func apply_widget_criteria (widget_id:Text, criteria: Types.CriteriaArgs) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func update_widget_payload (widget_id:Text, criteria: ?Types.CriteriaArgs, options: ?Types.OptionsArgs) : async Result.Result<Text, CommonTypes.Errors> {
 		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (widget_get(widget_id)) {
 			case (?w) {
 				let identity = _build_identity(caller);
 				if (not CommonUtils.identity_equals(identity, w.creator))  return #err(#AccessDenied);
-				
-				// validate entity
-				if (Option.isSome(criteria.entity)) {
-					let valid_ids = await _validate_entities(CommonUtils.unwrap(criteria.entity));
-					if (not valid_ids) return #err(#InvalidRequest);
-				};
+				// update criteria
+				switch (criteria) {
+					case (?cr) {
+						// validate entity
+						if (Option.isSome(cr.entity)) {
+							let valid_ids = await _validate_entities(CommonUtils.unwrap(cr.entity));
+							if (not valid_ids) return #err(#InvalidRequest);
+						};
 
-				w.criteria:=?{
-					var entity = criteria.entity;
-					var by_country_code = criteria.by_country_code;
-					var by_tag = criteria.by_tag;
-					var by_classification = criteria.by_classification;
+						w.criteria:=?{
+							var entity = cr.entity;
+							var by_country_code = cr.by_country_code;
+							var by_tag = cr.by_tag;
+							var by_classification = cr.by_classification;
+						};
+					};
+					case (null) {};
+				};
+				// update options
+				switch (options) {
+					case (?opt) {
+						w.options:=?{
+							var width = opt.width;
+							var height = opt.height;
+							var payload_items = opt.payload_items;
+						};						
+					};
+					case  (null) {};
 				};
 				return #ok(widget_id);
 			};
@@ -244,7 +272,7 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 	/**
 	* Change widget status
 	*/
-	public shared ({ caller }) func apply_widget_status (widget_id:Text, status: Types.Status) : async Result.Result<Text, CommonTypes.Errors> {
+	public shared ({ caller }) func update_widget_status (widget_id:Text, status: Types.Status) : async Result.Result<Text, CommonTypes.Errors> {
 		if (Principal.isAnonymous(caller)) return #err(#UnAuthorized);
 		switch (widget_get(widget_id)) {
 			case (?w) {
