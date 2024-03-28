@@ -5,7 +5,14 @@ import styles from './BundleView.module.scss'
 import If from '~/components/general/If.tsx'
 import Button from '~/components/general/Button'
 import { useFullScreenModal } from '~/context/FullScreenModalContext'
-import BundleTags from '~/components/features/BundleView/BundleTags.tsx'
+import BundleTags from './components/BundleTags'
+import BundleAbout from '~/components/features/BundleView/components/BundleAbout'
+
+enum BUNDLE_DATA_TYPES {
+  Tags = 'Tags',
+  About = 'About',
+  Location = 'Location',
+}
 
 interface BundleViewProps {
   bundle: Bundle
@@ -17,14 +24,16 @@ const BundleView: FC<BundleViewProps> = ({ bundle }) => {
   const label = useMemo(() => bundle.classification.replace('_', ' '), [bundle.classification])
 
   const handleClick = useCallback(
-    (name: string) => {
+    (name: BUNDLE_DATA_TYPES) => {
       switch (name) {
-        case 'tags':
+        case BUNDLE_DATA_TYPES.Tags:
           setContent(<BundleTags tags={bundle.tags} />)
           break
+        case BUNDLE_DATA_TYPES.About:
+          setContent(<BundleAbout about={bundle.about} />)
       }
     },
-    [setContent, bundle.tags],
+    [setContent, bundle.tags, bundle.about],
   )
 
   return (
@@ -40,10 +49,10 @@ const BundleView: FC<BundleViewProps> = ({ bundle }) => {
           <Button variant="text" text="Location" />
         </If>
         <If condition={bundle.about.length > 0}>
-          <Button variant="text" text="About" />
+          <Button variant="text" text="About" onClick={() => handleClick(BUNDLE_DATA_TYPES.About)} />
         </If>
         <If condition={bundle.tags.length > 0}>
-          <Button variant="text" text="Tags" onClick={() => handleClick('tags')} />
+          <Button variant="text" text="Tags" onClick={() => handleClick(BUNDLE_DATA_TYPES.Tags)} />
         </If>
       </div>
     </div>

@@ -1,0 +1,24 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.about {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  height: 80%;
+  overflow: auto;
+  @include custom-scroll
+}
+
+.locale {
+  span {
+    color: $grey-text-color;
+    margin-right: .5em;
+  }
+}
+
+.name {
+  font-size: 24px;
+  margin: .3em 0;
+}
