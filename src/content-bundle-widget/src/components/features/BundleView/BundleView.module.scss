@@ -16,13 +16,24 @@
   top: 16px;
   right: 16px;
 }
+.title-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0;
+  button {
+    text-decoration: underline;
+  }
+}
 .title {
   font-size: 32px;
-  margin: 12px 0;
   font-weight: 500;
+  line-height: 52px;
+  margin-right: auto;
 }
 .description {
-  @include ellipsis
+  @include ellipsis;
+  margin: 12px 0;
 }
 .coordinates {
   display: flex;
@@ -37,13 +48,8 @@
 .country {
   width: 100%;
 }
-.btn-group {
+.tags {
   display: flex;
-  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
-  button {
-    text-decoration: underline;
-  }
 }
