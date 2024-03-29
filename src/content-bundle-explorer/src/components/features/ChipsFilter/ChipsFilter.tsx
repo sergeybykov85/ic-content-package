@@ -28,6 +28,7 @@ const ChipsFilter: FC<ChipsFilterProps> = ({ data, label, name, activeItem, onCh
               onClick={value => onChange(value, name)}
               onCrossClick={() => onChange('', name)}
               color={color}
+              className={clsx(i === activeItem && styles.active)}
             />
           ))}
         </div>

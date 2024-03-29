@@ -1,6 +1,12 @@
+@import "src/styles/variables";
+
 .chips {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin: 16px 0;
+}
+.active {
+  background: $orange-color;
+  border-color: $orange-color;
 }
