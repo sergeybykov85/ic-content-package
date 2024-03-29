@@ -188,8 +188,8 @@ shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageA
                 await _register_bundle(args, caller_identity);
             };
             case (#Shared) {
-				if (not CommonUtils.identity_equals(caller_identity, owner)
-					or  Option.isSome(List.find(contributors , CommonUtils.find_identity(caller_identity)))) return #err(#AccessDenied);
+				if (not (CommonUtils.identity_equals(caller_identity, owner)
+					or  Option.isSome(List.find(contributors , CommonUtils.find_identity(caller_identity))))) return #err(#AccessDenied);
 				
                 await _register_bundle(args, caller_identity);
             };			

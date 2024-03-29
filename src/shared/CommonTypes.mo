@@ -67,6 +67,11 @@ module {
 		#Sundry;
 	};
 
+	public type DataPayloadStructure = {
+		group_id : DataGroupId;
+		categories : [CategoryId];
+	};
+
 	public type Errors = {
 		// not enough cycles
 		#FuelNotEnough;
