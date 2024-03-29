@@ -1,5 +1,4 @@
 @import "src/styles/variables";
-@import "src/styles/mixins";
 
 .location {
   span {
@@ -9,9 +8,4 @@
   p {
     margin-bottom: .5em;
   }
-}
-
-.grid {
-  display: grid;
-  @include grid-columns(2)
 }

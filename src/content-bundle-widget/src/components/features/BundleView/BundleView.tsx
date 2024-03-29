@@ -23,6 +23,7 @@ const BundleView: FC<BundleViewProps> = ({ bundle }) => {
   const { setContent } = useFullScreenModal()
 
   const label = useMemo(() => bundle.classification.replace('_', ' '), [bundle.classification])
+  const location = useMemo(() => bundle.location[0], [bundle.location])
 
   const handleClick = useCallback(
     (name: BUNDLE_DATA_TYPES) => {
@@ -34,7 +35,7 @@ const BundleView: FC<BundleViewProps> = ({ bundle }) => {
           setContent(<BundleAbout about={bundle.about} />)
           break
         case BUNDLE_DATA_TYPES.Location:
-          setContent(<BundleLocations locations={bundle.location} />)
+          setContent(<BundleLocations location={bundle.location[0]} />)
       }
     },
     [setContent, bundle.tags, bundle.about, bundle.location],
@@ -47,10 +48,28 @@ const BundleView: FC<BundleViewProps> = ({ bundle }) => {
         <Chip text={label} className={styles.chip} />
       </div>
       <h2 className={styles.title}>{bundle.name}</h2>
-      <p>{bundle.description}</p>
+      <p className={styles.description} title={bundle.description}>
+        {bundle.description}
+      </p>
+      <If condition={Boolean(location)}>
+        <div className={styles.coordinates}>
+          <p className={styles.country}>
+            <span>Country:</span>
+            {location?.country}
+          </p>
+          <p>
+            <span>Latitude:</span>
+            {location?.coordinates.latitude}
+          </p>
+          <p>
+            <span>Longitude:</span>
+            {location?.coordinates.longitude}
+          </p>
+        </div>
+      </If>
       <div className={styles['btn-group']}>
-        <If condition={bundle.location.length > 0}>
-          <Button variant="text" text="Location" onClick={() => handleClick(BUNDLE_DATA_TYPES.Location)} />
+        <If condition={Boolean(location)}>
+          <Button variant="text" text="Map" onClick={() => handleClick(BUNDLE_DATA_TYPES.Location)} />
         </If>
         <If condition={bundle.about.length > 0}>
           <Button variant="text" text="About" onClick={() => handleClick(BUNDLE_DATA_TYPES.About)} />

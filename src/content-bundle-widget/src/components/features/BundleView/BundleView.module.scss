@@ -1,8 +1,6 @@
 @import "src/styles/variables";
+@import "src/styles/mixins";
 
-.container {
-
-}
 .img-wrapper {
   position: relative;
 
@@ -22,6 +20,22 @@
   font-size: 32px;
   margin: 12px 0;
   font-weight: 500;
+}
+.description {
+  @include ellipsis
+}
+.coordinates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 16px 0;
+  span {
+    color: $grey-text-color;
+    margin-right: .5em;
+  }
+}
+.country {
+  width: 100%;
 }
 .btn-group {
   display: flex;
