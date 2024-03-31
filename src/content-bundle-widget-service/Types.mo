@@ -45,6 +45,7 @@ module {
 		name : Text;
 		description : Text;
 		type_id : TypeId;
+		status : ?Status;
 		criteria : ?CriteriaArgs;
 		options : ?OptionsArgs;
 	};
