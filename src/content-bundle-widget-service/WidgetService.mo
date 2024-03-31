@@ -171,8 +171,8 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 			var name = args.name;
 			var description = args.description;
 			type_id = args.type_id;
-			// widget is created with a Draft status;
-			var status = #Draft;
+			// default widget status = Draft;
+			var status = Option.get(args.status, #Draft);
 			var criteria = cr;
 			var options = opt;
 			creator = identity;
