@@ -20,17 +20,17 @@ export enum BUNDLE_DATA_GROUPS {
 }
 
 export enum BUNDLE_DATA_CATEGORIES {
-  Location = 'Location',
-  About = 'About',
-  History = 'History',
-  AudioGuide = 'AudioGuide',
-  Audio = 'Audio',
-  Video = 'Video',
-  Gallery = 'Gallery',
-  Article = 'Article',
-  Document = 'Document',
-  AR = 'AR',
-  Sundry = 'Sundry',
+  Location = 'Location', // POI
+  About = 'About', // POI
+  History = 'History', // POI
+  AudioGuide = 'AudioGuide', // POI
+  Audio = 'Audio', // Additions
+  Video = 'Video', // Additions
+  Gallery = 'Gallery', // POI and Additions
+  Article = 'Article', // Additions
+  Document = 'Document', // Additions
+  AR = 'AR', // POI
+  // Sundry = 'Sundry'
 }
 
 export interface PayloadDataItem {
@@ -57,3 +57,15 @@ export interface BundleDto {
 }
 
 export type AvailableBundleData = Partial<Record<BUNDLE_DATA_GROUPS, BUNDLE_DATA_CATEGORIES[]>>
+
+export interface AdditionalDataDto {
+  data_path: StorageData
+  sections: AdditionalDataSectionDto[]
+  // readonly
+}
+
+export interface AdditionalDataSectionDto {
+  category: VariantType<BUNDLE_DATA_CATEGORIES>
+  data: StorageData[]
+  data_path: StorageData
+}
