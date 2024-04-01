@@ -1,10 +1,10 @@
-import type { Coordinates, IdentityRecord, StorageData } from '~/types/globals.ts'
+import type { Coordinates, IdentityRecord, StorageData, VariantType } from '~/types/globals.ts'
 
 export interface LocationIndexDto {
-  city: string[]
+  city: string[] // optional
   coordinates: Coordinates
   country_code2: string
-  region: string[]
+  region: string[] // optional
 }
 
 export interface AboutIndexDto {
@@ -12,6 +12,11 @@ export interface AboutIndexDto {
   description: string
   locale: string
   attributes: string[]
+}
+
+export interface PayloadDataItem {
+  group_id: VariantType<BUNDLE_DATA_GROUPS>
+  categories: VariantType<BUNDLE_DATA_CATEGORIES>[]
 }
 
 export interface BundleDto {
@@ -29,4 +34,24 @@ export interface BundleDto {
   creator: IdentityRecord
   owner: IdentityRecord
   created: bigint
+  data_availability: PayloadDataItem[]
+}
+
+export enum BUNDLE_DATA_GROUPS {
+  POI = 'POI',
+  Additions = 'Additions',
+}
+
+export enum BUNDLE_DATA_CATEGORIES {
+  Location = 'Location',
+  About = 'About',
+  History = 'History',
+  AudioGuide = 'AudioGuide',
+  Audio = 'Audio',
+  Video = 'Video',
+  Gallery = 'Gallery',
+  Article = 'Article',
+  Document = 'Document',
+  AR = 'AR',
+  Sundry = 'Sundry',
 }

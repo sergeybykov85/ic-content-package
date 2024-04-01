@@ -1,5 +1,5 @@
 import type { IdentityRecord, VariantType } from '~/types/globals.ts'
-import type { BundleDto } from '~/types/bundleTypes.ts'
+import type { BundleDto, PayloadDataItem } from '~/types/bundleTypes.ts'
 
 export enum WIDGET_TYPES {
   Bundle = 'Bundle',
@@ -11,6 +11,12 @@ export enum WIDGET_STATUSES {
   Active = 'Active',
 }
 
+export interface WidgetOptionsDto {
+  width: bigint[] // optional
+  height: bigint[] // optional
+  payload_items: PayloadDataItem[][] // optional
+}
+
 export interface WidgetDto {
   id: string
   name: string
@@ -19,8 +25,8 @@ export interface WidgetDto {
   status: VariantType<WIDGET_STATUSES>
   creator: IdentityRecord
   created: bigint
+  options: WidgetOptionsDto[]
   // criteria: ?CriteriaView;
-  // options : ?OptionsView;
 }
 
 export interface WidgetItemDto {

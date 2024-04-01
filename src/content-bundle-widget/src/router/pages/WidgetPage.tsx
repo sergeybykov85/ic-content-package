@@ -4,23 +4,26 @@ import { useServices } from '~/context/ServicesContext'
 import type Bundle from '~/models/Bundle.ts'
 import WidgetCarousel from '~/components/features/WidgetCarousel'
 import BundleView from '~/components/features/BundleView'
+import type Widget from '~/models/Widget.ts'
 
 const WidgetPage: FC = () => {
   const { widgetId } = useParams()
   const { widgetService } = useServices()
 
+  const [widget, setWidget] = useState<Widget | null>(null)
   const [bundles, setBundles] = useState<Bundle[]>([])
 
   useEffect(() => {
     if (widgetId) {
-      widgetService.getWidgetItems(widgetId).then(response => setBundles(response))
+      widgetService.getWidget(widgetId).then(res => setWidget(res))
+      widgetService.getWidgetItems(widgetId).then(res => setBundles(res))
     }
   }, [widgetId, widgetService])
 
   return (
     <WidgetCarousel>
       {bundles.map(item => (
-        <BundleView key={item.id} bundle={item} />
+        <BundleView key={item.id} bundle={item} dataToRender={widget?.bundleDataToRender || []} />
       ))}
     </WidgetCarousel>
   )

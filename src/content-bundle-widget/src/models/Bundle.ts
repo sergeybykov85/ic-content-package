@@ -1,5 +1,5 @@
 import CanisterDTO from '~/models/CanisterDTO.ts'
-import type { AboutIndexDto, BundleDto } from '~/types/bundleTypes.ts'
+import type { AboutIndexDto, BUNDLE_DATA_CATEGORIES, BundleDto } from '~/types/bundleTypes.ts'
 import BundleLocation from '~/models/BundleLocation.ts'
 
 export default class Bundle extends CanisterDTO {
@@ -15,6 +15,7 @@ export default class Bundle extends CanisterDTO {
   public owner: string
   public created: string
   public packageId?: string
+  public availableCategories: BUNDLE_DATA_CATEGORIES[]
 
   constructor(bundleDto: BundleDto, packageId?: string) {
     super()
@@ -30,5 +31,6 @@ export default class Bundle extends CanisterDTO {
     this.owner = bundleDto.owner.identity_id
     this.created = this.toLocalDateString(bundleDto.created)
     this.packageId = packageId
+    this.availableCategories = this.parseBundleDataCategoriesFromPayload(bundleDto.data_availability)
   }
 }

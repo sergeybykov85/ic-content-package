@@ -7,29 +7,33 @@ import Button from '~/components/general/Button'
 import { useFullScreenModal } from '~/context/FullScreenModalContext'
 import BundleAbout from '~/components/features/BundleView/components/BundleAbout'
 import BundleLocations from '~/components/features/BundleView/components/BundleLocations'
-
-enum BUNDLE_DATA_TYPES {
-  About = 'About',
-  Location = 'Location',
-}
+import { BUNDLE_DATA_CATEGORIES } from '~/types/bundleTypes.ts'
 
 interface BundleViewProps {
   bundle: Bundle
+  dataToRender: BUNDLE_DATA_CATEGORIES[]
 }
 
-const BundleView: FC<BundleViewProps> = ({ bundle }) => {
+const BundleView: FC<BundleViewProps> = ({ bundle, dataToRender }) => {
   const { setContent } = useFullScreenModal()
 
   const label = useMemo(() => bundle.classification.replace('_', ' '), [bundle.classification])
   const location = useMemo(() => bundle.location[0], [bundle.location])
 
+  const checkDataAvailability = useCallback(
+    (category: BUNDLE_DATA_CATEGORIES) => {
+      return bundle.availableCategories.includes(category) && dataToRender.includes(category)
+    },
+    [bundle.availableCategories, dataToRender],
+  )
+
   const handleClick = useCallback(
-    (name: BUNDLE_DATA_TYPES) => {
+    (name: BUNDLE_DATA_CATEGORIES) => {
       switch (name) {
-        case BUNDLE_DATA_TYPES.About:
+        case BUNDLE_DATA_CATEGORIES.About:
           setContent(<BundleAbout about={bundle.about} />)
           break
-        case BUNDLE_DATA_TYPES.Location:
+        case BUNDLE_DATA_CATEGORIES.Location:
           setContent(<BundleLocations location={bundle.location[0]} />)
       }
     },
@@ -45,10 +49,10 @@ const BundleView: FC<BundleViewProps> = ({ bundle }) => {
       <div className={styles['title-wrapper']}>
         <h2 className={styles.title}>{bundle.name}</h2>
         <If condition={Boolean(location)}>
-          <Button variant="text" text="Map" onClick={() => handleClick(BUNDLE_DATA_TYPES.Location)} />
+          <Button variant="text" text="Map" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Location)} />
         </If>
-        <If condition={bundle.about.length > 0}>
-          <Button variant="text" text="About" onClick={() => handleClick(BUNDLE_DATA_TYPES.About)} />
+        <If condition={bundle.about.length > 0 || checkDataAvailability(BUNDLE_DATA_CATEGORIES.About)}>
+          <Button variant="text" text="About" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.About)} />
         </If>
       </div>
       <p className={styles.description} title={bundle.description}>
