@@ -9,21 +9,37 @@ import { useFullScreenModal } from '~/context/FullScreenModalContext'
 import styles from './BundleDataButtons.module.scss'
 import { useServices } from '~/context/ServicesContext'
 import type AdditionalDataSection from '~/models/AdditionalDataSection.ts'
+import BundleAudio from '~/components/features/BundleView/components/BundleAudio'
 
 interface BundleDataButtonsProps {
-  packageId: string
   bundle: Bundle
   dataToRender: AvailableBundleData
 }
 
-const BundleDataButtons: FC<BundleDataButtonsProps> = ({ packageId, bundle, dataToRender }) => {
+const BundleDataButtons: FC<BundleDataButtonsProps> = ({ bundle, dataToRender }) => {
   const { setContent } = useFullScreenModal()
   const { initBundlePackageService } = useServices()
 
-  const service = useMemo(() => initBundlePackageService!(packageId), [initBundlePackageService, packageId])
+  const service = useMemo(() => {
+    if (initBundlePackageService && bundle.packageId) {
+      return initBundlePackageService(bundle.packageId)
+    }
+  }, [bundle.packageId, initBundlePackageService])
 
   const [poiSections, setPoiSections] = useState<AdditionalDataSection[]>([])
   const [additionSections, setAdditionSections] = useState<AdditionalDataSection[]>([])
+
+  const getSection = useCallback(
+    (group: BUNDLE_DATA_GROUPS, category: BUNDLE_DATA_CATEGORIES) => {
+      switch (group) {
+        case BUNDLE_DATA_GROUPS.POI:
+          return poiSections.find(section => section.category === category)
+        case BUNDLE_DATA_GROUPS.Additions:
+          return additionSections.find(section => section.category === category)
+      }
+    },
+    [additionSections, poiSections],
+  )
 
   const checkIsAvailable = useCallback(
     (group: BUNDLE_DATA_GROUPS, category: BUNDLE_DATA_CATEGORIES) => {
@@ -33,26 +49,33 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ packageId, bundle, data
   )
 
   const handleClick = useCallback(
-    (name: BUNDLE_DATA_CATEGORIES) => {
-      switch (name) {
+    (category: BUNDLE_DATA_CATEGORIES) => {
+      switch (category) {
         case BUNDLE_DATA_CATEGORIES.About:
           setContent(<BundleAbout about={bundle.about} />)
           break
         case BUNDLE_DATA_CATEGORIES.Location:
           setContent(<BundleLocations location={bundle.location[0]} />)
+          break
+        case BUNDLE_DATA_CATEGORIES.AudioGuide:
+          setContent(<BundleAudio data={getSection(BUNDLE_DATA_GROUPS.POI, category)} />)
+          break
+        case BUNDLE_DATA_CATEGORIES.Audio:
+          setContent(<BundleAudio data={getSection(BUNDLE_DATA_GROUPS.Additions, category)} />)
+          break
       }
     },
-    [setContent, bundle.about, bundle.location],
+    [setContent, bundle.about, bundle.location, getSection],
   )
 
   useEffect(() => {
     if (BUNDLE_DATA_GROUPS.POI in dataToRender && BUNDLE_DATA_GROUPS.POI in bundle.availableCategories) {
-      service.getBundleAdditionalData(bundle.id, BUNDLE_DATA_GROUPS.POI).then(res => {
+      service?.getBundleAdditionalData(bundle.id, BUNDLE_DATA_GROUPS.POI).then(res => {
         setPoiSections(res.sections)
       })
     }
     if (BUNDLE_DATA_GROUPS.Additions in dataToRender && BUNDLE_DATA_GROUPS.Additions in bundle.availableCategories) {
-      service.getBundleAdditionalData(bundle.id, BUNDLE_DATA_GROUPS.Additions).then(res => {
+      service?.getBundleAdditionalData(bundle.id, BUNDLE_DATA_GROUPS.Additions).then(res => {
         setAdditionSections(res.sections)
       })
     }
@@ -67,7 +90,10 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ packageId, bundle, data
         <Button variant="text" text="About" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.About)} />
       </If>
       <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.POI, BUNDLE_DATA_CATEGORIES.AudioGuide)}>
-        <Button variant="text" text="About" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.AudioGuide)} />
+        <Button variant="text" text="Audio Guide" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.AudioGuide)} />
+      </If>
+      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.Additions, BUNDLE_DATA_CATEGORIES.Audio)}>
+        <Button variant="text" text="Audio" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Audio)} />
       </If>
     </div>
   )
