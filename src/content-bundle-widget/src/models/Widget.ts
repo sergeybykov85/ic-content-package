@@ -1,6 +1,6 @@
 import CanisterDTO from '~/models/CanisterDTO.ts'
 import type { WIDGET_STATUSES, WIDGET_TYPES, WidgetDto } from '~/types/widgetTypes.ts'
-import type { BUNDLE_DATA_CATEGORIES } from '~/types/bundleTypes.ts'
+import type { AvailableBundleData } from '~/types/bundleTypes.ts'
 
 export default class Widget extends CanisterDTO {
   public id: string
@@ -10,7 +10,7 @@ export default class Widget extends CanisterDTO {
   public status: WIDGET_STATUSES
   public creator: string
   public created: string
-  public bundleDataToRender: BUNDLE_DATA_CATEGORIES[]
+  public bundleDataToRender: AvailableBundleData
 
   constructor(widgetDto: WidgetDto) {
     super()
@@ -24,9 +24,9 @@ export default class Widget extends CanisterDTO {
     this.bundleDataToRender = this.parseBundleCategories(widgetDto.options)
   }
 
-  private parseBundleCategories = (options: WidgetDto['options']): BUNDLE_DATA_CATEGORIES[] => {
-    if (!options.length || !options[0].payload_items.length) return []
+  private parseBundleCategories = (options: WidgetDto['options']): AvailableBundleData => {
+    if (!options.length || !options[0].payload_items.length) return {}
 
-    return this.parseBundleDataCategoriesFromPayload(options[0].payload_items[0])
+    return this.parseAvailableBundleData(options[0].payload_items[0])
   }
 }

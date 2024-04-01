@@ -20,10 +20,12 @@ const WidgetPage: FC = () => {
     }
   }, [widgetId, widgetService])
 
+  if (!widget) return null
+
   return (
     <WidgetCarousel>
       {bundles.map(item => (
-        <BundleView key={item.id} bundle={item} dataToRender={widget?.bundleDataToRender || []} />
+        <BundleView key={item.id} bundle={item} widget={widget} />
       ))}
     </WidgetCarousel>
   )

@@ -1,44 +1,19 @@
 import type Bundle from '~/models/Bundle.ts'
-import { type FC, useCallback, useMemo } from 'react'
+import { type FC, useMemo } from 'react'
 import Chip from '~/components/general/Chip'
 import styles from './BundleView.module.scss'
 import If from '~/components/general/If.tsx'
-import Button from '~/components/general/Button'
-import { useFullScreenModal } from '~/context/FullScreenModalContext'
-import BundleAbout from '~/components/features/BundleView/components/BundleAbout'
-import BundleLocations from '~/components/features/BundleView/components/BundleLocations'
-import { BUNDLE_DATA_CATEGORIES } from '~/types/bundleTypes.ts'
+import BundleDataButtons from './components/BundleDataButtons'
+import type Widget from '~/models/Widget.ts'
 
 interface BundleViewProps {
   bundle: Bundle
-  dataToRender: BUNDLE_DATA_CATEGORIES[]
+  widget: Widget
 }
 
-const BundleView: FC<BundleViewProps> = ({ bundle, dataToRender }) => {
-  const { setContent } = useFullScreenModal()
-
+const BundleView: FC<BundleViewProps> = ({ bundle, widget }) => {
   const label = useMemo(() => bundle.classification.replace('_', ' '), [bundle.classification])
   const location = useMemo(() => bundle.location[0], [bundle.location])
-
-  const checkDataAvailability = useCallback(
-    (category: BUNDLE_DATA_CATEGORIES) => {
-      return bundle.availableCategories.includes(category) && dataToRender.includes(category)
-    },
-    [bundle.availableCategories, dataToRender],
-  )
-
-  const handleClick = useCallback(
-    (name: BUNDLE_DATA_CATEGORIES) => {
-      switch (name) {
-        case BUNDLE_DATA_CATEGORIES.About:
-          setContent(<BundleAbout about={bundle.about} />)
-          break
-        case BUNDLE_DATA_CATEGORIES.Location:
-          setContent(<BundleLocations location={bundle.location[0]} />)
-      }
-    },
-    [setContent, bundle.about, bundle.location],
-  )
 
   return (
     <div>
@@ -48,12 +23,6 @@ const BundleView: FC<BundleViewProps> = ({ bundle, dataToRender }) => {
       </div>
       <div className={styles['title-wrapper']}>
         <h2 className={styles.title}>{bundle.name}</h2>
-        <If condition={Boolean(location)}>
-          <Button variant="text" text="Map" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Location)} />
-        </If>
-        <If condition={bundle.about.length > 0 || checkDataAvailability(BUNDLE_DATA_CATEGORIES.About)}>
-          <Button variant="text" text="About" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.About)} />
-        </If>
       </div>
       <p className={styles.description} title={bundle.description}>
         {bundle.description}
@@ -81,6 +50,7 @@ const BundleView: FC<BundleViewProps> = ({ bundle, dataToRender }) => {
           ))}
         </div>
       </If>
+      <BundleDataButtons {...{ bundle, dataToRender: widget.bundleDataToRender }} />
     </div>
   )
 }

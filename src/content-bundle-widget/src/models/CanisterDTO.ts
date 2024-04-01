@@ -1,6 +1,6 @@
 import nanosecToSec from '~/utils/nanosecToSec.ts'
 import type { VariantType } from '~/types/globals.ts'
-import type { BUNDLE_DATA_CATEGORIES, PayloadDataItem } from '~/types/bundleTypes.ts'
+import type { AvailableBundleData, BUNDLE_DATA_CATEGORIES, PayloadDataItem } from '~/types/bundleTypes.ts'
 
 export default class CanisterDTO {
   protected parseOptionParam = <T>(param: T[], defaultValue: T): T => {
@@ -19,14 +19,15 @@ export default class CanisterDTO {
     return Object.keys(data)[0] as T
   }
 
-  protected parseBundleDataCategoriesFromPayload = (payload: PayloadDataItem[]): BUNDLE_DATA_CATEGORIES[] => {
-    const allCategoriesVariantType = payload.reduce((accum, item) => {
-      return [...accum, ...item.categories]
-    }, [] as VariantType<BUNDLE_DATA_CATEGORIES>[])
+  protected parseAvailableBundleData = (payload: PayloadDataItem[]): AvailableBundleData => {
+    const availableBundleData: AvailableBundleData = {}
 
-    return allCategoriesVariantType.reduce((accum, item) => {
-      const keys = Object.keys(item) as BUNDLE_DATA_CATEGORIES[]
-      return [...accum, ...keys]
-    }, [] as BUNDLE_DATA_CATEGORIES[])
+    payload.forEach(item => {
+      availableBundleData[this.parseVariantType(item.group_id)] = item.categories.reduce((accum, value) => {
+        return [...accum, this.parseVariantType(value)]
+      }, [] as BUNDLE_DATA_CATEGORIES[])
+    })
+
+    return availableBundleData
   }
 }

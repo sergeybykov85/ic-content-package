@@ -14,6 +14,25 @@ export interface AboutIndexDto {
   attributes: string[]
 }
 
+export enum BUNDLE_DATA_GROUPS {
+  POI = 'POI',
+  Additions = 'Additions',
+}
+
+export enum BUNDLE_DATA_CATEGORIES {
+  Location = 'Location',
+  About = 'About',
+  History = 'History',
+  AudioGuide = 'AudioGuide',
+  Audio = 'Audio',
+  Video = 'Video',
+  Gallery = 'Gallery',
+  Article = 'Article',
+  Document = 'Document',
+  AR = 'AR',
+  Sundry = 'Sundry',
+}
+
 export interface PayloadDataItem {
   group_id: VariantType<BUNDLE_DATA_GROUPS>
   categories: VariantType<BUNDLE_DATA_CATEGORIES>[]
@@ -37,21 +56,4 @@ export interface BundleDto {
   data_availability: PayloadDataItem[]
 }
 
-export enum BUNDLE_DATA_GROUPS {
-  POI = 'POI',
-  Additions = 'Additions',
-}
-
-export enum BUNDLE_DATA_CATEGORIES {
-  Location = 'Location',
-  About = 'About',
-  History = 'History',
-  AudioGuide = 'AudioGuide',
-  Audio = 'Audio',
-  Video = 'Video',
-  Gallery = 'Gallery',
-  Article = 'Article',
-  Document = 'Document',
-  AR = 'AR',
-  Sundry = 'Sundry',
-}
+export type AvailableBundleData = Partial<Record<BUNDLE_DATA_GROUPS, BUNDLE_DATA_CATEGORIES[]>>
