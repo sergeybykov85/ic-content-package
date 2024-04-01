@@ -1,15 +1,16 @@
-import type Bundle from '~/models/Bundle.ts'
-import { type AvailableBundleData, BUNDLE_DATA_CATEGORIES, BUNDLE_DATA_GROUPS } from '~/types/bundleTypes.ts'
+import styles from './BundleDataButtons.module.scss'
 import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { useFullScreenModal } from '~/context/FullScreenModalContext'
+import { useServices } from '~/context/ServicesContext'
+import type Bundle from '~/models/Bundle.ts'
+import type AdditionalDataSection from '~/models/AdditionalDataSection.ts'
+import { type AvailableBundleData, BUNDLE_DATA_CATEGORIES, BUNDLE_DATA_GROUPS } from '~/types/bundleTypes.ts'
 import Button from '~/components/general/Button'
 import If from '~/components/general/If.tsx'
 import BundleAbout from '~/components/features/BundleView/components/BundleAbout'
 import BundleLocations from '~/components/features/BundleView/components/BundleLocations'
-import { useFullScreenModal } from '~/context/FullScreenModalContext'
-import styles from './BundleDataButtons.module.scss'
-import { useServices } from '~/context/ServicesContext'
-import type AdditionalDataSection from '~/models/AdditionalDataSection.ts'
 import BundleAudio from '~/components/features/BundleView/components/BundleAudio'
+import BundleGallery from '~/components/features/BundleView/components/BundleGallery'
 
 interface BundleDataButtonsProps {
   bundle: Bundle
@@ -49,7 +50,7 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ bundle, dataToRender })
   )
 
   const handleClick = useCallback(
-    (category: BUNDLE_DATA_CATEGORIES) => {
+    (category: BUNDLE_DATA_CATEGORIES, group?: BUNDLE_DATA_GROUPS) => {
       switch (category) {
         case BUNDLE_DATA_CATEGORIES.About:
           setContent(<BundleAbout about={bundle.about} />)
@@ -62,6 +63,9 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ bundle, dataToRender })
           break
         case BUNDLE_DATA_CATEGORIES.Audio:
           setContent(<BundleAudio data={getSection(BUNDLE_DATA_GROUPS.Additions, category)} />)
+          break
+        case BUNDLE_DATA_CATEGORIES.Gallery:
+          setContent(<BundleGallery data={getSection(group!, category)} />)
           break
       }
     },
@@ -94,6 +98,20 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ bundle, dataToRender })
       </If>
       <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.Additions, BUNDLE_DATA_CATEGORIES.Audio)}>
         <Button variant="text" text="Audio" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Audio)} />
+      </If>
+      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.POI, BUNDLE_DATA_CATEGORIES.Gallery)}>
+        <Button
+          variant="text"
+          text="Gallery"
+          onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Gallery, BUNDLE_DATA_GROUPS.POI)}
+        />
+      </If>
+      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.Additions, BUNDLE_DATA_CATEGORIES.Gallery)}>
+        <Button
+          variant="text"
+          text="Gallery"
+          onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Gallery, BUNDLE_DATA_GROUPS.Additions)}
+        />
       </If>
     </div>
   )
