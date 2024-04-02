@@ -6,6 +6,7 @@ import copyToClipboard from '~/utils/copyToClipboard.ts'
 import { enqueueSnackbar } from 'notistack'
 import If from '~/components/general/If'
 import type Package from '~/models/Package.ts'
+import removeUnderscores from '~/utils/removeUnderscores.ts'
 
 interface DetailsBlockProps {
   className?: string
@@ -28,7 +29,7 @@ const DetailsBlock: FC<DetailsBlockProps> = ({ data, className }) => {
   const { tags = [] } = data
 
   const blackLabel = useMemo(
-    () => (data.submission || data.classification || '').replace('_', ' '),
+    () => removeUnderscores(data.submission || data.classification || ''),
     [data.classification, data.submission],
   )
 

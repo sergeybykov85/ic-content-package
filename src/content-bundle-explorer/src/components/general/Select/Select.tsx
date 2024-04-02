@@ -4,6 +4,7 @@ import useClickAway from '~/hooks/useClickAway.ts'
 import styles from './Select.module.scss'
 import clsx from 'clsx'
 import If from '~/components/general/If'
+import removeUnderscores from '~/utils/removeUnderscores.ts'
 
 interface SelectProps<T> {
   defaultValue: T
@@ -57,7 +58,7 @@ function Select<T extends string = string>({
         <span className={clsx(styles.label, !label && styles['no-label'])}>{label}</span>
         <TextInput
           readOnly
-          {...{ value, placeholder, onFocus, disabled }}
+          {...{ value: removeUnderscores(value), placeholder, onFocus, disabled }}
           className={clsx(styles.input, disabled && styles.disabled)}
         />
         <If condition={Boolean(error)}>
@@ -67,7 +68,7 @@ function Select<T extends string = string>({
       <ul className={clsx(styles.options)}>
         {options.map(item => (
           <li key={item} value={item} onClick={() => onClick(item)}>
-            {item}
+            {removeUnderscores(item)}
           </li>
         ))}
       </ul>
