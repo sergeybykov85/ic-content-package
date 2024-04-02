@@ -87,7 +87,7 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ bundle, dataToRender })
 
   return (
     <div className={styles.container}>
-      <If condition={Boolean(location)}>
+      <If condition={Boolean(bundle.location[0])}>
         <Button variant="text" text="Map" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Location)} />
       </If>
       <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.POI, BUNDLE_DATA_CATEGORIES.About)}>
