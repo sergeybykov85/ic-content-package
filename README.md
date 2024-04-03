@@ -4,6 +4,9 @@ Primary goal of this project is providing a required ecosystem to store and mana
 POI Horizon will evolve, the existing modules will get more functions and new modules will come as well. The widget will allow not only to distribute information from the ICP platform but the user will be able to operate with them, like vote on the favorite POI, choose the next “Web3 tour to launch” etc.
 Let’s see some details below.
 
+Showcase post 
+https://forum.dfinity.org/t/introducing-poi-horizon-system-decentralized-backbone-for-web3-tour-and-web3-heritage-services/29266
+
 ## Key terms
 **Decentralized content bundle** (or content bundle for short) – model to store various information. It is made up of one or more data groups. It is an internal term of the product.
 
@@ -121,6 +124,32 @@ Some public methods of the `PackageService` actor:
 - `deploy_private_package (metadata:Types.MetadataArgs, options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors>`:deploys a new private package (canister), inits its store and registers it in the registry 
 - `deploy_shared_package (metadata:Types.MetadataArgs, contributors:[CommonTypes.Identity], options: ?Types.PackageOptions) : async Result.Result<Text, CommonTypes.Errors>`:deploys a new shared package (canister), inits its store and registers it in the registry
 - `remove_empty_package (id : Text, remainder_cycles:?Nat)`: removes the empty package physically and delists it from the registry as well
+
+////
+## BundlePackage actor
+This actor is responsible to represent a package model (list of bundles).Client/service interects with BundlePackage to manage bundles. It is worth to mention that PackageService instantiate BundlePackage actor and include it into the PackageRegistry
+
+### Interface
+Some public methods of the `BundlePackage` actor:
+- `update_metadata (args : Types.MetadataUpdateArgs) : async Result.Result<(), CommonTypes.Errors>`: updates metadata (name, description, logo) of the package
+- `apply_contributors (access_list : [CommonTypes.Identity]) : async Result.Result<(), CommonTypes.Errors>`: applies list of contributors for shared package. 
+- `register_bundle (args : Types.BundleArgs) : async Result.Result<Text, CommonTypes.Errors> `: registers a new bundle in the package. If user is not authorized, then error is returned
+- `update_bundle (id: Text, args : Types.BundleUpdateArgs) : async Result.Result<Text, CommonTypes.Errors>`: updates the bundle metadata (name, description, tags, classifications)
+- `apply_bundle_logo (id: Text, logo : ?Types.DataRawPayload) : async Result.Result<Text, CommonTypes.Errors>`: updates bundle logo
+- `remove_empty_bundle (bundle_id: Text) : async Result.Result<Text, CommonTypes.Errors>`: removes empty bundle. Empty means the bundle without any details like POI etc. If bundle has only metadata name/description/logo it is an empty one
+- `freeze_bundle (id: Text, args: Types.DataFreezeArgs) : async Result.Result<Text, CommonTypes.Errors>`: sets the readonly attribute (time in sec) for the specified group id (POI, Additions)
+- `apply_bundle_section_raw (bundle_id: Text, args : Types.DataPackageRawArgs) : async Result.Result<Text, CommonTypes.Errors>`: submits the data into bundle. This method just submits raw format of the data. It is useful for image, video, audio guide, binary data
+- `apply_bundle_section (bundle_id: Text, args : Types.DataPackageArgs) : async Result.Result<Text, CommonTypes.Errors>`:  submits the data into bundle. This method is designed to submit "structured" data like location, aboutt, history. Since the data has some structure, then it might be post-procesed as well (adding to  the index, etc)
+
+- `init_datastore (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors>`:  this method should be called upon package creation. If BundlePackage is installed by PackageService, the it takes care about that as well.
+- `new_data_bucket (cycles : ?Nat) : async Result.Result<Text, CommonTypes.Errors>`:  registers a new databucket (partition of the storrage) if a new one is needed
+- `get_bundle_data (bundle_id: Text, group_id:CommonTypes.DataGroupId) : async Result.Result<Conversion.DataGroupView, CommonTypes.Errors>`:  returns bundle data for the specified group
+- `get_bundle_data_groups (bundle_id: Text) : async Result.Result<[CommonTypes.DataGroupId], CommonTypes.Errors>`:  returns list of data groups where data aleady submitted for the bundle
+- `contribute_opportunity_for (identity:CommonTypes.Identity) : async Bool`:  checks if identity can contribute in this package
+- `bundle_contribute_opportunity_for (bundle_id: Text, identity:CommonTypes.Identity) : async Bool`:  checks if identity can contribute inside the existing bundle
+- `get_supported_categories (group_id:CommonTypes.DataGroupId) : async [CommonTypes.CategoryId] `:  returns supported categorries for the specified group id. In the future each package may have different schema of the allowed data
+- `get_supported_groups () : async [CommonTypes.DataGroupId]`:  returns supprrted dat groups. In the future each package may have different schema of the allowed data
+- `get_supported_classifications () : async [Text]`:  returns supprrted classifications for the package. In the future each package may have different schema of the allowed data
 
 
 ## WidgetService actor
