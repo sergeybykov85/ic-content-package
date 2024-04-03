@@ -467,6 +467,13 @@ shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageA
 												};
 												// if resource is not specified, then exclude entire category/section
 												_exclude_section(group, category, args.resource_id);
+												// delete group id if no sections
+												if (List.size(group.sections) == 0) {
+													switch (await _cleanup_group(args.group, bundle, group)){
+														case (#ok()) { };
+														case (#err(e)) {return #err(e);};
+													};
+												}
 											};
 											case (#err(e)) {return #err(e)};
 										};
@@ -476,21 +483,9 @@ shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageA
 							};
 							
 							case (null) {
-								let bucket_actor : Types.Actor.DataBucketActor = actor (group.data_path.bucket_id);
-								// remove group
-								switch (await bucket_actor.delete_resource(group.data_path.resource_id)){
-									// update model
-									case (#ok(_)) {
-										switch (args.group) {
-											case (#POI) {
-												bundle.payload.poi_group:=null;
-												bundle.index.about:=List.nil();
-												bundle.index.location:=null;
-											};
-											case (#Additions) {bundle.payload.poi_group:=null};
-										};
-									};
-									case (#err(e)) {return #err(e)};
+								switch (await _cleanup_group(args.group, bundle, group)){
+									case (#ok()) { };
+									case (#err(e)) {return #err(e);};
 								};
 							}
 						}
@@ -1742,6 +1737,26 @@ shared (installation) actor class _BundlePackage(initArgs : Types.BundlePackageA
 			case (null) {data_group.sections := List.mapFilter<Types.DataSection, Types.DataSection>(data_group.sections,  func (k:Types.DataSection) = if (k.category == category) { null } else { ?k })};
 		}
 			
+	};
+
+	private func _cleanup_group (id : CommonTypes.DataGroupId, bundle: Types.Bundle, group: Types.DataGroup) : async Result.Result<(), CommonTypes.Errors>  {
+		let bucket_actor : Types.Actor.DataBucketActor = actor (group.data_path.bucket_id);
+		// remove group
+		switch (await bucket_actor.delete_resource(group.data_path.resource_id)){
+		// update model
+			case (#ok(_)) {
+				switch (id) {
+					case (#POI) {
+						bundle.payload.poi_group:=null;
+						bundle.index.about:=List.nil();
+						bundle.index.location:=null;
+					};
+					case (#Additions) {bundle.payload.additions_group:=null};
+				};
+				return #ok();
+			};
+			case (#err(e)) {return #err(e)};
+		};
 	};
 
 	private func _eq_resouce(resource_name: Text, resource_locale:Text) : (k:CommonTypes.ResourcePath) -> Bool {
