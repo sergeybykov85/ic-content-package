@@ -1,0 +1,35 @@
+@import "src/styles/mixins";
+@import "src/styles/variables";
+
+.section {
+  display: grid;
+  align-items: center;
+  @include grid-columns(1);
+
+  @media (min-width: $bp-sm) {
+    @include grid-columns(2);
+  }
+
+  padding: 32px;
+}
+.title {
+  font-style: normal;
+  font-weight: 600;
+  text-align: center;
+  margin: 16px auto;
+
+
+  font-size: 36px;
+
+  @media (min-width: $bp-lg) {
+    font-size: 60px;
+  }
+  @media (min-width: $bp-xl) {
+    font-size: 80px;
+  }
+}
+
+.img {
+  max-width: 500px;
+  margin: 0 auto;
+}
