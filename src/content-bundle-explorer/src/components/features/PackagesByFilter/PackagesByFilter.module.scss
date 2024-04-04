@@ -1,3 +1,5 @@
+@import "src/styles/mixins";
+
 .container {
   padding: 8px 0 32px 0;
 }
@@ -14,8 +16,10 @@
 }
 
 .chips {
-  //display: flex;
-  //gap: 8px;
-  //flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.title {
+  @include title;
   margin: 16px 0;
 }
