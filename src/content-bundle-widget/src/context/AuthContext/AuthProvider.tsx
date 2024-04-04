@@ -114,9 +114,7 @@ const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
          * Safari: http://localhost:4943?canisterId=<canister_id>
          * */
         identityProvider:
-          DFX_NETWORK === 'ic'
-            ? 'https://identity.ic0.app'
-            : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
+          DFX_NETWORK === 'ic' ? 'https://identity.ic0.app' : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
         maxTimeToLive: BigInt(AUTH_EXPIRATION_TIME) * 10n ** 9n, // from seconds to nanoseconds
         onSuccess: () => {
           setAuthType(AUTH_TYPE.IC)

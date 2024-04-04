@@ -31,7 +31,7 @@ const WidgetEmbedCode: FC<WidgetEmbedCodeProps> = ({ widgetId }) => {
   }, [value])
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout
+    let timeoutId: number
     if (copied) {
       timeoutId = setTimeout(() => {
         setCopied(false)

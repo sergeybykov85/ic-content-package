@@ -7,12 +7,12 @@ import { useParams } from 'react-router-dom'
 const WidgetPreviewPage: FC = () => {
   const { widgetId = '' } = useParams()
   return (
-    <>
+    <div style={{ padding: 32 }}>
       <WidgetLayout>
         <WidgetPage />
       </WidgetLayout>
       <WidgetEmbedCode widgetId={widgetId} />
-    </>
+    </div>
   )
 }
 
