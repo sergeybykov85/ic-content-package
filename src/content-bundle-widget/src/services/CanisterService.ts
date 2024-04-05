@@ -2,7 +2,8 @@ import type { IDL } from '@dfinity/candid'
 import type { Identity } from '@dfinity/agent'
 import { Actor, type ActorMethod, type ActorSubclass, HttpAgent } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
-import type { CanisterResponse } from '~/types/globals.ts'
+import type { CanisterResponse, IdentityRecord } from '~/types/globals.ts'
+import { IDENTITY_TYPES } from '~/types/globals.ts'
 
 type ActorInstance = ActorSubclass<Record<string, ActorMethod<unknown[], unknown>>>
 
@@ -50,4 +51,11 @@ export default class CanisterService {
       return arr.slice(i * size, i * size + size)
     })
   }
+
+  protected createIdentityDto = (id: string, type: IDENTITY_TYPES = IDENTITY_TYPES.ICP): IdentityRecord => ({
+    identity_id: id,
+    identity_type: {
+      [type]: null,
+    },
+  })
 }
