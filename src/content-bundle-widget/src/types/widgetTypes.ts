@@ -33,3 +33,30 @@ export interface WidgetItemDto {
   package_id: string
   bundle: BundleDto
 }
+
+export interface WidgetCriteriaDto {
+  entity: {
+    package_id: string
+    ids: string[] // optional
+  }[] // optional
+  by_tag: string[] // optional
+  by_country_code: string[] // optional
+  by_classification: string[] // optional
+}
+
+export interface WidgetCreationRequestDto {
+  name: string
+  description: string
+  type_id: VariantType<WIDGET_TYPES>
+  status: VariantType<WIDGET_STATUSES>[] // optional
+  criteria: WidgetCriteriaDto[] // optional
+  options: WidgetOptionsDto[] // optional
+}
+
+export interface WidgetCreationParams {
+  name: string
+  description: string
+  isDraft?: boolean
+  packageId?: string
+  bundleIds?: string[]
+}

@@ -6,6 +6,7 @@ import MainLayout from '~/components/layouts/MainLayout'
 import ProtectedRoute from '~/components/layouts/ProtectedRoute.tsx'
 import WelcomePage from '~/router/pages/WelcomePage.tsx'
 import MyWidgetsPage from '~/router/pages/MyWidgetsPage.tsx'
+import NewWidgetPage from '~/router/pages/NewWidgetPage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
       {
         path: 'my-widgets',
         element: <MyWidgetsPage />,
+      },
+      {
+        path: 'new-widget',
+        element: <NewWidgetPage />,
       },
     ],
   },
