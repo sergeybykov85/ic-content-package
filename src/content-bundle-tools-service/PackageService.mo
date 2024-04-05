@@ -16,10 +16,6 @@ import CommonUtils "../shared/CommonUtils";
 
 
 shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
-	// def cycles for the package canister creation
-	let DEF_PACKAGE_CYCLES:Nat = 1_000_000_000_000;
-	// def cycles for  the databucket crreation when a new package is deployed
-	let DEF_DATASTORE_CYCLES:Nat = 600_000_000_000;
 	let DEF_MINIMUM_REMAINING_CYCLES:Nat = 5_000_000_000_000;
 	let DEF_REMAINDER_REMOVE_PACK_CYCLES: Nat = 20_000_000_000;
 	
@@ -38,6 +34,11 @@ shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
 	});
+
+	// def cycles for the package canister creation
+	stable var def_package_cycles:Nat = 1_000_000_000_000;
+	// def cycles for  the databucket crreation when a new package is deployed
+	stable var def_datastore_cycles:Nat = 600_000_000_000;
 
 	stable let _NETWORK = initArgs.network;
 
@@ -103,6 +104,24 @@ shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
 			}
 		};
 	};
+
+	/**
+	* Applies the number of cycles that is used for datastore initialization for the new package. Can't be greather than def_package_cycles
+	*/
+	public shared ({ caller }) func apply_def_datastore_cycles (v : Nat) : async Result.Result<(), CommonTypes.Errors> {
+		if (not can_manage(caller)) return #err(#AccessDenied);
+		def_datastore_cycles := v;
+		#ok();
+	};
+
+	/**
+	* Applies the number of cycles that is used for package deployment
+	*/
+	public shared ({ caller }) func apply_def_package_cycles (v : Nat) : async Result.Result<(), CommonTypes.Errors> {
+		if (not can_manage(caller)) return #err(#AccessDenied);
+		def_package_cycles := v;
+		#ok();
+	};	
 
 	/**
 	* Applies the trial allowance
@@ -285,8 +304,8 @@ shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
 		let registry_actor : Types.Actor.PackageRegistryActor = actor (registry);
 		// if the caller is able to register any package
 		if  (not (await registry_actor.is_submitter({identity_type=#ICP; identity_id=Principal.toText(Principal.fromActor(this)) }))) { return #err(#AccessDenied); };
-		let cycles_p = Option.get(args.cycles_package, DEF_PACKAGE_CYCLES);
-		let cycles_store = Option.get(args.cycles_datastore, DEF_DATASTORE_CYCLES);
+		let cycles_p = Option.get(args.cycles_package, def_package_cycles);
+		let cycles_store = Option.get(args.cycles_datastore, def_datastore_cycles);
 		// cycles to allocate a datastore is taken from the package. cycles_p must be > than cycles_store
 		if (cycles_store > cycles_p)  return #err(#InvalidRequest);
 		// reject request if fuel is not enough
@@ -350,6 +369,14 @@ shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
 	public query func available_cycles() : async Nat {
 		return Cycles.balance();
   	};
+
+	public query func get_def_datastore_cycles() : async Nat {
+		return def_datastore_cycles;
+  	};
+
+	public query func get_def_package_cycles() : async Nat {
+		return def_package_cycles;
+  	};		
 
 	public query func get_trial_allowance() : async Nat {
 		return trial_allowance;
