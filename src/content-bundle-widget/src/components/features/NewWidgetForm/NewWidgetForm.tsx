@@ -1,5 +1,5 @@
 import styles from './NewWidgetForm.module.scss'
-import { type FC, useId, useState } from 'react'
+import { type FC, useCallback, useId, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import type { WidgetCreationParams } from '~/types/widgetTypes.ts'
@@ -7,6 +7,9 @@ import { TextArea, TextInput } from '~/components/general/Inputs'
 import Checkbox from '~/components/general/Checkbox'
 import Button from '~/components/general/Button'
 import BundleIdsForm from '~/components/features/NewWidgetForm/BundleIdsForm.tsx'
+import { useServices } from '~/context/ServicesContext'
+import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
+import { enqueueSnackbar } from 'notistack'
 
 const NAME_MAX_LENGTH = import.meta.env.VITE_WIDGET_NAME_MAX_LENGTH
 const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_WIDGET_DESCRIPTION_MAX_LENGTH
@@ -14,13 +17,38 @@ const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_WIDGET_DESCRIPTION_MAX_LENGT
 type FormValues = Pick<WidgetCreationParams, 'name' | 'description' | 'packageId'>
 
 const NewWidgetForm: FC = () => {
-  const [isDraft, setIsDraft] = useState(false)
-
   const formId = useId()
+  const { widgetService } = useServices()
+  const { setLoading } = useFullScreenLoading()
+  const [isDraft, setIsDraft] = useState(false)
+  const [bundleIds, setBundleIds] = useState<string[]>([])
+
+  const onSubmit = useCallback(
+    async (values: FormValues) => {
+      try {
+        setLoading(true)
+        const widgetId = await widgetService.createWidget({
+          ...values,
+          isDraft,
+          bundleIds,
+        })
+        console.log(widgetId)
+        enqueueSnackbar('Widget successfully created', { variant: 'success' })
+      } catch (error) {
+        console.error(error)
+        enqueueSnackbar('Something went wrong', { variant: 'error' })
+      } finally {
+        setLoading(false)
+      }
+    },
+    [bundleIds, isDraft, setLoading, widgetService],
+  )
+
   const form = useFormik<FormValues>({
     initialValues: {
       name: '',
       description: '',
+      packageId: '',
     },
     validateOnChange: false,
     validationSchema: Yup.object().shape({
@@ -34,7 +62,7 @@ const NewWidgetForm: FC = () => {
         .required('Required!'),
       packageId: Yup.string().required('Required!'), // TODO: validation
     }),
-    onSubmit: values => console.log(values),
+    onSubmit,
   })
 
   return (
@@ -69,7 +97,7 @@ const NewWidgetForm: FC = () => {
           className={styles.input}
         />
       </form>
-      <BundleIdsForm />
+      <BundleIdsForm onChange={ids => setBundleIds(ids)} />
       <div className={styles.footer}>
         <Button type="submit" text="Submit" className={styles.btn} form={formId} />
         <Checkbox
