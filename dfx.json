@@ -38,8 +38,27 @@
       ],
       "type": "assets",
       "build": "npm run build:content-bundle-tools"
+    },
+    "content-bundle-explorer": {
+      "frontend": {
+        "entrypoint": "src/content-bundle-explorer/dist/index.html"
+      },
+      "source": [
+        "src/content-bundle-explorer/dist"
+      ],
+      "type": "assets",
+      "build": "npm run build:content-bundle-explorer"
+    },
+    "content-bundle-widget": {
+      "frontend": {
+        "entrypoint": "src/content-bundle-widget/dist/index.html"
+      },
+      "source": [
+        "src/content-bundle-widget/dist"
+      ],
+      "type": "assets",
+      "build": "npm run build:content-bundle-widget"
     }
-   
   },
   "defaults": {
     "build": {
