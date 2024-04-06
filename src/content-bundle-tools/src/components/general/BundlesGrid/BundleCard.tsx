@@ -3,6 +3,7 @@ import { type FC, useMemo } from 'react'
 import Card from '~/components/general/Card'
 import styles from './BundleCard.module.scss'
 import shortenPrincipal from '~/utils/shortenPrincipal.ts'
+import removeUnderscores from '~/utils/removeUnderscores.ts'
 
 interface BundleCardProps {
   data: Bundle
@@ -10,7 +11,7 @@ interface BundleCardProps {
 
 const BundleCard: FC<BundleCardProps> = ({ data }) => {
   const creator = useMemo(() => shortenPrincipal(data.creator), [data.creator])
-  const label = useMemo(() => data.classification.replace('_', ' '), [data.classification])
+  const label = useMemo(() => removeUnderscores(data.classification), [data.classification])
   return (
     <Card label={label} title={data.name} logoUrl={data.logoUrl}>
       <div className={styles.footer}>

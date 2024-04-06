@@ -1,5 +1,7 @@
 {
     "scripts": {
-        "build:content-bundle-tools": "cd ./src/content-bundle-tools && npm install && npm run build"
+        "build:content-bundle-tools": "cd ./src/content-bundle-tools && npm install && npm run build",
+        "build:content-bundle-explorer": "cd ./src/content-bundle-explorer && npm install && npm run build",
+        "build:content-bundle-widget": "cd ./src/content-bundle-widget && npm install && npm run build"
     }
 }

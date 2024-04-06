@@ -46,13 +46,16 @@ export default class PackageService extends CanisterService {
     return this.responseHandler(response)
   }
 
-  public checkPackageDeployAllowance = async (identityId: string): Promise<boolean> => {
+  public getActivityBy = async (identityId: string): Promise<{ allowance: number, deployedPackagesNumber: number }> => {
     const { allowance, deployed_packages } = (await this.actor.activity_by({
       identity_type: {
         [IdentityTypes.ICP]: null,
       },
       identity_id: identityId,
     })) as { allowance: bigint; deployed_packages: string[] }
-    return deployed_packages.length < Number(allowance)
+    return {
+      allowance: Number(allowance),
+      deployedPackagesNumber: deployed_packages.length
+    }
   }
 }

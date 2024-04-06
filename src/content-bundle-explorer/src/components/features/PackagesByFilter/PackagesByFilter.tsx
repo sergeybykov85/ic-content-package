@@ -10,6 +10,8 @@ import EmptyBlock from '~/components/features/EmptyBlock'
 import styles from './PackagesByFilter.module.scss'
 import PaginationControl from '~/components/features/PaginationControl'
 import ChipsFilter from '~/components/features/ChipsFilter'
+import Collapse from '~/components/general/Collapse.tsx'
+import RecentPackages from '~/components/features/RecentPackages'
 
 type DataSegmentation = Omit<DataSegmentationDto, 'total_supply'>
 
@@ -48,51 +50,59 @@ const PackagesByFilter: FC = () => {
   }, [packageRegistryService])
 
   return (
-    <div className={styles.container}>
-      <div className={styles.filters}>
-        <Select
-          label="Type"
-          placeholder="Select..."
-          defaultValue={filters.kind || ''}
-          options={['None', ...Object.values(PACKAGE_TYPES)]}
-          name="kind"
-          onSelect={handleFilterChange}
+    <>
+      <section className={styles.container}>
+        <div className={styles.filters}>
+          <Select
+            label="Type"
+            placeholder="Select..."
+            defaultValue={filters.kind || ''}
+            options={['None', ...Object.values(PACKAGE_TYPES)]}
+            name="kind"
+            onSelect={handleFilterChange}
+          />
+          <Select
+            label="Country"
+            placeholder="Select..."
+            defaultValue={filters.countryCode || ''}
+            options={['None', ...dataSegmentation.countries]}
+            name="countryCode"
+            onSelect={handleFilterChange}
+          />
+          <If condition={!emptyFilters}>
+            <Button variant="text" text="Reset filters" onClick={() => setFilters({})} className={styles.reset} />
+          </If>
+        </div>
+        <ChipsFilter
+          data={dataSegmentation.classifications}
+          label="Classifications:"
+          name="classification"
+          onChange={handleFilterChange}
+          activeItem={filters.classification || ''}
+          className={styles.chips}
         />
-        <Select
-          label="Country"
-          placeholder="Select..."
-          defaultValue={filters.countryCode || ''}
-          options={['None', ...dataSegmentation.countries]}
-          name="countryCode"
-          onSelect={handleFilterChange}
+        <ChipsFilter
+          data={dataSegmentation.tags}
+          label="Tags:"
+          name="tag"
+          onChange={handleFilterChange}
+          activeItem={filters.tag || ''}
+          className={styles.chips}
+          color="blue"
         />
-        <If condition={!emptyFilters}>
-          <Button variant="text" text="Reset filters" onClick={() => setFilters({})} className={styles.reset} />
-        </If>
-      </div>
-      <ChipsFilter
-        data={dataSegmentation.classifications}
-        label="Classifications:"
-        name="classification"
-        onChange={handleFilterChange}
-        activeItem={filters.classification || ''}
-        className={styles.chips}
-      />
-      <ChipsFilter
-        data={dataSegmentation.tags}
-        label="Tags:"
-        name="tag"
-        onChange={handleFilterChange}
-        activeItem={filters.tag || ''}
-        className={styles.chips}
-        color="blue"
-      />
-      <If condition={!packages.length}>
-        <EmptyBlock variant={emptyFilters ? 'idle' : 'not-found'} />
-      </If>
-      <PackageGrid packages={packages} />
-      <PaginationControl pagination={{ page, totalPages }} onPageChange={setPage} />
-    </div>
+        <Collapse open={!packages.length}>
+          <EmptyBlock variant={emptyFilters ? 'idle' : 'not-found'} />
+        </Collapse>
+        <Collapse open={packages.length > 0}>
+          <h2 className={styles.title}>Search results</h2>
+          <PackageGrid packages={packages} />
+        </Collapse>
+        <PaginationControl pagination={{ page, totalPages }} onPageChange={setPage} />
+      </section>
+      <Collapse open={packages.length < 1}>
+        <RecentPackages />
+      </Collapse>
+    </>
   )
 }
 

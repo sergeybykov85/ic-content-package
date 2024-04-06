@@ -1,0 +1,35 @@
+@import "src/styles/variables";
+
+.container {
+  position: relative;
+  overflow: hidden;
+}
+.dialog {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  background: #FFFFFF;
+  padding: 32px;
+
+  transition: $transition-time;
+  transform: translateY(100%);
+
+  &--opened {
+    transform: translateY(0);
+  }
+}
+.cross {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  transition: $transition-time;
+  opacity: 0;
+
+  &--opened {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,26 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.input {
+  width: 100%;
+  max-width: 600px;
+  &--short {
+    max-width: 300px;
+  }
+}
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.bundle-ids-inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.bundle-ids-list {
+  display: flex;
+  gap: 8px;
+}

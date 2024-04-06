@@ -14,6 +14,8 @@ import {
 } from '~/types/authTypes.ts'
 import { AuthContext } from './index.ts'
 
+const DFX_NETWORK = import.meta.env.VITE_DFX_NETWORK
+
 const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [authClient, setAuthClient] = useState<AuthClient | null>(null)
   const [identity, setIdentity] = useState<IdentityInstance | null>(null)
@@ -54,7 +56,7 @@ const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       ?.isAuthenticated()
       .then(res => {
         if (res) {
-          setIdentity(authClient.getIdentity())
+          setIdentity(authClient!.getIdentity())
         }
       })
       .finally(() => setAuthReady(true))
@@ -112,7 +114,7 @@ const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
          * Safari: http://localhost:4943?canisterId=<canister_id>
          * */
         identityProvider:
-          process.env.DFX_NETWORK === 'ic'
+          DFX_NETWORK === 'ic'
             ? 'https://identity.ic0.app'
             : `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`,
         maxTimeToLive: BigInt(AUTH_EXPIRATION_TIME) * 10n ** 9n, // from seconds to nanoseconds

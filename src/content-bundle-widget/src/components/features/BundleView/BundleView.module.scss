@@ -1,0 +1,55 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.img-wrapper {
+  position: relative;
+
+  img {
+    width: 100%;
+    border-radius: $border-radius;
+    height: 250px;
+    object-fit: cover;
+  }
+}
+.chip {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+.title-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0;
+  button {
+    text-decoration: underline;
+  }
+}
+.title {
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 52px;
+  margin-right: auto;
+}
+.description {
+  @include ellipsis;
+  margin: 12px 0;
+}
+.coordinates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 16px 0;
+  span {
+    color: $grey-text-color;
+    margin-right: .5em;
+  }
+}
+.country {
+  width: 100%;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

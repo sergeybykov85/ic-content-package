@@ -1,0 +1,23 @@
+@import "src/styles/variables";
+
+.container {
+  position: relative;
+}
+.btn {
+  position: absolute;
+  top: 110px;
+  left: -40px;
+  &:hover img {
+    filter: $primary-blue-filter;
+  }
+  &--next {
+    left: auto;
+    right: -40px;
+    img {
+      transform: rotate(180deg);
+    }
+  }
+}
+.slide {
+  width: 100%;
+}

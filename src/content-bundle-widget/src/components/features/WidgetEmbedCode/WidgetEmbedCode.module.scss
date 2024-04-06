@@ -1,0 +1,17 @@
+@import "src/styles/variables";
+.container {
+  width: 100%;
+  max-width: 600px;
+  margin: 32px auto;
+}
+.textarea {
+  display: block;
+  width: 100%;
+  textarea {
+    color: $grey-text-color;
+  }
+}
+.btn {
+  margin-top: 16px;
+  width: 100%;
+}

@@ -1,0 +1,8 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.no-api-key {
+  @include box;
+  color: $grey-text-color;
+  text-align: center;
+}

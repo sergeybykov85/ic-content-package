@@ -2,6 +2,7 @@ import { type FC, type MouseEventHandler, useCallback } from 'react'
 import styles from './Chip.module.scss'
 import clsx from 'clsx'
 import If from '~/components/general/If.tsx'
+import removeUnderscores from '~/utils/removeUnderscores.ts'
 
 export interface ChipProps {
   className?: string
@@ -30,7 +31,7 @@ const Chip: FC<ChipProps> = ({ text, className, color = 'black', onClick, withCr
       className={clsx(styles.chip, styles[`chip--${color}`], onClick && styles.clickable, className)}
       onClick={handleClick}
     >
-      {text}
+      {removeUnderscores(text)}
       <If condition={withCross}>
         <img src="/images/plus.svg" alt="cross" onClick={handleCrossClick} />
       </If>
