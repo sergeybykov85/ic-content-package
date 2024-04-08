@@ -1,12 +1,20 @@
 import CanisterService from '~/services/CanisterService.ts'
 import { idlFactory as idl } from '~/../../declarations/widget_service'
-import type { CanisterResponse } from '~/types/globals.ts'
-import type { WidgetCreationParams, WidgetCreationRequestDto, WidgetDto, WidgetItemDto } from '~/types/widgetTypes.ts'
+import type { CanisterResponse, PaginatedListResponse } from '~/types/globals.ts'
+import type {
+  WidgetCreationParams,
+  WidgetCreationRequestDto,
+  WidgetDto,
+  WidgetItemDto,
+  WidgetUpdateParams,
+  WidgetUpdateRequestDto,
+} from '~/types/widgetTypes.ts'
 import { WIDGET_STATUSES, WIDGET_TYPES } from '~/types/widgetTypes.ts'
 import Widget from '~/models/Widget.ts'
 import Bundle from '~/models/Bundle.ts'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
+import PaginatedList from '~/models/PaginatedList.ts'
 
 const WIDGET_SERVICE_CANISTER_ID = import.meta.env.VITE_WIDGET_SERVICE_CANISTER_ID
 
@@ -24,14 +32,21 @@ export default class WidgetService extends CanisterService {
     return this.responseHandler(response).map(({ bundle, package_id }) => new Bundle(bundle, package_id))
   }
 
-  public getWidgetsByCreator = async (page: number, pageSize: number, principal: string): Promise<void> => {
+  public getWidgetsByCreator = async (
+    page: number,
+    pageSize: number,
+    principal: string,
+  ): Promise<PaginatedList<Widget>> => {
     const startIndex = page * pageSize
-    const response = await this.actor.get_widgets_page_by_creator(
+    const { items, total_supply } = (await this.actor.get_widgets_page_by_creator(
       startIndex,
       pageSize,
       this.createIdentityDto(principal),
+    )) as PaginatedListResponse<WidgetDto>
+    return new PaginatedList(
+      { page, pageSize, totalItems: Number(total_supply) },
+      items.map(i => new Widget(i)),
     )
-    console.log(response)
   }
 
   public createWidget = async (params: WidgetCreationParams): Promise<string> => {
@@ -53,5 +68,15 @@ export default class WidgetService extends CanisterService {
     }
     const response = (await this.actor.create_widget(request)) as CanisterResponse<string>
     return this.responseHandler(response)
+  }
+
+  public updateWidget = async (widgetId: string, params: WidgetUpdateParams): Promise<void> => {
+    const request: WidgetUpdateRequestDto = {
+      name: this.createOptionalParam(params.name),
+      description: this.createOptionalParam(params.description),
+      status: params.status ? [{ [params.status]: null }] : [],
+    }
+    const response = (await this.actor.update_widget(widgetId, request)) as CanisterResponse<void>
+    this.responseHandler(response)
   }
 }

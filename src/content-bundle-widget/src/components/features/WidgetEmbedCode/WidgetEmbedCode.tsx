@@ -4,6 +4,7 @@ import styles from './WidgetEmbedCode.module.scss'
 import Button from '~/components/general/Button'
 import copyToClipboard from '~/utils/copyToClipboard.ts'
 import { enqueueSnackbar } from 'notistack'
+import getWidgetEmbedCode from '~/utils/getWidgetEmbedCode.ts'
 
 interface WidgetEmbedCodeProps {
   widgetId: string
@@ -12,14 +13,7 @@ interface WidgetEmbedCodeProps {
 const WidgetEmbedCode: FC<WidgetEmbedCodeProps> = ({ widgetId }) => {
   const [copied, setCopied] = useState(false)
 
-  const value = useMemo(
-    () => `<div
-  data-type="content-bundle-widget"
-  data-widget-id="${widgetId}"
-></div>
-<script src="${location.origin}/widget-constructor.js"></script>`,
-    [widgetId],
-  )
+  const value = useMemo(() => getWidgetEmbedCode(widgetId), [widgetId])
 
   const handleCopy = useCallback(() => {
     copyToClipboard(value, () => {
@@ -31,7 +25,7 @@ const WidgetEmbedCode: FC<WidgetEmbedCodeProps> = ({ widgetId }) => {
   }, [value])
 
   useEffect(() => {
-    let timeoutId: number
+    let timeoutId: NodeJS.Timeout
     if (copied) {
       timeoutId = setTimeout(() => {
         setCopied(false)

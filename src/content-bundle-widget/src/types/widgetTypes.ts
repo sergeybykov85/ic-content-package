@@ -60,3 +60,15 @@ export interface WidgetCreationParams {
   packageId?: string
   bundleIds?: string[]
 }
+
+export interface WidgetUpdateRequestDto {
+  name: string[] // optional
+  description: string[] // optional
+  status: VariantType<WIDGET_STATUSES>[] // optional
+}
+
+export interface WidgetUpdateParams {
+  name?: string
+  description?: string
+  status?: WIDGET_STATUSES
+}

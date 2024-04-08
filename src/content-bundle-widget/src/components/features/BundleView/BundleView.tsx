@@ -14,7 +14,6 @@ interface BundleViewProps {
 const BundleView: FC<BundleViewProps> = ({ bundle, widget }) => {
   const label = useMemo(() => bundle.classification.replace('_', ' '), [bundle.classification])
   const location = useMemo(() => bundle.location[0], [bundle.location])
-
   return (
     <div>
       <div className={styles['img-wrapper']}>

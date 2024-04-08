@@ -1,13 +1,21 @@
 import styles from './NewWidgetForm.module.scss'
-import { type FC, type FormEventHandler, useCallback, useState } from 'react'
+import { type FC, type FormEventHandler, useCallback, useEffect, useState } from 'react'
 import { TextInput } from '~/components/general/Inputs'
 import IconButton from '~/components/general/IconButton'
 import Chip from '~/components/general/Chip'
 import clsx from 'clsx'
 
-const BundleIdsForm: FC = () => {
+interface BundleIdsFormProps {
+  onChange: (ids: string[]) => void
+}
+
+const BundleIdsForm: FC<BundleIdsFormProps> = ({ onChange }) => {
   const [ids, setIds] = useState<string[]>([])
   const [newValue, setNewValue] = useState('')
+
+  useEffect(() => {
+    onChange(ids)
+  }, [ids, onChange])
 
   const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>(
     event => {
