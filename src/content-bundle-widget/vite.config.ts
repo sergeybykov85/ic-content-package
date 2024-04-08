@@ -32,7 +32,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       external: [
-        path.join(declarationsDirPath, 'widget_service', 'index.js'),
+        path.join(declarationsDirPath, 'widget_service', 'widget_service.did.js'),
+        path.join(declarationsDirPath, 'bundle_package', 'bundle_package.did.js'),
       ],
     },
   },
