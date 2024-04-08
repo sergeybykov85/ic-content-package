@@ -20,7 +20,7 @@ const PrincipalBtn: FC<PrincipalBtnProps> = ({ principal }) => {
   }, [principal])
 
   useEffect(() => {
-    let timeoutId: number
+    let timeoutId: NodeJS.Timeout
     if (copied) {
       timeoutId = setTimeout(() => {
         setCopied(false)
