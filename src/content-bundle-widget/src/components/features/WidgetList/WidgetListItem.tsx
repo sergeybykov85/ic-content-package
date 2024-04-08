@@ -10,6 +10,8 @@ import { Link } from 'react-router-dom'
 import { useServices } from '~/context/ServicesContext'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
+import getWidgetEmbedCode from '~/utils/getWidgetEmbedCode.ts'
+import copyToClipboard from '~/utils/copyToClipboard.ts'
 
 interface WidgetListProps {
   widget: Widget
@@ -25,6 +27,7 @@ const WidgetListItem: FC<WidgetListProps> = ({ widget }) => {
       setLoading(true)
       await widgetService.updateWidget(widget.id, { status: WIDGET_STATUSES.Active })
       setIsActive(true)
+      enqueueSnackbar('Widget successfully activated', { variant: 'success' })
     } catch (error) {
       console.error(error)
       enqueueSnackbar('Widget activation failed', { variant: 'error' })
@@ -32,6 +35,13 @@ const WidgetListItem: FC<WidgetListProps> = ({ widget }) => {
       setLoading(false)
     }
   }, [setLoading, widget.id, widgetService])
+
+  const copyWidgetCode = useCallback(() => {
+    const embedCode = getWidgetEmbedCode(widget.id)
+    copyToClipboard(embedCode, () => {
+      enqueueSnackbar('Copied to clipboard', { variant: 'success' })
+    })
+  }, [widget.id])
 
   return (
     <div className={styles.item}>
@@ -58,7 +68,7 @@ const WidgetListItem: FC<WidgetListProps> = ({ widget }) => {
           <Button text="Activate" onClick={activateWidget} />
         </If>
         <If condition={isActive}>
-          <Button text="Copy embed code" variant="outlined" />
+          <Button text="Copy embed code" variant="outlined" onClick={copyWidgetCode} />
           <Link to={`/widget-preview/${widget.id}`} target="_blank">
             <Button text="Open preview" variant="text" />
           </Link>
