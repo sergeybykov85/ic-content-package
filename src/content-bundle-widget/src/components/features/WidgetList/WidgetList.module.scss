@@ -1,0 +1,46 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.list {
+  display: grid;
+  grid-gap: 16px;
+  @include grid-columns(3)
+}
+.item {
+  display: flex;
+  flex-direction: column;
+  @include box(16px)
+}
+.title {
+  font-weight: 500;
+}
+.description {
+  margin: 8px 0;
+}
+.detail {
+  margin: 4px 0 ;
+  display: flex;
+  justify-content: space-between;
+
+  span {
+    color: $grey-text-color
+  }
+}
+.active {
+  color: forestgreen;
+}
+.btn-group {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  margin-top: auto;
+
+  button {
+    padding: 8px 16px;
+  }
+
+  a {
+    margin-left: auto;
+  }
+}

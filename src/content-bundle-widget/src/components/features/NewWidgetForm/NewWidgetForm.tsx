@@ -10,6 +10,7 @@ import BundleIdsForm from '~/components/features/NewWidgetForm/BundleIdsForm.tsx
 import { useServices } from '~/context/ServicesContext'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
+import { useNavigate } from 'react-router-dom'
 
 const NAME_MAX_LENGTH = import.meta.env.VITE_WIDGET_NAME_MAX_LENGTH
 const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_WIDGET_DESCRIPTION_MAX_LENGTH
@@ -20,6 +21,8 @@ const NewWidgetForm: FC = () => {
   const formId = useId()
   const { widgetService } = useServices()
   const { setLoading } = useFullScreenLoading()
+  const navigate = useNavigate()
+
   const [isDraft, setIsDraft] = useState(false)
   const [bundleIds, setBundleIds] = useState<string[]>([])
 
@@ -34,6 +37,7 @@ const NewWidgetForm: FC = () => {
         })
         console.log(widgetId)
         enqueueSnackbar('Widget successfully created', { variant: 'success' })
+        navigate('/my-widgets')
       } catch (error) {
         console.error(error)
         enqueueSnackbar('Something went wrong', { variant: 'error' })
@@ -41,7 +45,7 @@ const NewWidgetForm: FC = () => {
         setLoading(false)
       }
     },
-    [bundleIds, isDraft, setLoading, widgetService],
+    [bundleIds, isDraft, navigate, setLoading, widgetService],
   )
 
   const form = useFormik<FormValues>({
