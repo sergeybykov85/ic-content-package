@@ -35,7 +35,7 @@ const NewWidgetForm: FC = () => {
           isDraft,
           bundleIds,
         })
-        console.log(widgetId)
+        console.info(widgetId)
         enqueueSnackbar('Widget successfully created', { variant: 'success' })
         navigate('/my-widgets')
       } catch (error) {

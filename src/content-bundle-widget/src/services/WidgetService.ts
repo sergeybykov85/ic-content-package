@@ -66,7 +66,6 @@ export default class WidgetService extends CanisterService {
         by_classification: [],
       })
     }
-    console.log(request)
     const response = (await this.actor.create_widget(request)) as CanisterResponse<string>
     return this.responseHandler(response)
   }

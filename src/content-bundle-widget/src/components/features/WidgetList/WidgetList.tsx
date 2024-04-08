@@ -1,6 +1,6 @@
 import styles from './WidgetList.module.scss'
 import { type FC } from 'react'
-import Widget from '~/models/Widget.ts'
+import type Widget from '~/models/Widget.ts'
 import WidgetListItem from './WidgetListItem.tsx'
 
 interface WidgetListProps {
