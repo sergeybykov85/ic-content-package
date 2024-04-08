@@ -29,7 +29,7 @@
       "type": "pull",
       "id": "rdmx6-jaaaa-aaaaa-aaadq-cai"
     },
-    "content-bundle-tools": {
+    "content_bundle_tools": {
       "frontend": {
         "entrypoint": "src/content-bundle-tools/dist/index.html"
       },
@@ -39,7 +39,7 @@
       "type": "assets",
       "build": "npm run build:content-bundle-tools"
     },
-    "content-bundle-explorer": {
+    "content_bundle_explorer": {
       "frontend": {
         "entrypoint": "src/content-bundle-explorer/dist/index.html"
       },
@@ -49,7 +49,7 @@
       "type": "assets",
       "build": "npm run build:content-bundle-explorer"
     },
-    "content-bundle-widget": {
+    "content_bundle_widget": {
       "frontend": {
         "entrypoint": "src/content-bundle-widget/dist/index.html"
       },
