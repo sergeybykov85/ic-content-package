@@ -1,7 +1,7 @@
 import CanisterService from '~/models/CanisterService.ts'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
-import { idlFactory as idl } from '~/../../declarations/bundle_package/bundle_package.did.js'
+import { idlFactory as idl } from '~/declarations/bundle_package/bundle_package.did.js'
 import type { DataSegmentationDto, DeployPackageMetadata, PackageDetailsDto } from '~/types/packagesTypes.ts'
 import PackageDetails from '~/models/PackageDetails.ts'
 import Bundle from '~/models/Bundle.ts'

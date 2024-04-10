@@ -1,5 +1,5 @@
 import CanisterService from '~/services/CanisterService.ts'
-import { idlFactory as idl } from '~/../../declarations/widget_service/widget_service.did.js'
+import { idlFactory as idl } from '~/declarations/widget_service/widget_service.did.js'
 import type { CanisterResponse, PaginatedListResponse } from '~/types/globals.ts'
 import type {
   WidgetCreationParams,

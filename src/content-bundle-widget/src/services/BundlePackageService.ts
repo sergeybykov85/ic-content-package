@@ -1,5 +1,5 @@
 import CanisterService from '~/services/CanisterService.ts'
-import { idlFactory as idl } from '~/../../declarations/bundle_package/bundle_package.did.js'
+import { idlFactory as idl } from '~/declarations/bundle_package/bundle_package.did.js'
 import type { AdditionalDataDto, BUNDLE_DATA_GROUPS } from '~/types/bundleTypes.ts'
 import type { CanisterResponse } from '~/types/globals.ts'
 import AdditionalDataSection from '~/models/AdditionalDataSection.ts'

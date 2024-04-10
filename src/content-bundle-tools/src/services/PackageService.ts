@@ -1,4 +1,4 @@
-import { idlFactory as idl } from '~/../../declarations/package_service/package_service.did.js'
+import { idlFactory as idl } from '~/declarations/package_service/package_service.did.js'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 import type { DeployPackageOptions, DeployPackageMetadata, PackageTypes } from '~/types/packagesTypes.ts'
