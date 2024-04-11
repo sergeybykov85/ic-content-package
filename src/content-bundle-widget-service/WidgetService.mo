@@ -26,7 +26,7 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 		identity_id = Principal.toText(installation.caller);
 	};
 	// registry actor
-	var registry:Text = Option.get(initArgs.package_registry, "{DEFAULT_REGISTRY_PLACE_HERE}");
+	stable var registry:Text = Option.get(initArgs.package_registry, "{DEFAULT_REGISTRY_PLACE_HERE}");
 
     stable var owner:CommonTypes.Identity = Option.get(initArgs.owner, {
 		identity_type = #ICP; identity_id = Principal.toText(installation.caller) 
@@ -82,7 +82,15 @@ shared (installation) actor class (initArgs : Types.WidgetServiceArgs) = this {
 		if (not can_manage(caller)) return #err(#AccessDenied);
 		trial_allowance := v;
 		#ok();
-	};	
+	};
+	/**
+	* Applies the registry. This method might be removed laterr
+	*/
+	public shared ({ caller }) func apply_registry (to : Principal) : async Result.Result<(), CommonTypes.Errors> {
+		if (not CommonUtils.identity_equals({identity_type = #ICP; identity_id = Principal.toText(caller);}, owner)) return #err(#AccessDenied);
+		registry := Principal.toText(to);
+		#ok();
+	};		
 
 	/**
 	* Registers an allowance

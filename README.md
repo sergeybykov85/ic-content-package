@@ -35,7 +35,7 @@ Tech stack for UI apps : Node.js, TypeScript, React, Vite & Vitest, ESLint & Pre
 
 ## Architecture 
 Here is a schema of existing canisters. This illustration refers to the current list of canisters and also some new possible modules mentioned as well.
-![canisters](screens/code_structure.jpg)
+![canisters](screens/canisters.jpg)
 
 A few words about each visual UI application.
 

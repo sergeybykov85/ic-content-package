@@ -36,9 +36,9 @@ shared (installation) actor class (initArgs : Types.PackageServiceArgs) = this {
 	});
 
 	// def cycles for the package canister creation
-	stable var def_package_cycles:Nat = 1_000_000_000_000;
+	stable var def_package_cycles:Nat = 1_100_000_000_000;
 	// def cycles for  the databucket crreation when a new package is deployed
-	stable var def_datastore_cycles:Nat = 600_000_000_000;
+	stable var def_datastore_cycles:Nat = 700_000_000_000;
 
 	stable let _NETWORK = initArgs.network;
 

@@ -1,5 +1,5 @@
 import CanisterService from '~/services/CanisterService.ts'
-import { idlFactory as idl } from '~/../../declarations/bundle_package'
+import { idlFactory as idl } from '~/declarations/bundle_package/bundle_package.did.js'
 import type { DataSegmentationDto, PackageWithOwnerDto } from '~/types/packageTypes.ts'
 import PackageWithOwner from '~/models/PackageWithOwner.ts'
 import PaginatedList from '~/models/PaginatedList.ts'

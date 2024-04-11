@@ -1,4 +1,4 @@
-import { idlFactory as idl } from '~/../../declarations/package_registry'
+import { idlFactory as idl } from '~/declarations/package_registry/package_registry.did.js'
 import CanisterService from '~/services/CanisterService.ts'
 import { PackageWithSubmitter } from '~/models/PackageWithSubmitter.ts'
 import type {
