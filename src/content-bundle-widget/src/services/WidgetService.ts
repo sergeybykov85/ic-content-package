@@ -61,7 +61,7 @@ export default class WidgetService extends CanisterService {
     }
     if (params.packageId) {
       request.criteria.push({
-        entity: [{ package_id: params.packageId, ids: params.bundleIds || [] }],
+        entity: [{ package_id: params.packageId, ids: this.createOptionalParam(params.bundleIds) }],
         by_tag: [],
         by_country_code: [],
         by_classification: [],
