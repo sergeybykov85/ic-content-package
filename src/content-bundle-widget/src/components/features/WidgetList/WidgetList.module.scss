@@ -4,7 +4,16 @@
 .list {
   display: grid;
   grid-gap: 16px;
-  @include grid-columns(3)
+
+  @include grid-columns(1);
+
+  @media (min-width: $bp-md) {
+    @include grid-columns(2);
+  }
+
+  @media (min-width: $bp-lg) {
+    @include grid-columns(3);
+  }
 }
 .item {
   display: flex;
