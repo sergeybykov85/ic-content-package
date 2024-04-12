@@ -14,6 +14,7 @@ import Select from '~/components/general/Select'
 import clsx from 'clsx'
 import styles from './BundleForms.module.scss'
 import TagsForm from '~/components/features/BundleForms/TagsForm.tsx'
+import removeUnderscores from '~/utils/removeUnderscores.ts'
 
 const NAME_MAX_LENGTH = import.meta.env.VITE_BUNDLE_NAME_MAX_LENGTH
 const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_BUNDLE_DESCRIPTION_MAX_LENGTH
@@ -145,6 +146,7 @@ const CreateBundleForm: FC<CreateBundleFormProps> = ({ packageId }) => {
               options={supportedClassifications}
               onSelect={handleClassificationChanged}
               error={form.errors.classification}
+              valueRenderer={v => removeUnderscores(v)}
             />
           </form>
           <TagsForm tags={tags} onChange={handleTagsChange} />
