@@ -39,9 +39,7 @@ const AudioDataForm: FC<AudioDataFormProps> = ({ formId, onSubmit }) => {
     },
     validateOnChange: false,
     validationSchema: Yup.object().shape({
-      name: Yup.string()
-        .required('Required!')
-        .matches(/^[a-zA-Z0-9_. -]+$/g, { message: 'Only latin characters, numbers, spaces and ".", "_", "-"' }),
+      locale: Yup.string().required('Required!')
     }),
     onSubmit: handleSubmit,
   })
