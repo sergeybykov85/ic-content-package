@@ -2,12 +2,10 @@ import { type FC, useCallback } from 'react'
 import type { AboutDataParams, AdditionalDataDomainParams } from '~/types/bundleDataTypes.ts'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import locales from '~/assets/locales.json'
 import Select from '~/components/general/Select'
 import { TextArea, TextInput } from '~/components/general/Inputs'
 import styles from './AboutDataForm.module.scss'
-
-const LOCALES = locales as Record<string, string>
+import locales from '~/utils/locales.ts'
 
 interface AboutDataFormProps {
   formId: string
@@ -19,7 +17,7 @@ type FormValues = Omit<AboutDataParams, 'attributes'>
 const AboutDataForm: FC<AboutDataFormProps> = ({ formId, onSubmit }) => {
   const handleSubmit = useCallback(
     (values: FormValues) => {
-      const locale = Object.keys(LOCALES).find(key => LOCALES[key] === values.locale)!
+      const locale = locales.getCodeByLanguage(values.locale)
       onSubmit({
         domainParams: {
           locale,
@@ -36,14 +34,14 @@ const AboutDataForm: FC<AboutDataFormProps> = ({ formId, onSubmit }) => {
     initialValues: {
       name: '',
       description: '',
-      locale: LOCALES['en'],
+      locale: locales.getLanguageByCode('en'),
     },
     validateOnChange: false,
     validationSchema: Yup.object().shape({
       name: Yup.string().min(2, 'Too Short!').max(100, `Maximum length ${100} characters`).required('Required!'),
       description: Yup.string()
         .min(2, 'Too Short!')
-        .max(1000, `Maximum length ${1000} characters`)
+        .max(2000, `Maximum length ${2000} characters`)
         .required('Required!'),
       locale: Yup.string().required('Required!'),
     }),
@@ -59,7 +57,7 @@ const AboutDataForm: FC<AboutDataFormProps> = ({ formId, onSubmit }) => {
         label="Locale"
         placeholder="Chose locale"
         defaultValue={form.initialValues.locale}
-        options={Object.values(LOCALES)}
+        options={locales.getAllLanguages()}
         onSelect={handleLocaleSelect}
         error={form.errors.locale}
         className={styles.select}

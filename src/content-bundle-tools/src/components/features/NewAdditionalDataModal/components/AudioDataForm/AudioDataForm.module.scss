@@ -1,0 +1,19 @@
+@import "src/styles/variables";
+@import "src/styles/mixins";
+
+.select {
+  max-width: 260px;
+}
+.file {
+  margin-top: 32px;
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: 1px dashed $border-color;
+  border-radius: $border-radius;
+  transition: $transition-time;
+
+  span {
+    color: $grey-text-color
+  }
+}

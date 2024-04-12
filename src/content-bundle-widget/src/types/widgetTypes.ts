@@ -37,7 +37,7 @@ export interface WidgetItemDto {
 export interface WidgetCriteriaDto {
   entity: {
     package_id: string
-    ids: string[] // optional
+    ids: string[][] // optional
   }[] // optional
   by_tag: string[] // optional
   by_country_code: string[] // optional

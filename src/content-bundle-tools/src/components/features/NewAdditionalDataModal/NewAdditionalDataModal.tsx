@@ -22,6 +22,7 @@ import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import Button from '~/components/general/Button'
 import AboutDataForm from '~/components/features/NewAdditionalDataModal/components/AboutDataForm'
 import RawDataForm from '~/components/features/NewAdditionalDataModal/components/RawDataForm'
+import AudioDataForm from '~/components/features/NewAdditionalDataModal/components/AudioDataForm'
 
 interface NewAdditionalDataModalProps {
   bundleId: string
@@ -130,6 +131,9 @@ const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({
           return <LocationDataForm {...{ onSubmit, formId }} />
         case POI_CATEGORIES.About:
           return <AboutDataForm {...{ onSubmit, formId }} />
+        case ADDITIONS_CATEGORIES.Audio:
+        case POI_CATEGORIES.AudioGuide:
+          return <AudioDataForm {...{ onSubmit, formId }} />
         case POI_CATEGORIES.AR:
         case POI_CATEGORIES.History:
         case ADDITIONS_CATEGORIES.Article:
@@ -160,6 +164,7 @@ const NewAdditionalDataModal: FC<NewAdditionalDataModalProps> = ({
           defaultValue={chosenCategory}
           onSelect={value => setChosenCategory(value)}
           placeholder="Choose category..."
+          valueRenderer={(v) => v === 'AudioGuide' ? 'Audio Guide' : v}
         />
       </div>
       <Collapse open={Boolean(chosenCategory)}>{renderForm(chosenCategory)}</Collapse>

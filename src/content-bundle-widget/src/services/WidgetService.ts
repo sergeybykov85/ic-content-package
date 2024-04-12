@@ -1,6 +1,7 @@
 import CanisterService from '~/services/CanisterService.ts'
 import { idlFactory as idl } from '~/declarations/widget_service/widget_service.did.js'
 import type { CanisterResponse, PaginatedListResponse } from '~/types/globals.ts'
+import { IDENTITY_TYPES } from '~/types/globals.ts'
 import type {
   WidgetCreationParams,
   WidgetCreationRequestDto,
@@ -60,7 +61,7 @@ export default class WidgetService extends CanisterService {
     }
     if (params.packageId) {
       request.criteria.push({
-        entity: [{ package_id: params.packageId, ids: params.bundleIds || [] }],
+        entity: [{ package_id: params.packageId, ids: this.createOptionalParam(params.bundleIds) }],
         by_tag: [],
         by_country_code: [],
         by_classification: [],
@@ -78,5 +79,18 @@ export default class WidgetService extends CanisterService {
     }
     const response = (await this.actor.update_widget(widgetId, request)) as CanisterResponse<void>
     this.responseHandler(response)
+  }
+
+  public getActivityBy = async (identityId: string): Promise<{ allowance: number; widgetsAmount: number }> => {
+    const res /*{ allowance, deployed_packages }*/ = (await this.actor.activity_by({
+      identity_type: {
+        [IDENTITY_TYPES.ICP]: null,
+      },
+      identity_id: identityId,
+    })) as { allowance: bigint; registered_widgets: string[] }
+    return {
+      allowance: Number(res.allowance),
+      widgetsAmount: res.registered_widgets.length,
+    }
   }
 }

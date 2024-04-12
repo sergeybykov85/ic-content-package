@@ -4,7 +4,6 @@ import useClickAway from '~/hooks/useClickAway.ts'
 import styles from './Select.module.scss'
 import clsx from 'clsx'
 import If from '~/components/general/If'
-import removeUnderscores from '~/utils/removeUnderscores.ts'
 
 interface SelectProps<T> {
   defaultValue: T
@@ -15,6 +14,7 @@ interface SelectProps<T> {
   placeholder?: string
   error?: string
   disabled?: boolean
+  valueRenderer?: (value: T) => string
 }
 
 function Select<T extends string = string>({
@@ -26,6 +26,7 @@ function Select<T extends string = string>({
   placeholder,
   error,
   disabled,
+  valueRenderer
 }: SelectProps<T>): ReactNode {
   const [value, setValue] = useState(defaultValue)
   const [visible, setVisible] = useState(false)
@@ -50,13 +51,15 @@ function Select<T extends string = string>({
     [hideOptions, onSelect, disabled],
   )
 
+  const renderValue = useCallback((v: T) => valueRenderer ? valueRenderer(v) : v, [valueRenderer])
+
   return (
     <div ref={ref} className={clsx(styles.select, className, visible && styles.opened)}>
       <label>
         <span className={clsx(styles.label, !label && styles['no-label'])}>{label}</span>
         <TextInput
           readOnly
-          {...{ value: removeUnderscores(value), placeholder, onFocus, disabled }}
+          {...{ value: renderValue(value), placeholder, onFocus, disabled }}
           className={clsx(styles.input, disabled && styles.disabled)}
         />
         <If condition={Boolean(error)}>
@@ -66,7 +69,7 @@ function Select<T extends string = string>({
       <ul className={clsx(styles.options)}>
         {options.map(item => (
           <li key={item} value={item} onClick={() => onClick(item)}>
-            {removeUnderscores(item)}
+            {renderValue(item)}
           </li>
         ))}
       </ul>
