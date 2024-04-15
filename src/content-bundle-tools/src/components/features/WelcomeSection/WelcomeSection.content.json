@@ -1,4 +1,8 @@
 {
-  "title": "Welcome to the Content Bundle Tool",
-  "description": "Embark on a captivating journey through the groundbreaking world of Web3. Join us as we dive into the cutting-edge technologies, decentralized platforms, and immersive experiences that define the next generation of the internet."
+  "title": "Welcome to the Content Bundle Toolkit",
+  "description": "Create and populate your POI with data by placing it in ICP web3 environment.",
+  "items": [
+    "Become a contributor to existing POIs",
+    "You will be able to profit from future web3 tours using these POIs"
+  ]
 }

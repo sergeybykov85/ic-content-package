@@ -1,32 +1,82 @@
 @import "src/styles/variables";
+@import "src/styles/mixins";
 
 .section {
-  width: 100%;
-  min-height: inherit;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  display: grid;
+  gap: 32px;
+  @include grid-columns(1);
 
-  padding: 80px 0;
+  @media (min-width: $bp-md) {
+    @include grid-columns(2);
+  }
+  padding: 60px 0;
 }
 .title {
-  font-size: 40px;
   font-style: normal;
   font-weight: 600;
-  text-align: center;
-  max-width: 800px;
-  margin: 32px auto;
+  margin-bottom: 32px;
 
-  @media (min-width: $bp-sm) {
-    font-size: 60px;
+  font-size: 36px;
+
+  @media (min-width: $bp-lg) {
+    font-size: 40px;
   }
-  @media (min-width: $bp-md) {
-    font-size: 80px;
+  @media (min-width: $bp-xl) {
+    font-size: 60px;
   }
 }
 
 .description {
-  max-width: 480px;
+  font-weight: 400;
+  font-size: 24px;
+  margin-top: 16px;
+
+  @media (min-width: $bp-lg) {
+    font-size: 28px;
+  }
+  @media (min-width: $bp-xl) {
+    font-size: 34px;
+  }
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+
+  margin: 32px 0;
+  @media (min-width: $bp-md) {
+    margin: 62px 0;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+
+    font-weight: 600;
+    font-size: 18px;
+
+    @media (min-width: $bp-md) {
+      font-size: 24px;
+    }
+
+    img {
+      height: 68px;
+    }
+  }
+}
+
+.btn {
+  display: flex;
+  justify-content: center;
+  @media (min-width: $bp-md) {
+    justify-content: flex-start;
+  }
+}
+
+.img {
+  max-width: 500px;
+  width: 100%;
   margin: 0 auto;
-  text-align: center;
 }
