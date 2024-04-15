@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import type AdditionalDataSection from '~/models/AdditionalDataSection.ts'
 import BundleDataLayout from '~/components/features/BundleView/components/BundleDataLayout'
 import styles from './BundleAudio.module.scss'
-import { BUNDLE_DATA_CATEGORIES } from '~/types/bundleTypes.ts'
+import { POI_CATEGORIES } from '~/types/bundleTypes.ts'
 
 interface BundleAudioProps {
   data?: AdditionalDataSection
@@ -11,7 +11,7 @@ interface BundleAudioProps {
 const BundleAudio: FC<BundleAudioProps> = ({ data }) => {
   if (!data) return null
   return (
-    <BundleDataLayout title={data.category === BUNDLE_DATA_CATEGORIES.AudioGuide ? 'Audio Guide' : 'Audio'}>
+    <BundleDataLayout title={data.category === POI_CATEGORIES.AudioGuide ? 'Audio Guide' : 'Audio'}>
       <div className={styles.container}>
         {data.dataList.map(item => (
           <div key={item.id}>

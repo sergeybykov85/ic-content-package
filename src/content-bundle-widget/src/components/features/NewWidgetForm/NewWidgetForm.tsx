@@ -11,6 +11,8 @@ import { useServices } from '~/context/ServicesContext'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
 import { useNavigate } from 'react-router-dom'
+import BundleOptionsForm from '~/components/features/NewWidgetForm/BundleOptionsForm.tsx'
+import type { ADDITIONS_CATEGORIES, POI_CATEGORIES } from '~/types/bundleTypes.ts'
 
 const NAME_MAX_LENGTH = import.meta.env.VITE_WIDGET_NAME_MAX_LENGTH
 const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_WIDGET_DESCRIPTION_MAX_LENGTH
@@ -25,6 +27,13 @@ const NewWidgetForm: FC = () => {
 
   const [isDraft, setIsDraft] = useState(false)
   const [bundleIds, setBundleIds] = useState<string[]>([])
+  const [categories, setCategories] = useState<{
+    poiCategories: POI_CATEGORIES[]
+    additionsCategories: ADDITIONS_CATEGORIES[]
+  }>({
+    poiCategories: [],
+    additionsCategories: [],
+  })
 
   const onSubmit = useCallback(
     async (values: FormValues) => {
@@ -34,6 +43,7 @@ const NewWidgetForm: FC = () => {
           ...values,
           isDraft,
           bundleIds,
+          ...categories,
         })
         console.info(widgetId)
         enqueueSnackbar('Widget successfully created', { variant: 'success' })
@@ -45,7 +55,7 @@ const NewWidgetForm: FC = () => {
         setLoading(false)
       }
     },
-    [bundleIds, isDraft, navigate, setLoading, widgetService],
+    [bundleIds, categories, isDraft, navigate, setLoading, widgetService],
   )
 
   const form = useFormik<FormValues>({
@@ -70,38 +80,43 @@ const NewWidgetForm: FC = () => {
   })
 
   return (
-    <div className={styles.container}>
-      <form onSubmit={form.handleSubmit} className={styles.container} id={formId}>
-        <TextInput
-          name="name"
-          label="Name"
-          placeholder="Set widget name"
-          value={form.values.name}
-          onChange={form.handleChange}
-          error={form.errors.name}
-          className={styles.input}
-        />
-        <TextArea
-          name="description"
-          label="Description"
-          placeholder="Set package description"
-          value={form.values.description}
-          onChange={form.handleChange}
-          error={form.errors.description}
-          className={styles.input}
-          rows={3}
-        />
-        <TextInput
-          name="packageId"
-          label="Package ID"
-          placeholder="Set package ID"
-          value={form.values.packageId}
-          onChange={form.handleChange}
-          error={form.errors.packageId}
-          className={styles.input}
-        />
-      </form>
-      <BundleIdsForm onChange={ids => setBundleIds(ids)} />
+    <div>
+      <div className={styles.grid}>
+        <div className={styles.main}>
+          <form onSubmit={form.handleSubmit} className={styles.form} id={formId}>
+            <TextInput
+              name="name"
+              label="Name"
+              placeholder="Set widget name"
+              value={form.values.name}
+              onChange={form.handleChange}
+              error={form.errors.name}
+              className={styles.input}
+            />
+            <TextArea
+              name="description"
+              label="Description"
+              placeholder="Set package description"
+              value={form.values.description}
+              onChange={form.handleChange}
+              error={form.errors.description}
+              className={styles.input}
+              rows={3}
+            />
+            <TextInput
+              name="packageId"
+              label="Package ID"
+              placeholder="Set package ID"
+              value={form.values.packageId}
+              onChange={form.handleChange}
+              error={form.errors.packageId}
+              className={styles.input}
+            />
+          </form>
+          <BundleIdsForm onChange={ids => setBundleIds(ids)} />
+        </div>
+        <BundleOptionsForm className={styles.options} onChange={setCategories} />
+      </div>
       <div className={styles.footer}>
         <Button type="submit" text="Submit" className={styles.btn} form={formId} />
         <Checkbox

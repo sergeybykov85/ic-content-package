@@ -19,23 +19,28 @@ export enum BUNDLE_DATA_GROUPS {
   Additions = 'Additions',
 }
 
-export enum BUNDLE_DATA_CATEGORIES {
-  Location = 'Location', // POI
-  About = 'About', // POI
-  History = 'History', // POI
-  AudioGuide = 'AudioGuide', // POI
-  Audio = 'Audio', // Additions
-  Video = 'Video', // Additions
-  Gallery = 'Gallery', // POI and Additions
-  Article = 'Article', // Additions
-  Document = 'Document', // Additions
-  AR = 'AR', // POI
-  // Sundry = 'Sundry'
+export enum POI_CATEGORIES {
+  Location = 'Location',
+  About = 'About',
+  History = 'History',
+  AudioGuide = 'AudioGuide',
+  Gallery = 'Gallery',
+  AR = 'AR',
 }
+
+export enum ADDITIONS_CATEGORIES {
+  Audio = 'Audio',
+  Video = 'Video',
+  Gallery = 'Gallery',
+  Article = 'Article',
+  Document = 'Document',
+}
+
+export type BundleDataCategories = POI_CATEGORIES | ADDITIONS_CATEGORIES
 
 export interface PayloadDataItem {
   group_id: VariantType<BUNDLE_DATA_GROUPS>
-  categories: VariantType<BUNDLE_DATA_CATEGORIES>[]
+  categories: VariantType<BundleDataCategories>[]
 }
 
 export interface BundleDto {
@@ -56,7 +61,7 @@ export interface BundleDto {
   data_availability: PayloadDataItem[]
 }
 
-export type AvailableBundleData = Partial<Record<BUNDLE_DATA_GROUPS, BUNDLE_DATA_CATEGORIES[]>>
+export type AvailableBundleData = Partial<Record<BUNDLE_DATA_GROUPS, BundleDataCategories[]>>
 
 export interface AdditionalDataDto {
   data_path: StorageData
@@ -65,7 +70,7 @@ export interface AdditionalDataDto {
 }
 
 export interface AdditionalDataSectionDto {
-  category: VariantType<BUNDLE_DATA_CATEGORIES>
+  category: VariantType<BundleDataCategories>
   data: StorageData[]
   data_path: StorageData
 }

@@ -1,5 +1,5 @@
 import type { IdentityRecord, VariantType } from '~/types/globals.ts'
-import type { BundleDto, PayloadDataItem } from '~/types/bundleTypes.ts'
+import type { ADDITIONS_CATEGORIES, BundleDto, PayloadDataItem, POI_CATEGORIES } from '~/types/bundleTypes.ts'
 
 export enum WIDGET_TYPES {
   Bundle = 'Bundle',
@@ -59,6 +59,8 @@ export interface WidgetCreationParams {
   isDraft?: boolean
   packageId?: string
   bundleIds?: string[]
+  poiCategories?: POI_CATEGORIES[]
+  additionsCategories?: ADDITIONS_CATEGORIES[]
 }
 
 export interface WidgetUpdateRequestDto {

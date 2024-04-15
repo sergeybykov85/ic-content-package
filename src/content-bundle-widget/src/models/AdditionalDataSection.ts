@@ -1,4 +1,4 @@
-import type { BUNDLE_DATA_CATEGORIES, AdditionalDataSectionDto } from '~/types/bundleTypes.ts'
+import type { AdditionalDataSectionDto, BundleDataCategories } from '~/types/bundleTypes.ts'
 import CanisterDTO from '~/models/CanisterDTO.ts'
 import getLanguageByCode from '~/utils/getLanguageByCode.ts'
 
@@ -10,7 +10,7 @@ export interface DataListItem {
 }
 
 export default class AdditionalDataSection extends CanisterDTO {
-  public category: BUNDLE_DATA_CATEGORIES
+  public category: BundleDataCategories
   public dataList: DataListItem[]
   public dataPathUrl: string
 
