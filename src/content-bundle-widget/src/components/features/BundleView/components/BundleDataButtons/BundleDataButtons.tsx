@@ -4,7 +4,8 @@ import { useFullScreenModal } from '~/context/FullScreenModalContext'
 import { useServices } from '~/context/ServicesContext'
 import type Bundle from '~/models/Bundle.ts'
 import type AdditionalDataSection from '~/models/AdditionalDataSection.ts'
-import { type AvailableBundleData, BUNDLE_DATA_CATEGORIES, BUNDLE_DATA_GROUPS } from '~/types/bundleTypes.ts'
+import type { BundleDataCategories, AvailableBundleData } from '~/types/bundleTypes.ts'
+import { ADDITIONS_CATEGORIES, BUNDLE_DATA_GROUPS, POI_CATEGORIES } from '~/types/bundleTypes.ts'
 import Button from '~/components/general/Button'
 import If from '~/components/general/If.tsx'
 import BundleAbout from '~/components/features/BundleView/components/BundleAbout'
@@ -31,7 +32,7 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ bundle, dataToRender })
   const [additionSections, setAdditionSections] = useState<AdditionalDataSection[]>([])
 
   const getSection = useCallback(
-    (group: BUNDLE_DATA_GROUPS, category: BUNDLE_DATA_CATEGORIES) => {
+    (group: BUNDLE_DATA_GROUPS, category: BundleDataCategories) => {
       switch (group) {
         case BUNDLE_DATA_GROUPS.POI:
           return poiSections.find(section => section.category === category)
@@ -43,28 +44,29 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ bundle, dataToRender })
   )
 
   const checkIsAvailable = useCallback(
-    (group: BUNDLE_DATA_GROUPS, category: BUNDLE_DATA_CATEGORIES) => {
+    (group: BUNDLE_DATA_GROUPS, category: BundleDataCategories) => {
       return dataToRender[group]?.includes(category) && bundle.availableCategories[group]?.includes(category)
     },
     [bundle.availableCategories, dataToRender],
   )
 
   const handleClick = useCallback(
-    (category: BUNDLE_DATA_CATEGORIES, group?: BUNDLE_DATA_GROUPS) => {
+    (category: BundleDataCategories, group?: BUNDLE_DATA_GROUPS) => {
       switch (category) {
-        case BUNDLE_DATA_CATEGORIES.About:
+        case POI_CATEGORIES.About:
           setContent(<BundleAbout about={bundle.about} />)
           break
-        case BUNDLE_DATA_CATEGORIES.Location:
+        case POI_CATEGORIES.Location:
           setContent(<BundleLocations location={bundle.location[0]} />)
           break
-        case BUNDLE_DATA_CATEGORIES.AudioGuide:
+        case POI_CATEGORIES.AudioGuide:
           setContent(<BundleAudio data={getSection(BUNDLE_DATA_GROUPS.POI, category)} />)
           break
-        case BUNDLE_DATA_CATEGORIES.Audio:
+        case ADDITIONS_CATEGORIES.Audio:
           setContent(<BundleAudio data={getSection(BUNDLE_DATA_GROUPS.Additions, category)} />)
           break
-        case BUNDLE_DATA_CATEGORIES.Gallery:
+        case POI_CATEGORIES.Gallery:
+        case ADDITIONS_CATEGORIES.Gallery:
           setContent(<BundleGallery data={getSection(group!, category)} />)
           break
       }
@@ -88,29 +90,29 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ bundle, dataToRender })
   return (
     <div className={styles.container}>
       <If condition={Boolean(bundle.location[0])}>
-        <Button variant="text" text="Map" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Location)} />
+        <Button variant="text" text="Map" onClick={() => handleClick(POI_CATEGORIES.Location)} />
       </If>
-      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.POI, BUNDLE_DATA_CATEGORIES.About)}>
-        <Button variant="text" text="About" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.About)} />
+      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.POI, POI_CATEGORIES.About)}>
+        <Button variant="text" text="About" onClick={() => handleClick(POI_CATEGORIES.About)} />
       </If>
-      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.POI, BUNDLE_DATA_CATEGORIES.AudioGuide)}>
-        <Button variant="text" text="Audio Guide" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.AudioGuide)} />
+      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.POI, POI_CATEGORIES.AudioGuide)}>
+        <Button variant="text" text="Audio Guide" onClick={() => handleClick(POI_CATEGORIES.AudioGuide)} />
       </If>
-      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.Additions, BUNDLE_DATA_CATEGORIES.Audio)}>
-        <Button variant="text" text="Audio" onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Audio)} />
+      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.Additions, ADDITIONS_CATEGORIES.Audio)}>
+        <Button variant="text" text="Audio" onClick={() => handleClick(ADDITIONS_CATEGORIES.Audio)} />
       </If>
-      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.POI, BUNDLE_DATA_CATEGORIES.Gallery)}>
+      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.POI, POI_CATEGORIES.Gallery)}>
         <Button
           variant="text"
           text="Gallery"
-          onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Gallery, BUNDLE_DATA_GROUPS.POI)}
+          onClick={() => handleClick(POI_CATEGORIES.Gallery, BUNDLE_DATA_GROUPS.POI)}
         />
       </If>
-      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.Additions, BUNDLE_DATA_CATEGORIES.Gallery)}>
+      <If condition={checkIsAvailable(BUNDLE_DATA_GROUPS.Additions, ADDITIONS_CATEGORIES.Gallery)}>
         <Button
           variant="text"
           text="Gallery"
-          onClick={() => handleClick(BUNDLE_DATA_CATEGORIES.Gallery, BUNDLE_DATA_GROUPS.Additions)}
+          onClick={() => handleClick(ADDITIONS_CATEGORIES.Gallery, BUNDLE_DATA_GROUPS.Additions)}
         />
       </If>
     </div>

@@ -1,6 +1,6 @@
 import nanosecToSec from '~/utils/nanosecToSec.ts'
 import type { VariantType } from '~/types/globals.ts'
-import type { AvailableBundleData, BUNDLE_DATA_CATEGORIES, PayloadDataItem } from '~/types/bundleTypes.ts'
+import type { AvailableBundleData, BundleDataCategories, PayloadDataItem } from '~/types/bundleTypes.ts'
 
 export default class CanisterDTO {
   protected parseOptionParam = <T>(param: T[], defaultValue: T): T => {
@@ -25,7 +25,7 @@ export default class CanisterDTO {
     payload.forEach(item => {
       availableBundleData[this.parseVariantType(item.group_id)] = item.categories.reduce((accum, value) => {
         return [...accum, this.parseVariantType(value)]
-      }, [] as BUNDLE_DATA_CATEGORIES[])
+      }, [] as BundleDataCategories[])
     })
 
     return availableBundleData

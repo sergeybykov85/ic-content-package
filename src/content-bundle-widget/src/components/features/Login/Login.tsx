@@ -1,4 +1,4 @@
-import type { FC, MouseEventHandler } from 'react'
+import { type FC, type MouseEventHandler, useMemo } from 'react'
 import { useCallback, useState } from 'react'
 import Button from '~/components/general/Button'
 import Dialog from '~/components/general/ModalDialog'
@@ -11,9 +11,10 @@ import styles from './Login.module.scss'
 
 interface LoginButtonProps {
   className?: string
+  text?: string
 }
 
-const Login: FC<LoginButtonProps> = ({ className }) => {
+const Login: FC<LoginButtonProps> = ({ className, text }) => {
   const { isAuthenticated, logout, principal = '' } = useAuth()
   const [open, setOpen] = useState(false)
   const onClick = useCallback<MouseEventHandler<HTMLButtonElement>>(
@@ -28,14 +29,14 @@ const Login: FC<LoginButtonProps> = ({ className }) => {
     setOpen(false)
   }, [])
 
+  const btnText = useMemo(() => (!isAuthenticated ? text || 'Log in' : 'Log out'), [isAuthenticated, text])
+
   return (
     <div className={clsx(styles.container, className)}>
       <If condition={isAuthenticated && Boolean(principal)}>
         <PrincipalBtn {...{ principal }} />
       </If>
-      <Button variant={!isAuthenticated ? 'contained' : 'text'} {...{ onClick }}>
-        {!isAuthenticated ? 'Log in' : 'Log out'}
-      </Button>
+      <Button variant={!isAuthenticated ? 'contained' : 'text'} {...{ onClick }} text={btnText} />
       <Dialog {...{ open: open && !isAuthenticated, onClose }}>
         <LoginForm />
       </Dialog>

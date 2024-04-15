@@ -16,6 +16,7 @@ import Bundle from '~/models/Bundle.ts'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 import PaginatedList from '~/models/PaginatedList.ts'
+import { BUNDLE_DATA_GROUPS } from '~/types/bundleTypes.ts'
 
 const WIDGET_SERVICE_CANISTER_ID = import.meta.env.VITE_WIDGET_SERVICE_CANISTER_ID
 
@@ -57,7 +58,13 @@ export default class WidgetService extends CanisterService {
       status: [{ [params.isDraft ? WIDGET_STATUSES.Draft : WIDGET_STATUSES.Active]: null }],
       type_id: { [WIDGET_TYPES.Bundle]: null },
       criteria: [],
-      options: [],
+      options: [
+        {
+          width: [],
+          height: [],
+          payload_items: [],
+        },
+      ],
     }
     if (params.packageId) {
       request.criteria.push({
@@ -66,6 +73,21 @@ export default class WidgetService extends CanisterService {
         by_country_code: [],
         by_classification: [],
       })
+    }
+    if (params.poiCategories?.length || params.additionsCategories?.length) {
+      request.options[0].payload_items.push([])
+      if (params.poiCategories?.length) {
+        request.options[0].payload_items[0].push({
+          group_id: { [BUNDLE_DATA_GROUPS.POI]: null },
+          categories: params.poiCategories.map(item => ({ [item]: null })),
+        })
+      }
+      if (params.additionsCategories?.length) {
+        request.options[0].payload_items[0].push({
+          group_id: { [BUNDLE_DATA_GROUPS.Additions]: null },
+          categories: params.additionsCategories.map(item => ({ [item]: null })),
+        })
+      }
     }
     const response = (await this.actor.create_widget(request)) as CanisterResponse<string>
     return this.responseHandler(response)
