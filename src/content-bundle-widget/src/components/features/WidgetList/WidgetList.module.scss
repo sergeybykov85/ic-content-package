@@ -21,6 +21,9 @@
   @include box(16px)
 }
 .title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   font-weight: 500;
 }
 .description {
@@ -51,5 +54,10 @@
 
   a {
     margin-left: auto;
+  }
+}
+.delete:hover {
+  img {
+    filter: $red-color-filter;
   }
 }

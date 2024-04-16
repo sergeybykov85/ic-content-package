@@ -103,6 +103,11 @@ export default class WidgetService extends CanisterService {
     this.responseHandler(response)
   }
 
+  public removeWidget = async (widgetId: string): Promise<void> => {
+    const response = (await this.actor.remove_widget(widgetId)) as CanisterResponse<void>
+    this.responseHandler(response)
+  }
+
   public getActivityBy = async (identityId: string): Promise<{ allowance: number; widgetsAmount: number }> => {
     const res /*{ allowance, deployed_packages }*/ = (await this.actor.activity_by({
       identity_type: {
