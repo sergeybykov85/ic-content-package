@@ -26,7 +26,7 @@ export interface WidgetDto {
   creator: IdentityRecord
   created: bigint
   options: WidgetOptionsDto[]
-  // criteria: ?CriteriaView;
+  criteria: WidgetCriteriaDto[]
 }
 
 export interface WidgetItemDto {
@@ -73,4 +73,15 @@ export interface WidgetUpdateParams {
   name?: string
   description?: string
   status?: WIDGET_STATUSES
+}
+
+export interface WidgetPayloadUpdateParams {
+  criteria?: {
+    packageId: string
+    bundleIds?: string[]
+  }
+  options?: {
+    poiCategories?: POI_CATEGORIES[]
+    additionsCategories?: ADDITIONS_CATEGORIES[]
+  }
 }

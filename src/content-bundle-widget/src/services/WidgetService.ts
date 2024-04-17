@@ -5,8 +5,11 @@ import { IDENTITY_TYPES } from '~/types/globals.ts'
 import type {
   WidgetCreationParams,
   WidgetCreationRequestDto,
+  WidgetCriteriaDto,
   WidgetDto,
   WidgetItemDto,
+  WidgetOptionsDto,
+  WidgetPayloadUpdateParams,
   WidgetUpdateParams,
   WidgetUpdateRequestDto,
 } from '~/types/widgetTypes.ts'
@@ -100,6 +103,56 @@ export default class WidgetService extends CanisterService {
       status: params.status ? [{ [params.status]: null }] : [],
     }
     const response = (await this.actor.update_widget(widgetId, request)) as CanisterResponse<void>
+    this.responseHandler(response)
+  }
+
+  public updateWidgetPayload = async (widgetId: string, params: WidgetPayloadUpdateParams): Promise<void> => {
+    const criteria: WidgetCriteriaDto[] = []
+
+    if (params.criteria) {
+      criteria.push({
+        entity: [
+          {
+            package_id: params.criteria.packageId,
+            ids: this.createOptionalParam(params.criteria.bundleIds),
+          },
+        ],
+        by_tag: [],
+        by_country_code: [],
+        by_classification: [],
+      })
+    }
+
+    const options: WidgetOptionsDto[] = [
+      {
+        width: [],
+        height: [],
+        payload_items: [],
+      },
+    ]
+
+    if (params.options?.poiCategories?.length || params.options?.additionsCategories?.length) {
+      options[0].payload_items.push([])
+      if (params.options.poiCategories?.length) {
+        options[0].payload_items[0].push({
+          group_id: { [BUNDLE_DATA_GROUPS.POI]: null },
+          categories: params.options.poiCategories.map(item => ({ [item]: null })),
+        })
+      }
+      if (params.options?.additionsCategories?.length) {
+        options[0].payload_items[0].push({
+          group_id: { [BUNDLE_DATA_GROUPS.Additions]: null },
+          categories: params.options.additionsCategories.map(item => ({ [item]: null })),
+        })
+      }
+    }
+
+    const response = (await this.actor.update_widget_payload(widgetId, criteria, options)) as CanisterResponse<void>
+    this.responseHandler(response)
+  }
+
+  public updateWidgetStatus = async (widgetId: string, status: WIDGET_STATUSES): Promise<void> => {
+    const response = (await this.actor.update_widget_status(widgetId, { [status]: null })) as CanisterResponse<void>
     this.responseHandler(response)
   }
 

@@ -8,6 +8,7 @@ import WelcomePage from '~/router/pages/WelcomePage.tsx'
 import MyWidgetsPage from '~/router/pages/MyWidgetsPage.tsx'
 import NewWidgetPage from '~/router/pages/NewWidgetPage.tsx'
 import ErrorPage from '~/router/pages/ErrorPage'
+import WidgetEditorPage from '~/router/pages/WidgetEditorPage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: 'new-widget',
         element: <NewWidgetPage />,
+      },
+      {
+        path: 'widget-editor/:widgetId',
+        element: <WidgetEditorPage />,
       },
     ],
   },

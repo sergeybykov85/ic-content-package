@@ -23,6 +23,7 @@ export default class CanisterDTO {
     const availableBundleData: AvailableBundleData = {}
 
     payload.forEach(item => {
+      // @ts-expect-error known issue
       availableBundleData[this.parseVariantType(item.group_id)] = item.categories.reduce((accum, value) => {
         return [...accum, this.parseVariantType(value)]
       }, [] as BundleDataCategories[])

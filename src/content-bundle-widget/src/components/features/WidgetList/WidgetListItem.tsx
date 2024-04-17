@@ -1,14 +1,14 @@
 import styles from './WidgetList.module.scss'
-import { type FC, useCallback, useMemo } from 'react'
+import { type FC, useMemo } from 'react'
 import type Widget from '~/models/Widget.ts'
 import clsx from 'clsx'
 import { WIDGET_STATUSES } from '~/types/widgetTypes.ts'
 import If from '~/components/general/If.tsx'
 import Button from '~/components/general/Button'
 import { Link } from 'react-router-dom'
-import { enqueueSnackbar } from 'notistack'
-import getWidgetEmbedCode from '~/utils/getWidgetEmbedCode.ts'
-import copyToClipboard from '~/utils/copyToClipboard.ts'
+// import { enqueueSnackbar } from 'notistack'
+// import getWidgetEmbedCode from '~/utils/getWidgetEmbedCode.ts'
+// import copyToClipboard from '~/utils/copyToClipboard.ts'
 import IconButton from '~/components/general/IconButton'
 
 interface WidgetListProps {
@@ -20,12 +20,12 @@ interface WidgetListProps {
 const WidgetListItem: FC<WidgetListProps> = ({ widget, onClickActivate, onClickDelete }) => {
   const isActive = useMemo(() => widget.status === WIDGET_STATUSES.Active, [widget.status])
 
-  const copyWidgetCode = useCallback(() => {
-    const embedCode = getWidgetEmbedCode(widget.id)
-    copyToClipboard(embedCode, () => {
-      enqueueSnackbar('Copied to clipboard', { variant: 'success' })
-    })
-  }, [widget.id])
+  // const copyWidgetCode = useCallback(() => {
+  //   const embedCode = getWidgetEmbedCode(widget.id)
+  //   copyToClipboard(embedCode, () => {
+  //     enqueueSnackbar('Copied to clipboard', { variant: 'success' })
+  //   })
+  // }, [widget.id])
 
   return (
     <div className={styles.item}>
@@ -47,11 +47,14 @@ const WidgetListItem: FC<WidgetListProps> = ({ widget, onClickActivate, onClickD
         {widget.created}
       </p>
       <div className={styles['btn-group']}>
+        <Link to={`/widget-editor/${widget.id}`}>
+          <Button text="Edit widget" variant="outlined" />
+        </Link>
         <If condition={!isActive}>
           <Button text="Activate" onClick={() => onClickActivate(widget.id)} />
         </If>
         <If condition={isActive}>
-          <Button text="Copy embed code" variant="outlined" onClick={copyWidgetCode} />
+          {/*<Button text="Copy embed code" variant="outlined" onClick={copyWidgetCode} />*/}
           <Link to={`/widget-preview/${widget.id}`} target="_blank">
             <Button text="Open preview" variant="text" />
           </Link>

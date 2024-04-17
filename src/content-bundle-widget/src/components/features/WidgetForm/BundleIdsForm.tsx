@@ -1,4 +1,4 @@
-import styles from './NewWidgetForm.module.scss'
+import styles from './WidgetForm.module.scss'
 import { type FC, type FormEventHandler, useCallback, useEffect, useState } from 'react'
 import { TextInput } from '~/components/general/Inputs'
 import IconButton from '~/components/general/IconButton'
@@ -6,11 +6,12 @@ import Chip from '~/components/general/Chip'
 import clsx from 'clsx'
 
 interface BundleIdsFormProps {
+  initIds?: string[]
   onChange: (ids: string[]) => void
 }
 
-const BundleIdsForm: FC<BundleIdsFormProps> = ({ onChange }) => {
-  const [ids, setIds] = useState<string[]>([])
+const BundleIdsForm: FC<BundleIdsFormProps> = ({ onChange, initIds }) => {
+  const [ids, setIds] = useState<string[]>(initIds || [])
   const [newValue, setNewValue] = useState('')
 
   useEffect(() => {

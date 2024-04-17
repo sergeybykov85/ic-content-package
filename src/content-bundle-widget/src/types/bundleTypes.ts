@@ -61,7 +61,10 @@ export interface BundleDto {
   data_availability: PayloadDataItem[]
 }
 
-export type AvailableBundleData = Partial<Record<BUNDLE_DATA_GROUPS, BundleDataCategories[]>>
+export type AvailableBundleData = Partial<{
+  [BUNDLE_DATA_GROUPS.POI]: POI_CATEGORIES[]
+  [BUNDLE_DATA_GROUPS.Additions]: ADDITIONS_CATEGORIES[]
+}>
 
 export interface AdditionalDataDto {
   data_path: StorageData

@@ -1,26 +1,28 @@
-import styles from './NewWidgetForm.module.scss'
+import styles from './WidgetForm.module.scss'
 import { type FC, useCallback, useId, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import type { WidgetCreationParams } from '~/types/widgetTypes.ts'
+import { WIDGET_STATUSES } from '~/types/widgetTypes.ts'
 import { TextArea, TextInput } from '~/components/general/Inputs'
 import Checkbox from '~/components/general/Checkbox'
 import Button from '~/components/general/Button'
-import BundleIdsForm from '~/components/features/NewWidgetForm/BundleIdsForm.tsx'
+import BundleIdsForm from '~/components/features/WidgetForm/BundleIdsForm.tsx'
 import { useServices } from '~/context/ServicesContext'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
 import { useNavigate } from 'react-router-dom'
-import BundleOptionsForm from '~/components/features/NewWidgetForm/BundleOptionsForm.tsx'
+import BundleOptionsForm from '~/components/features/WidgetForm/BundleOptionsForm.tsx'
 import type { ADDITIONS_CATEGORIES, POI_CATEGORIES } from '~/types/bundleTypes.ts'
 import parseErrorMsg from '~/utils/parseErrorMsg.ts'
+import type Widget from '~/models/Widget.ts'
 
 const NAME_MAX_LENGTH = import.meta.env.VITE_WIDGET_NAME_MAX_LENGTH
 const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_WIDGET_DESCRIPTION_MAX_LENGTH
 
-type FormValues = Pick<WidgetCreationParams, 'name' | 'description' | 'packageId'>
+type FormValues = Required<Pick<WidgetCreationParams, 'name' | 'description' | 'packageId'>>
 
-const NewWidgetForm: FC = () => {
+const WidgetForm: FC<{ widget?: Widget }> = ({ widget }) => {
   const formId = useId()
   const { widgetService } = useServices()
   const { setLoading } = useFullScreenLoading()
@@ -36,7 +38,7 @@ const NewWidgetForm: FC = () => {
     additionsCategories: [],
   })
 
-  const onSubmit = useCallback(
+  const createWidget = useCallback(
     async (values: FormValues) => {
       try {
         setLoading(true)
@@ -48,7 +50,34 @@ const NewWidgetForm: FC = () => {
         })
         console.info(widgetId)
         enqueueSnackbar('Widget successfully created', { variant: 'success' })
-        navigate('/my-widgets')
+        window.open(`/widget-preview/${widgetId}`)
+        navigate(`/widget-editor/${widgetId}`)
+      } catch (error) {
+        console.error(error)
+        enqueueSnackbar(parseErrorMsg(error), { variant: 'error' })
+        setLoading(false)
+      }
+    },
+    [bundleIds, categories, isDraft, navigate, setLoading, widgetService],
+  )
+
+  const updateWidget = useCallback(
+    async (values: FormValues) => {
+      try {
+        setLoading(true)
+        await widgetService.updateWidget(widget!.id, {
+          name: values.name,
+          description: values.description,
+          status: isDraft ? WIDGET_STATUSES.Draft : WIDGET_STATUSES.Active,
+        })
+        await widgetService.updateWidgetPayload(widget!.id, {
+          options: categories,
+          criteria: {
+            packageId: values.packageId,
+            bundleIds,
+          },
+        })
+        enqueueSnackbar('Widget successfully updated', { variant: 'success' })
       } catch (error) {
         console.error(error)
         enqueueSnackbar(parseErrorMsg(error), { variant: 'error' })
@@ -56,14 +85,14 @@ const NewWidgetForm: FC = () => {
         setLoading(false)
       }
     },
-    [bundleIds, categories, isDraft, navigate, setLoading, widgetService],
+    [bundleIds, categories, isDraft, setLoading, widget, widgetService],
   )
 
   const form = useFormik<FormValues>({
     initialValues: {
-      name: '',
-      description: '',
-      packageId: '',
+      name: widget?.name || '',
+      description: widget?.description || '',
+      packageId: widget?.packageId || '',
     },
     validateOnChange: false,
     validationSchema: Yup.object().shape({
@@ -75,9 +104,9 @@ const NewWidgetForm: FC = () => {
         .min(2, 'Too Short!')
         .max(DESCRIPTION_MAX_LENGTH, `Maximum length ${DESCRIPTION_MAX_LENGTH} characters`)
         .required('Required!'),
-      packageId: Yup.string().required('Required!'), // TODO: validation
+      packageId: Yup.string().required('Required!'),
     }),
-    onSubmit,
+    onSubmit: widget ? updateWidget : createWidget,
   })
 
   return (
@@ -114,9 +143,13 @@ const NewWidgetForm: FC = () => {
               className={styles.input}
             />
           </form>
-          <BundleIdsForm onChange={ids => setBundleIds(ids)} />
+          <BundleIdsForm onChange={ids => setBundleIds(ids)} initIds={widget?.bundleIds} />
         </div>
-        <BundleOptionsForm className={styles.options} onChange={setCategories} />
+        <BundleOptionsForm
+          className={styles.options}
+          onChange={setCategories}
+          initOptions={widget?.bundleDataToRender}
+        />
       </div>
       <div className={styles.footer}>
         <Button type="submit" text="Submit" className={styles.btn} form={formId} />
@@ -131,4 +164,4 @@ const NewWidgetForm: FC = () => {
   )
 }
 
-export default NewWidgetForm
+export default WidgetForm

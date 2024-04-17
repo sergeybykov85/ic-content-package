@@ -11,6 +11,8 @@ export default class Widget extends CanisterDTO {
   public creator: string
   public created: string
   public bundleDataToRender: AvailableBundleData
+  public packageId?: string
+  public bundleIds?: string[]
 
   constructor(widgetDto: WidgetDto) {
     super()
@@ -22,6 +24,8 @@ export default class Widget extends CanisterDTO {
     this.creator = widgetDto.creator.identity_id
     this.created = this.toLocalDateString(widgetDto.created)
     this.bundleDataToRender = this.parseBundleCategories(widgetDto.options)
+    this.packageId = widgetDto.criteria[0].entity[0].package_id
+    this.bundleIds = widgetDto.criteria[0].entity[0].ids[0]
   }
 
   private parseBundleCategories = (options: WidgetDto['options']): AvailableBundleData => {

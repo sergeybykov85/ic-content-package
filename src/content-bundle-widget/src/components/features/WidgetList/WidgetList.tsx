@@ -21,7 +21,7 @@ const WidgetList: FC<WidgetListProps> = ({ list, refreshList }) => {
     async (widgetId: string) => {
       try {
         setLoading(true)
-        await widgetService.updateWidget(widgetId, { status: WIDGET_STATUSES.Active })
+        await widgetService.updateWidgetStatus(widgetId, WIDGET_STATUSES.Active)
         enqueueSnackbar('Widget was successfully activated', { variant: 'success' })
         refreshList()
       } catch (error) {
