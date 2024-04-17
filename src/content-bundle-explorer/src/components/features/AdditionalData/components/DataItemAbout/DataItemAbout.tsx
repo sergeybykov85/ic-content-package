@@ -19,8 +19,12 @@ const DataItemAbout: FC<DataItemAboutProps> = ({ list, about }) => {
               <span>Locale:</span>
               {item.locale}
             </p>
-            <p className={styles.name}>{item.name}</p>
-            <p>{item.description}</p>
+            <h4 className={styles.name}>{item.name}</h4>
+            <div className={styles.description}>
+              {item.description.split(/(\r\n|\r|\n)/g).map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+            </div>
           </div>
         ))}
       </div>

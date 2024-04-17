@@ -13,8 +13,12 @@ const BundleAbout: FC<{ about: AboutIndexDto[] }> = ({ about }) => (
             <span>Language:</span>
             {getLanguageByCode(item.locale)}
           </p>
-          <p className={styles.name}>{item.name}</p>
-          <p>{item.description}</p>
+          <h4 className={styles.name}>{item.name}</h4>
+          <div className={styles.description}>
+            {item.description.split(/(\r\n|\r|\n)/g).map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
         </div>
       ))}
     </div>
