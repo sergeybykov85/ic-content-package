@@ -38,7 +38,13 @@ const BundleOptionsForm: FC<BundleOptionsFormProps> = ({ className, onChange }) 
       <p>Add POI:</p>
       <div className={styles.categories}>
         {Object.values(POI_CATEGORIES).map(item => (
-          <Checkbox key={item} label={item} value={item} name={item} onChange={handlePoiChange} />
+          <Checkbox
+            key={item}
+            label={item === POI_CATEGORIES.AudioGuide ? 'Audio Guide' : item}
+            value={item}
+            name={item}
+            onChange={handlePoiChange}
+          />
         ))}
       </div>
       <p>Add Additions:</p>
