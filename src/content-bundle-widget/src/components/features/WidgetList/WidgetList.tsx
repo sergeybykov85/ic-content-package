@@ -6,6 +6,7 @@ import { useServices } from '~/context/ServicesContext'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { WIDGET_STATUSES } from '~/types/widgetTypes.ts'
 import { enqueueSnackbar } from 'notistack'
+import parseErrorMsg from '~/utils/parseErrorMsg.ts'
 
 interface WidgetListProps {
   list: Widget[]
@@ -26,7 +27,7 @@ const WidgetList: FC<WidgetListProps> = ({ list, refreshList }) => {
       } catch (error) {
         setLoading(false)
         console.error(error)
-        enqueueSnackbar('Failed to activate widget', { variant: 'error' })
+        enqueueSnackbar(`Failed to activate widget with error: ${parseErrorMsg(error)}`, { variant: 'error' })
       }
     },
     [refreshList, setLoading, widgetService],
@@ -42,7 +43,7 @@ const WidgetList: FC<WidgetListProps> = ({ list, refreshList }) => {
       } catch (error) {
         setLoading(false)
         console.error(error)
-        enqueueSnackbar('Failed to delete widget', { variant: 'error' })
+        enqueueSnackbar(`Failed to delete widget with error: ${parseErrorMsg(error)}`, { variant: 'error' })
       }
     },
     [refreshList, setLoading, widgetService],

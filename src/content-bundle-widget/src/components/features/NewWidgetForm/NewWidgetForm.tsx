@@ -13,6 +13,7 @@ import { enqueueSnackbar } from 'notistack'
 import { useNavigate } from 'react-router-dom'
 import BundleOptionsForm from '~/components/features/NewWidgetForm/BundleOptionsForm.tsx'
 import type { ADDITIONS_CATEGORIES, POI_CATEGORIES } from '~/types/bundleTypes.ts'
+import parseErrorMsg from '~/utils/parseErrorMsg.ts'
 
 const NAME_MAX_LENGTH = import.meta.env.VITE_WIDGET_NAME_MAX_LENGTH
 const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_WIDGET_DESCRIPTION_MAX_LENGTH
@@ -50,7 +51,7 @@ const NewWidgetForm: FC = () => {
         navigate('/my-widgets')
       } catch (error) {
         console.error(error)
-        enqueueSnackbar('Something went wrong', { variant: 'error' })
+        enqueueSnackbar(parseErrorMsg(error), { variant: 'error' })
       } finally {
         setLoading(false)
       }

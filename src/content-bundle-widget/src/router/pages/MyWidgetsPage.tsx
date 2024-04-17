@@ -7,6 +7,7 @@ import type Widget from '~/models/Widget.ts'
 import NewWidgetBtn from '~/components/features/NewWidgetBtn'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { enqueueSnackbar } from 'notistack'
+import parseErrorMsg from '~/utils/parseErrorMsg.ts'
 
 const MyWidgetsPage: FC = () => {
   const { widgetService } = useServices()
@@ -22,7 +23,7 @@ const MyWidgetsPage: FC = () => {
       const { items } = await widgetService.getWidgetsByCreator(0, 12, principal)
       setWidgetsList(items)
     } catch (e) {
-      enqueueSnackbar('Failed to fetch widgets list', { variant: 'error' })
+      enqueueSnackbar(`Failed to fetch widgets list with error: ${parseErrorMsg(e)}`, { variant: 'error' })
     } finally {
       setLoading(false)
     }

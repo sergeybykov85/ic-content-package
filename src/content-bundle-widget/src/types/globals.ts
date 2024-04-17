@@ -1,6 +1,6 @@
 export interface CanisterResponse<T> {
   ok?: T
-  err?: unknown
+  err?: Record<string, unknown>
 }
 
 export type VariantType<T extends string> = Partial<Record<T, null>>
