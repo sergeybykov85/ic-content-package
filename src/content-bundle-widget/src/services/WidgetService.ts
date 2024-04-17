@@ -162,15 +162,15 @@ export default class WidgetService extends CanisterService {
   }
 
   public getActivityBy = async (identityId: string): Promise<{ allowance: number; widgetsAmount: number }> => {
-    const res /*{ allowance, deployed_packages }*/ = (await this.actor.activity_by({
+    const { allowance, registered_widgets } = (await this.actor.activity_by({
       identity_type: {
         [IDENTITY_TYPES.ICP]: null,
       },
       identity_id: identityId,
     })) as { allowance: bigint; registered_widgets: string[] }
     return {
-      allowance: Number(res.allowance),
-      widgetsAmount: res.registered_widgets.length,
+      allowance: Number(allowance),
+      widgetsAmount: registered_widgets.length,
     }
   }
 }

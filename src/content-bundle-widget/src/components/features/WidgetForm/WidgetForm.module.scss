@@ -34,8 +34,12 @@
 .footer {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 16px;
   margin-top: 32px;
+}
+.delete {
+  margin-left: auto;
 }
 .bundle-ids-inputs {
   display: flex;

@@ -16,6 +16,7 @@ import BundleOptionsForm from '~/components/features/WidgetForm/BundleOptionsFor
 import type { ADDITIONS_CATEGORIES, POI_CATEGORIES } from '~/types/bundleTypes.ts'
 import parseErrorMsg from '~/utils/parseErrorMsg.ts'
 import type Widget from '~/models/Widget.ts'
+import If from '~/components/general/If.tsx'
 
 const NAME_MAX_LENGTH = import.meta.env.VITE_WIDGET_NAME_MAX_LENGTH
 const DESCRIPTION_MAX_LENGTH = import.meta.env.VITE_WIDGET_DESCRIPTION_MAX_LENGTH
@@ -109,6 +110,19 @@ const WidgetForm: FC<{ widget?: Widget }> = ({ widget }) => {
     onSubmit: widget ? updateWidget : createWidget,
   })
 
+  const deleteWidget = useCallback(async () => {
+    try {
+      setLoading(true)
+      await widgetService.removeWidget(widget!.id)
+      enqueueSnackbar('Widget was successfully deleted', { variant: 'success' })
+      navigate('/my-widgets')
+    } catch (error) {
+      setLoading(false)
+      console.error(error)
+      enqueueSnackbar(`Failed to delete widget with error: ${parseErrorMsg(error)}`, { variant: 'error' })
+    }
+  }, [navigate, setLoading, widget, widgetService])
+
   return (
     <div>
       <div className={styles.grid}>
@@ -152,13 +166,16 @@ const WidgetForm: FC<{ widget?: Widget }> = ({ widget }) => {
         />
       </div>
       <div className={styles.footer}>
-        <Button type="submit" text="Submit" className={styles.btn} form={formId} />
+        <Button type="submit" text="Submit" form={formId} />
         <Checkbox
           label="Save as Draft"
           checked={isDraft}
           onChange={e => setIsDraft(e.target.checked)}
           className={styles.checkbox}
         />
+        <If condition={Boolean(widget)}>
+          <Button text="Delete widget" variant="text" color="red" onClick={deleteWidget} className={styles.delete} />
+        </If>
       </div>
     </div>
   )
