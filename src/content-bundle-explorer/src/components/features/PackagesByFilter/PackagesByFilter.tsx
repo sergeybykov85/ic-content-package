@@ -90,8 +90,8 @@ const PackagesByFilter: FC = () => {
           className={styles.chips}
           color="blue"
         />
-        <Collapse open={!packages.length}>
-          <EmptyBlock variant={emptyFilters ? 'idle' : 'not-found'} />
+        <Collapse open={!packages.length && !emptyFilters}>
+          <EmptyBlock variant="not-found" />
         </Collapse>
         <Collapse open={packages.length > 0}>
           <h2 className={styles.title}>Search results</h2>
@@ -99,7 +99,7 @@ const PackagesByFilter: FC = () => {
         </Collapse>
         <PaginationControl pagination={{ page, totalPages }} onPageChange={setPage} />
       </section>
-      <Collapse open={packages.length < 1}>
+      <Collapse open={!packages.length}>
         <RecentPackages />
       </Collapse>
     </>

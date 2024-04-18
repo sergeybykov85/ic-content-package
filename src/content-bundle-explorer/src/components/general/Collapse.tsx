@@ -35,10 +35,14 @@ const Collapse: FC<CollapseProps> = ({ open, children, className }) => {
   }, [observer])
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout
     if (open) {
-      setTimeout(() => setOverflowHidden(false), TRANSITION_DURATION)
+      timeoutId = setTimeout(() => setOverflowHidden(false), TRANSITION_DURATION)
     } else {
       setOverflowHidden(true)
+    }
+    return () => {
+      clearTimeout(timeoutId)
     }
   }, [open])
 
