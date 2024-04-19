@@ -30,4 +30,5 @@
   display: grid;
   grid-gap: 16px 32px;
   @include grid-columns(2);
+  padding-bottom: 16px;
 }

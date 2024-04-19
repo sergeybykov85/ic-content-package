@@ -1,0 +1,14 @@
+@import "src/styles/variables";
+//@import "src/styles/mixins";
+
+.input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.list {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

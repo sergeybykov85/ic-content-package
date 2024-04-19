@@ -1,5 +1,5 @@
 import type PackageDetails from '~/models/PackageDetails.ts'
-import { type FC, useCallback, useMemo, useState } from 'react'
+import { type FC, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { TextArea, TextInput } from '~/components/general/Inputs'
@@ -8,11 +8,13 @@ import { useNavigate } from 'react-router-dom'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import { useServices } from '~/context/ServicesContext'
 import { enqueueSnackbar } from 'notistack'
-import type { DeployPackageMetadata, PackageTypes } from '~/types/packagesTypes.ts'
+import { type DeployPackageMetadata, PACKAGE_TYPES } from '~/types/packagesTypes.ts'
 import fileToUint8Array from '~/utils/fileToUint8Array.ts'
 import styles from './PackageEditForm.module.scss'
 import Select from '~/components/general/Select'
 import Button from '~/components/general/Button'
+import ContributorsForm from '~/components/features/ContributorsForm'
+import If from '~/components/general/If'
 
 interface PackageEditFormProps {
   packageId: string
@@ -29,12 +31,20 @@ const PackageEditForm: FC<PackageEditFormProps> = ({ initValues, packageId }) =>
   const navigate = useNavigate()
   const { setLoading } = useFullScreenLoading()
   const { initBundlePackageService, packageRegistryService } = useServices()
+  const formId = useId()
 
   const [imageFile, setImageFile] = useState<File | undefined>()
+  const [contributors, setContributors] = useState<string[]>([])
 
   const bundlePackageService = useMemo(() => {
     return packageId && initBundlePackageService ? initBundlePackageService(packageId) : null
   }, [initBundlePackageService, packageId])
+
+  useEffect(() => {
+    if (bundlePackageService) {
+      bundlePackageService.getContributors().then(res => setContributors(res))
+    }
+  }, [bundlePackageService])
 
   const onSubmit = useCallback(
     async (values: FormValues) => {
@@ -50,6 +60,10 @@ const PackageEditForm: FC<PackageEditFormProps> = ({ initValues, packageId }) =>
         await bundlePackageService?.updatePackageMetadata({ name, description, logo })
         await packageRegistryService?.refreshPackage(packageId)
 
+        if (initValues.submission === PACKAGE_TYPES.Shared) {
+          await bundlePackageService?.applyContributors(contributors)
+        }
+
         enqueueSnackbar(`Package has been edited `, { variant: 'success' })
         setLoading(false)
         navigate(`/package/${packageId}`)
@@ -59,7 +73,7 @@ const PackageEditForm: FC<PackageEditFormProps> = ({ initValues, packageId }) =>
         setLoading(false)
       }
     },
-    [bundlePackageService, imageFile, navigate, packageId, packageRegistryService, setLoading],
+    [bundlePackageService, imageFile, navigate, packageId, packageRegistryService, setLoading, contributors, initValues.submission],
   )
 
   const form = useFormik<FormValues>({
@@ -83,29 +97,34 @@ const PackageEditForm: FC<PackageEditFormProps> = ({ initValues, packageId }) =>
   }, [])
 
   return (
-    <form onSubmit={form.handleSubmit}>
+    <div>
       <div className={styles.grid}>
         <div>
-          <Select<PackageTypes> label="Type" defaultValue={initValues.submission} options={[]} disabled />
-          <TextInput
-            name="name"
-            label="Name"
-            placeholder="Set package name"
-            value={form.values.name}
-            onChange={form.handleChange}
-            error={form.errors.name}
-            className={styles.input}
-          />
-          <TextArea
-            name="description"
-            label="Description"
-            placeholder="Set package description"
-            value={form.values.description}
-            onChange={form.handleChange}
-            error={form.errors.description}
-            className={styles.input}
-            rows={3}
-          />
+          <form onSubmit={form.handleSubmit} id={formId} className={styles.form}>
+            <Select<PACKAGE_TYPES> label="Type" defaultValue={initValues.submission} options={[]} disabled />
+            <TextInput
+              name="name"
+              label="Name"
+              placeholder="Set package name"
+              value={form.values.name}
+              onChange={form.handleChange}
+              error={form.errors.name}
+              className={styles.input}
+            />
+            <TextArea
+              name="description"
+              label="Description"
+              placeholder="Set package description"
+              value={form.values.description}
+              onChange={form.handleChange}
+              error={form.errors.description}
+              className={styles.input}
+              rows={3}
+            />
+          </form>
+          <If condition={initValues.submission === PACKAGE_TYPES.Shared}>
+            <ContributorsForm contributors={contributors} onChange={v => setContributors(v)} />
+          </If>
         </div>
         <div>
           <ImageInput
@@ -117,8 +136,8 @@ const PackageEditForm: FC<PackageEditFormProps> = ({ initValues, packageId }) =>
         </div>
       </div>
 
-      <Button type="submit" text="Update" className={styles.btn} />
-    </form>
+      <Button form={formId} type="submit" text="Update" className={styles.btn} />
+    </div>
   )
 }
 

@@ -20,7 +20,7 @@ import type {
 } from '~/types/bundleDataTypes.ts'
 import { ADDITIONAL_DATA_ACTIONS } from '~/types/bundleDataTypes.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
-import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
+import type { CanisterResponse, IdentityRecord, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import AdditionalDataSection from '~/models/AdditionalDataSection.ts'
 import fileToUint8Array from '~/utils/fileToUint8Array.ts'
 
@@ -154,6 +154,18 @@ export default class BundlePackageService extends CanisterService {
     })) as CanisterResponse<void>
 
     this.responseHandler(response)
+  }
+
+  public applyContributors = async (contributors: string[]): Promise<void> => {
+    const response = await this.actor.apply_contributors(
+      contributors.map(item => this.createIdentityDto(item))
+    ) as CanisterResponse<void>
+    this.responseHandler(response)
+  }
+
+  public getContributors = async (): Promise<string[]> => {
+    const response = await this.actor.get_contributors() as IdentityRecord[]
+    return response.map(item => item.identity_id)
   }
 
   public checkPossibilityToCreateBundle = async (principal: string): Promise<boolean> => {

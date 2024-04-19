@@ -1,17 +1,17 @@
 import type { IdentityRecord, RawFile, VariantType } from '~/types/globals.ts'
 
-export enum PackageTypes {
+export enum PACKAGE_TYPES {
   Public = 'Public',
   Private = 'Private',
   Shared = 'Shared',
 }
 
-export enum IdentifierTypes {
+export enum IDENTIFIER_TYPES {
   Hash = 'Hash',
   Ordinal = 'Ordinal',
 }
 
-type PackageSubmission = VariantType<PackageTypes>
+type PackageSubmission = VariantType<PACKAGE_TYPES>
 
 export interface PackageDto {
   created: bigint // nanoseconds
@@ -39,7 +39,7 @@ export interface DeployPackageMetadata {
 export interface DeployPackageOptions {
   maxTagSupply?: number
   maxCreatorSupply?: number
-  identifierType?: IdentifierTypes
+  identifierType?: IDENTIFIER_TYPES
   maxSupply?: number
 }
 

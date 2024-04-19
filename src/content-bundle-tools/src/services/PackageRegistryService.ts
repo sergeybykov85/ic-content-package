@@ -1,5 +1,5 @@
 import { idlFactory as idl } from '~/declarations/package_registry/package_registry.did.js'
-import type { PackageDto, PackageTypes } from '~/types/packagesTypes.ts'
+import type { PackageDto, PACKAGE_TYPES } from '~/types/packagesTypes.ts'
 import type { Identity } from '@dfinity/agent'
 import type { Secp256k1KeyIdentity } from '@dfinity/identity-secp256k1'
 import { Package } from '~/models/Package.ts'
@@ -21,7 +21,7 @@ export default class PackageRegistryService extends CanisterService {
     return rawPackages.map(i => new Package(i))
   }
 
-  public getPackagesByType = async (type: PackageTypes): Promise<Package[]> => {
+  public getPackagesByType = async (type: PACKAGE_TYPES): Promise<Package[]> => {
     const rawPackages = (await this.actor.get_packages_by_type({ [type]: null })) as PackageDto[]
     return rawPackages.map(i => new Package(i))
   }

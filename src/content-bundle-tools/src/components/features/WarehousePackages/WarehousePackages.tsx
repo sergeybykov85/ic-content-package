@@ -1,11 +1,11 @@
-import type { PackageTypes } from '~/types/packagesTypes.ts'
+import type { PACKAGE_TYPES } from '~/types/packagesTypes.ts'
 import type { Package } from '~/models/Package.ts'
 import { type FC, useEffect, useState } from 'react'
 import PackagesGrid from '~/components/general/PackagesGrid'
 import { useServices } from '~/context/ServicesContext'
 
 interface WarehousePackagesProps {
-  type: PackageTypes
+  type: PACKAGE_TYPES
 }
 
 const WarehousePackages: FC<WarehousePackagesProps> = ({ type }) => {

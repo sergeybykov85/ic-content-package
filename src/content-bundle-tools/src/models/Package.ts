@@ -1,4 +1,4 @@
-import type { PackageDto, PackageTypes } from '~/types/packagesTypes.ts'
+import type { PackageDto, PACKAGE_TYPES } from '~/types/packagesTypes.ts'
 import CanisterDTO from '~/models/CanisterDTO.ts'
 
 export class Package extends CanisterDTO {
@@ -8,7 +8,7 @@ export class Package extends CanisterDTO {
   public maxSupply: number | 'unlimited'
   public name: string
   // public registered: string
-  public submission: PackageTypes
+  public submission: PACKAGE_TYPES
   public logoUrl: string
   constructor(packageDto: PackageDto) {
     super()

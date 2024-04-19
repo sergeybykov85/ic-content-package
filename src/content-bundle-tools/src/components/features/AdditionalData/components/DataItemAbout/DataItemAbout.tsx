@@ -11,8 +11,6 @@ interface DataItemAboutProps {
 
 const DataItemAbout: FC<DataItemAboutProps> = ({ list, about }) => {
   if (about.length) {
-    console.log('list', list)
-    console.log('about', about)
     return (
       <div className={styles.container}>
         {about.map(item => (
