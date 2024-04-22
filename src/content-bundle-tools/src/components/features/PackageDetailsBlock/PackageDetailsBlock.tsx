@@ -1,4 +1,4 @@
-import { type FC, useEffect, useMemo, useState } from 'react'
+import { type FC, useCallback, useEffect, useMemo, useState } from 'react'
 import type PackageDetails from '~/models/PackageDetails.ts'
 import DetailsBlock from '~/components/general/DetailsBlock'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
@@ -7,6 +7,9 @@ import If from '~/components/general/If'
 import { useAuth } from '~/context/AuthContext'
 import { Link, useLocation } from 'react-router-dom'
 import Button from '~/components/general/Button'
+import { PACKAGE_TYPES } from '~/types/packagesTypes.ts'
+import { enqueueSnackbar } from 'notistack'
+import parseErrorMsg from '~/utils/parseErrorMsg.ts'
 
 interface PackageDetailsBlockProps {
   bundlePackageService: BundlePackageService
@@ -19,20 +22,33 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageServic
 
   const [packageData, setPackageData] = useState<PackageDetails | null>(null)
   const [tags, setTags] = useState<string[]>([])
+  const [contributors, setContributors] = useState<string[] | undefined>()
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+
+      const data = await bundlePackageService.getPackageDetails()
+      setPackageData(data)
+
+      const { tags: fetchedTags } = await bundlePackageService.getDataSegmentation()
+      setTags(fetchedTags)
+
+      if (data.submission === PACKAGE_TYPES.Shared) {
+        const fetchedContributors = await bundlePackageService.getContributors()
+        setContributors(fetchedContributors)
+      }
+    } catch (error) {
+      console.error(error)
+      enqueueSnackbar(`Failed to fetch data with error: ${parseErrorMsg(error)}`, { variant: 'error' })
+    } finally {
+      setLoading(false)
+    }
+  }, [setLoading, bundlePackageService])
 
   useEffect(() => {
-    setLoading(true)
-    bundlePackageService
-      .getPackageDetails()
-      .then(data => setPackageData(data))
-      .finally(() => setLoading(false))
-  }, [bundlePackageService, setLoading])
-
-  useEffect(() => {
-    bundlePackageService.getDataSegmentation().then(response => {
-      setTags(response.tags)
-    })
-  }, [bundlePackageService])
+    void fetchData()
+  }, [fetchData])
 
   const bundleEditable = useMemo(() => packageData?.owner === principal, [packageData?.owner, principal])
 
@@ -48,6 +64,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageServic
     return (
       <DetailsBlock
         data={{ ...packageData, tags }}
+        contributors={contributors}
         footer={
           <If condition={bundleEditable}>
             <Link to={`edit`} state={{ ...state, dataToEdit }}>
