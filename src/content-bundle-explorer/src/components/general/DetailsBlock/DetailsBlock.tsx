@@ -23,9 +23,10 @@ interface DetailsBlockProps {
     totalBundles?: number
     maxSupply?: Package['maxSupply']
   }
+  contributors?: string[]
 }
 
-const DetailsBlock: FC<DetailsBlockProps> = ({ data, className }) => {
+const DetailsBlock: FC<DetailsBlockProps> = ({ data, className, contributors }) => {
   const { tags = [] } = data
 
   const blackLabel = useMemo(
@@ -82,6 +83,19 @@ const DetailsBlock: FC<DetailsBlockProps> = ({ data, className }) => {
               </li>
             </If>
           </ul>
+          <If condition={Boolean(contributors?.length)}>
+            <div className={styles.contributors}>
+              <p>Contributors:</p>
+              <ul>
+                {contributors?.map(item => (
+                  <li className={styles['clickable-id']} onClick={() => handleCopyId(item)} key={item}>
+                    <span />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </If>
           <div className={styles.tags}>
             {tags.map(tag => (
               <Chip key={tag} text={tag} color="blue" />

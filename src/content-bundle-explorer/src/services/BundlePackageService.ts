@@ -4,7 +4,7 @@ import type { DataSegmentationDto, PackageWithOwnerDto } from '~/types/packageTy
 import PackageWithOwner from '~/models/PackageWithOwner.ts'
 import PaginatedList from '~/models/PaginatedList.ts'
 import Bundle from '~/models/Bundle.ts'
-import type { CanisterResponse, PaginatedListResponse, VariantType } from '~/types/globals.ts'
+import type { CanisterResponse, IdentityRecord, PaginatedListResponse, VariantType } from '~/types/globals.ts'
 import { IDENTITY_TYPES } from '~/types/globals.ts'
 import type { BundleDetailsDto, BundleDto, BundleFilters, BundleFiltersDto } from '~/types/bundleTypes.ts'
 import countries from '~/assets/countries.json'
@@ -29,6 +29,11 @@ export default class BundlePackageService extends CanisterService {
       ...response,
       countries: response.countries.map(i => COUNTRIES[i] || i),
     }
+  }
+
+  public getContributors = async (): Promise<string[]> => {
+    const response = (await this.actor.get_contributors()) as IdentityRecord[]
+    return response.map(item => item.identity_id)
   }
 
   public getBundlesPaginatedList = async (

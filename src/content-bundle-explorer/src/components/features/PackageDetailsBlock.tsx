@@ -4,6 +4,7 @@ import DetailsBlock from '~/components/general/DetailsBlock'
 import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
 import useError from '~/hooks/useError.ts'
+import { PACKAGE_TYPES } from '~/types/packageTypes.ts'
 
 interface PackageDetailsBlockProps {
   service: BundlePackageService
@@ -15,6 +16,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ service }) => {
 
   const [packageData, setPackageData] = useState<PackageWithOwner | null>(null)
   const [tags, setTags] = useState<string[]>([])
+  const [contributors, setContributors] = useState<string[] | undefined>()
 
   useEffect(() => {
     setLoading(true)
@@ -33,8 +35,14 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ service }) => {
     })
   }, [service])
 
+  useEffect(() => {
+    if (packageData?.submission === PACKAGE_TYPES.Shared) {
+      service.getContributors().then(res => setContributors(res))
+    }
+  }, [packageData?.submission, service])
+
   if (packageData) {
-    return <DetailsBlock data={{ ...packageData, tags }} />
+    return <DetailsBlock data={{ ...packageData, tags }} contributors={contributors} />
   }
 }
 

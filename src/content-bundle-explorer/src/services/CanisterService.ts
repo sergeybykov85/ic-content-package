@@ -29,8 +29,11 @@ export default class CanisterService {
 
   protected responseHandler = <T>(response: CanisterResponse<T>): T => {
     const { ok, err } = response
-    if (err || ok === undefined) {
-      throw err || new Error('Something went wrong')
+    if (err) {
+      throw new Error(Object.keys(err).join(', '))
+    }
+    if (ok === undefined) {
+      throw new Error('Something went wrong')
     }
     return ok
   }
