@@ -34,7 +34,8 @@
         "entrypoint": "src/content-bundle-tools/dist/index.html"
       },
       "source": [
-        "src/content-bundle-tools/dist"
+        "src/content-bundle-tools/dist",
+        "src/content-bundle-tools"
       ],
       "type": "assets",
       "build": "npm run build:content-bundle-tools"
