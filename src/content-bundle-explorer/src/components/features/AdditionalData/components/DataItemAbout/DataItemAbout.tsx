@@ -3,6 +3,7 @@ import type Bundle from '~/models/Bundle.ts'
 import type { FC } from 'react'
 import DataItemDefault from '../DataItemDefault/DataItemDefault.tsx'
 import styles from './DataItemAbout.module.scss'
+import getLanguageByCode from '~/utils/getLanguageByCode.ts'
 
 interface DataItemAboutProps {
   list: DataListItem[]
@@ -17,7 +18,7 @@ const DataItemAbout: FC<DataItemAboutProps> = ({ list, about }) => {
           <div key={item.locale}>
             <p className={styles.locale}>
               <span>Locale:</span>
-              {item.locale}
+              {item.locale ? getLanguageByCode(item.locale) : 'Not set'}
             </p>
             <h4 className={styles.name}>{item.name}</h4>
             <div className={styles.description}>

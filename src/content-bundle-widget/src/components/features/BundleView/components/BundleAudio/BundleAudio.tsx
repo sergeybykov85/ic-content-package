@@ -16,10 +16,6 @@ const BundleAudio: FC<BundleAudioProps> = ({ data }) => {
         {data.dataList.map(item => (
           <div key={item.id}>
             <p>
-              <span>Name:</span>
-              {item.name}
-            </p>
-            <p>
               <span>Locale:</span>
               {item.locale}
             </p>
