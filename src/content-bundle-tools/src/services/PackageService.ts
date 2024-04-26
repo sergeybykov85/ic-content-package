@@ -16,7 +16,7 @@ export default class PackageService extends CanisterService {
     type: PACKAGE_TYPES,
     metadata: DeployPackageMetadata,
     options?: DeployPackageOptions,
-    contributors?: string[]
+    contributors?: string[],
   ): Promise<string> => {
     const { name, description } = metadata
 
@@ -49,18 +49,26 @@ export default class PackageService extends CanisterService {
     } else {
       response = (await this.actor[`deploy_${type.toLowerCase()}_package`](
         { name, description, logo },
-        packageOptions
+        packageOptions,
       )) as CanisterResponse<string>
     }
 
     return this.responseHandler(response)
   }
 
-  public getActivityBy = async (identityId: string): Promise<{ allowance: number, deployedPackagesNumber: number }> => {
-    const { allowance, deployed_packages } = (await this.actor.activity_by(this.createIdentityDto(identityId))) as { allowance: bigint; deployed_packages: string[] }
+  public getActivityBy = async (identityId: string): Promise<{ allowance: number; deployedPackagesNumber: number }> => {
+    const { allowance, deployed_packages } = (await this.actor.activity_by(this.createIdentityDto(identityId))) as {
+      allowance: bigint
+      deployed_packages: string[]
+    }
     return {
       allowance: Number(allowance),
-      deployedPackagesNumber: deployed_packages.length
+      deployedPackagesNumber: deployed_packages.length,
     }
+  }
+
+  public removeEmptyPackage = async (packageId: string): Promise<void> => {
+    const response = (await this.actor.remove_empty_package(packageId, [])) as CanisterResponse<string>
+    this.responseHandler(response)
   }
 }

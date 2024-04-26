@@ -5,11 +5,10 @@ import { useFullScreenLoading } from '~/context/FullScreenLoadingContext'
 import type BundlePackageService from '~/services/BundlePackageService.ts'
 import If from '~/components/general/If'
 import { useAuth } from '~/context/AuthContext'
-import { Link, useLocation } from 'react-router-dom'
-import Button from '~/components/general/Button'
 import { PACKAGE_TYPES } from '~/types/packagesTypes.ts'
 import { enqueueSnackbar } from 'notistack'
 import parseErrorMsg from '~/utils/parseErrorMsg.ts'
+import PackageControls from '~/components/features/PackageControls'
 
 interface PackageDetailsBlockProps {
   bundlePackageService: BundlePackageService
@@ -17,7 +16,6 @@ interface PackageDetailsBlockProps {
 
 const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageService }) => {
   const { setLoading } = useFullScreenLoading()
-  const { state } = useLocation()
   const { principal } = useAuth()
 
   const [packageData, setPackageData] = useState<PackageDetails | null>(null)
@@ -52,14 +50,6 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageServic
 
   const bundleEditable = useMemo(() => packageData?.owner === principal, [packageData?.owner, principal])
 
-  const dataToEdit = useMemo(() => {
-    if (packageData) {
-      const { name, description, logoUrl, submission } = packageData
-      return { name, description, logoUrl, submission }
-    }
-    return null
-  }, [packageData])
-
   if (packageData) {
     return (
       <DetailsBlock
@@ -67,9 +57,7 @@ const PackageDetailsBlock: FC<PackageDetailsBlockProps> = ({ bundlePackageServic
         contributors={contributors}
         footer={
           <If condition={bundleEditable}>
-            <Link to={`edit`} state={{ ...state, dataToEdit }}>
-              <Button text="Edit package" variant="outlined" />
-            </Link>
+            <PackageControls packageData={packageData} />
           </If>
         }
       />
