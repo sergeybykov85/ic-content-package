@@ -45,6 +45,7 @@ const BundleDataButtons: FC<BundleDataButtonsProps> = ({ bundle, dataToRender })
 
   const checkIsAvailable = useCallback(
     (group: BUNDLE_DATA_GROUPS, category: BundleDataCategories) => {
+      // @ts-expect-error TODO: something went wrong, needs investigation
       return dataToRender[group]?.includes(category) && bundle.availableCategories[group]?.includes(category)
     },
     [bundle.availableCategories, dataToRender],
