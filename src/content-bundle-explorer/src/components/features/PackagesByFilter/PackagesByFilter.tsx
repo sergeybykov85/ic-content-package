@@ -24,6 +24,7 @@ const dataSegmentationInitState: DataSegmentation = {
 const PackagesByFilter: FC = () => {
   const { packageRegistryService } = useServices()
 
+  const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState<PackageFilters>({})
   const [dataSegmentation, setDataSegmentation] = useState<DataSegmentation>(dataSegmentationInitState)
   const [packages, setPackages] = useState<PackageWithSubmitter[]>([])
@@ -39,10 +40,16 @@ const PackagesByFilter: FC = () => {
   }, [])
 
   useEffect(() => {
-    packageRegistryService.getPackagesByFilters(page, 8, filters).then(response => {
-      setPackages(response.items)
-      setTotalPages(response.pagination.totalPages)
-    })
+    setLoading(true)
+    packageRegistryService
+      .getPackagesByFilters(page, 8, filters)
+      .then(response => {
+        setPackages(response.items)
+        setTotalPages(response.pagination.totalPages)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [packageRegistryService, filters, page])
 
   useEffect(() => {
@@ -90,7 +97,7 @@ const PackagesByFilter: FC = () => {
           className={styles.chips}
           color="blue"
         />
-        <Collapse open={!packages.length && !emptyFilters}>
+        <Collapse open={!packages.length && !emptyFilters && !loading}>
           <EmptyBlock variant="not-found" />
         </Collapse>
         <Collapse open={packages.length > 0}>
