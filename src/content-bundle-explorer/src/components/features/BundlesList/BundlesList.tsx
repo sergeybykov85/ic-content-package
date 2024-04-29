@@ -49,6 +49,10 @@ const BundlesList: FC<BundlesListProps> = ({ service }) => {
     service.getDataSegmentation().then(response => setDataSegmentation(response))
   }, [service])
 
+  if (!bundlesList.length && emptyFilters) {
+    return null
+  }
+
   return (
     <div>
       <h2 className={styles.title}>Bundles</h2>
@@ -82,7 +86,7 @@ const BundlesList: FC<BundlesListProps> = ({ service }) => {
         </If>
       </div>
       <If condition={!bundlesList.length}>
-        <EmptyBlock variant={emptyFilters ? 'idle' : 'not-found'} />
+        <EmptyBlock variant="not-found" />
       </If>
       <BundlesGrid bundles={bundlesList} />
       <PaginationControl pagination={{ page, totalPages }} onPageChange={setPage} />
