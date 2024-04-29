@@ -29,7 +29,7 @@ const AdditionalData: FC<AdditionalDataProps> = ({ group, title, service, bundle
         setSections(sections)
       })
       .catch(error => {
-        if ('NotRegistered' in error) {
+        if (error.message === 'NotRegistered') {
           setSourceUrl('')
           setSections([])
         } else {
