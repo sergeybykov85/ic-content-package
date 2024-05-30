@@ -45,7 +45,7 @@ const AdditionalData: FC<AdditionalDataProps> = ({
         setSections(sections)
       })
       .catch(error => {
-        if ('NotRegistered' in error) {
+        if (error.message === 'NotRegistered') {
           setSourceUrl('')
           setSections([])
         } else {
